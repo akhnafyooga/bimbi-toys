@@ -11,12 +11,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  CUSTOMER
+  ADMIN
+  STAFF
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String
   email         String    @unique
   passwordHash  String
   phone         String?
+  role          Role      @default(CUSTOMER)
   createdAt     DateTime  @default(now())
 
   wishlist      WishlistItem[]

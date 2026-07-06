@@ -38,13 +38,20 @@ Steps:
 
 1. Push this project to a GitHub repo.
 2. In Vercel, "Add New Project" → import the repo.
-3. Add environment variables (from your `.env`): `DATABASE_URL`, `AUTH_SECRET`,
-   `NEXTAUTH_URL` (set to your real domain, e.g. `https://bimbitoys.id`),
-   `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION`,
-   `RAJAONGKIR_API_KEY`.
+3. Add environment variables (from your `.env` — see `.env.example` for the full,
+   commented list): `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_URL` (set to your
+   real domain, e.g. `https://bimbitoys.id`), `MIDTRANS_SERVER_KEY`,
+   `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION`, and — once you're ready for
+   production photo storage — `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`,
+   `CLOUDINARY_API_SECRET` (see 2.5 below).
 4. Deploy. Vercel builds and gives you a `*.vercel.app` URL immediately.
 5. Optional: add your own domain in Vercel → Settings → Domains, and point your
    registrar's DNS at it.
+
+> **Commercial use note:** Vercel's free "Hobby" plan is licensed for personal,
+> non-commercial projects only. Since Bimbi Toys is a real business processing
+> real payments, use at least the **Pro** plan (usage-based pricing) —
+> see https://vercel.com/pricing.
 
 ### 2.3 Go live with real QRIS payments
 
@@ -56,6 +63,11 @@ Steps:
 3. In the Midtrans dashboard → Settings → Configuration, set your **Payment
    Notification URL** to `https://yourdomain.com/api/midtrans-webhook` — this
    is how Bimbi Toys finds out a scan succeeded.
+4. The webhook (`app/api/midtrans-webhook/route.ts`) already verifies the
+   Midtrans signature (`verifyNotificationSignature` in `lib/midtrans.ts`)
+   before trusting any payment notification — this doesn't need to change
+   between sandbox and production, just double-check it after your first live
+   test transaction (see the first-run checklist in Stage 5).
 
 ### 2.4 Real shipping costs
 
@@ -66,19 +78,43 @@ Swap it for a real courier-rate API:
   body of `getShippingOptions()` with the real fetch call (the file has the
   exact shape commented in already).
 
+### 2.5 Production image storage
+
+Product photos uploaded through the admin panel (`Produk → Tambah Produk Baru`)
+are saved through one swappable module, `lib/upload.ts`. By default it writes
+to `/public/uploads` on local disk — this is fine for local dev, but **does
+not persist on Vercel or any serverless host**, since the filesystem is wiped
+on every deploy.
+
+To switch to Cloudinary (recommended — generous free tier, automatic image
+optimization):
+1. Sign up at https://cloudinary.com and grab your Cloud Name, API Key, and
+   API Secret from the dashboard.
+2. Set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`
+   as environment variables (locally in `.env`, and on your host).
+3. That's it — `lib/upload.ts` detects those variables automatically and
+   uploads there instead. No code changes, no changes anywhere else in the
+   app (the `res.cloudinary.com` domain is already allow-listed in
+   `next.config.ts` for `next/image`).
+
+> This Cloudinary code path hasn't been exercised against a live account yet —
+> after setting the three env vars, upload one test product photo in the admin
+> panel and confirm it appears (check the Cloudinary Media Library too).
+
 ---
 
 ## Stage 3 — Integrate your real corporate data
 
-Right now the catalog is `prisma/seed.ts` — 10 sample toys. To go live with
-your actual inventory:
+The admin panel (`/admin`) is the primary way to manage products, categories,
+orders, stores, and stock day-to-day — see `HANDOFF.md` for a staff-friendly
+guide. For a one-time bulk import of an existing catalog:
 
 ### Option A — You have a spreadsheet/CSV of products
 Fastest path. Write a one-off import script (`prisma/import.ts`) that reads
 your CSV (columns: name, description, price, stock, category, image URLs) and
 calls `prisma.product.create(...)` for each row — same shape as `seed.ts`,
-just fed from your file instead of hardcoded data. Ask me for this script
-once you have a sample export and I'll tailor it exactly to your columns.
+just fed from your file instead of hardcoded data. Ask your developer for this
+script once you have a sample export.
 
 ### Option B — You have an existing POS/ERP system (e.g. Moka, Accurate, custom)
 Most systems expose either a REST API or scheduled CSV/Excel exports.
@@ -91,18 +127,77 @@ Two integration patterns:
 Either way, the target shape is always the `Product`, `ProductImage`,
 `Category`, and `StoreStock` tables already defined in `prisma/schema.prisma`
 — nothing else in the app needs to change, since every page reads from those
-same tables.
+same tables. Products added this way are immediately editable in the admin
+panel too.
 
-### Option C — Product images
-Seed data uses `picsum.photos` placeholders. For real photos:
-- Upload to a CDN/object storage (Cloudinary has a generous free tier and
-  automatic image optimization — good fit for a toy catalog with lots of photos)
-- Add the domain to `next.config.ts` → `images.remotePatterns`
-- Point `ProductImage.url` at the uploaded URLs
+### Option C — Product images for a bulk import
+For a one-time bulk import (not through the admin panel's upload form),
+upload photos to Cloudinary directly (or your CDN of choice) and point
+`ProductImage.url` at the resulting URLs. Going forward, day-to-day photo
+uploads happen through the admin panel itself (see Stage 2.5 above).
 
-### Admin panel (optional next step)
-Right now product data goes in via the seed/import script — there's no UI for
-non-technical staff to add products yet. A natural Stage 4 would be a small
-`/admin` section (protected by an `isAdmin` flag on `User`) with forms for
-creating/editing products, viewing orders, and updating store stock. Happy to
-scaffold that whenever you're ready — just say the word.
+---
+
+## Stage 4 — Admin panel & staff access
+
+The admin panel lives at `/admin` and is protected by a `role` field on `User`
+(`CUSTOMER`, `ADMIN`, or `STAFF` — new accounts default to `CUSTOMER`).
+
+### Create the client's first admin account
+
+1. Have the client register a normal account through `/register` (or register
+   one for them).
+2. Promote that account to `ADMIN`:
+   ```bash
+   npm run admin:promote -- someone@bimbitoys.id
+   ```
+3. They log in as usual at `/login`, then visit `/admin`.
+4. Once inside, an `ADMIN` can't yet promote *other* staff through the UI —
+   run the same command again for each additional staff account. (`ADMIN` vs
+   `STAFF` both get full access today; the distinction exists in the schema
+   for future use if you want to restrict `STAFF` permissions later.)
+
+See `HANDOFF.md` for the staff-friendly walkthrough of actually using the
+panel day-to-day.
+
+---
+
+## Stage 5 — First-run checklist before going live with real payments
+
+Run through this once, after Stage 2 is deployed and before telling customers
+the store is open:
+
+- [ ] Create the client's initial admin account (Stage 4) and confirm they can
+      log in and reach `/admin`.
+- [ ] Add at least one real product with a real photo through the admin panel,
+      and confirm it appears correctly on the storefront.
+- [ ] Place one real test order end-to-end as a customer: add to cart, check
+      out, scan the QRIS code with a real e-wallet app for a small amount.
+- [ ] Confirm the order's payment status flips to "Sudah Dibayar" automatically
+      within a few seconds (this proves the Midtrans webhook + signature
+      verification is correctly configured for your production domain).
+- [ ] In the admin panel, advance that test order through Sedang Dikemas →
+      Sedang Dikirim/Siap Diambil → Selesai, and confirm each step reflects
+      correctly on the customer's order page too.
+- [ ] Refund/cancel the test transaction in the Midtrans dashboard if it was a
+      real payment, so it doesn't show up in real revenue reporting later.
+
+## Still needs a human security review
+
+These are things this build didn't (and can't fully) verify by itself before
+you go live with real customer accounts and real money:
+
+- **Admin auth & role checks** — every `/api/admin/*` route re-checks the
+  session role server-side (see `lib/adminAuth.ts`), and `proxy.ts` blocks
+  page navigation to `/admin` for non-admin/staff sessions. Have a second
+  person independently confirm no admin route was missed.
+- **Payment webhook** — `app/api/midtrans-webhook/route.ts` verifies the
+  Midtrans signature before trusting any status update. Confirm this in
+  production with a real (small) transaction, not just sandbox.
+- **Rate limiting / abuse** — there's currently no rate limiting on
+  `/api/register`, `/api/checkout`, or the admin upload endpoint. Consider
+  adding this at the hosting/CDN layer (e.g. Vercel's built-in protections or
+  a WAF) before launch.
+- **Backups** — once on production Postgres (Stage 2.1), confirm your
+  provider's automatic backup schedule meets your comfort level for losing an
+  order or two of data.

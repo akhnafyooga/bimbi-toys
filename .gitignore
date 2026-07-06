@@ -40,6 +40,9 @@ yarn-error.log*
 /prisma/dev.db
 /prisma/dev.db-journal
 
+# locally uploaded product photos (dev only — production uses Cloudinary/S3, see DEPLOYMENT.md)
+/public/uploads
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

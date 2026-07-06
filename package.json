@@ -10,6 +10,7 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "admin:promote": "tsx scripts/promote-admin.ts",
     "setup": "npm install && prisma generate && prisma db push && npm run db:seed"
   },
   "prisma": {
