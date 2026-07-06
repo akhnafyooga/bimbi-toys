@@ -1,34 +1,65 @@
 import Image from "next/image";
+import Link from "next/link";
+
 export default function Footer() {
   return (
-    <footer className="mt-20 border-t-4 border-bimbi-sky bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 grid gap-8 sm:grid-cols-3">
-        <div>
+    <footer className="mt-20 bg-slate-900 text-slate-300 border-t-4 border-bimbi-sky">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 grid gap-8 sm:grid-cols-4">
+        {/* Info Column */}
+        <div className="space-y-4">
           <Image
-                      src="/logo.png"
-                      alt="Bimbi Toys"
-                      width={120}
-                      height={800}
-                      className="mx-auto h-50 w-auto"
-                      priority
-                    />
-          <p className="mt-2 text-sm text-bimbi-ink/70">
-            Toko mainan online paling asyik se-Indonesia. Ambil di toko atau kirim ke rumah, semua bisa!
+            src="/logo.png"
+            alt="Bimbi Toys"
+            width={120}
+            height={48}
+            className="h-10 w-auto brightness-0 invert"
+            priority
+          />
+          <p className="text-sm text-slate-400 leading-relaxed">
+            Toko mainan online paling asyik se-Indonesia. Ambil langsung di toko terdekat atau kirim ke rumah. Semua bisa!
           </p>
         </div>
+
+        {/* Links Column */}
         <div>
-          <p className="font-display text-lg mb-2">Ambil di Toko</p>
-          <ul className="text-sm text-bimbi-ink/70 space-y-1">
-            <li>📍 Simpang Lima, Semarang</li>
-            <li>📍 Green Oase, Rumah Pewe</li>
+          <p className="font-display text-white text-base font-bold mb-4 uppercase tracking-wider">Kategori Populer</p>
+          <ul className="text-sm space-y-2 text-slate-400">
+            <li><Link href="/?category=action-figure" className="hover:text-white transition-colors">Action Figure</Link></li>
+            <li><Link href="/?category=boneka" className="hover:text-white transition-colors">Boneka</Link></li>
+            <li><Link href="/?category=board-game" className="hover:text-white transition-colors">Board Game</Link></li>
+            <li><Link href="/?category=mainan-edukasi" className="hover:text-white transition-colors">Mainan Edukasi</Link></li>
           </ul>
         </div>
+
+        {/* Stores Column */}
         <div>
-          <p className="font-display text-lg mb-2">Pembayaran</p>
-          <p className="text-sm text-bimbi-ink/70">Bayar gampang pakai QRIS — GoPay, OVO, Dana, ShopeePay, m-Banking, semua bisa scan! ✨</p>
+          <p className="font-display text-white text-base font-bold mb-4 uppercase tracking-wider">Layanan Toko</p>
+          <ul className="text-sm space-y-2 text-slate-400">
+            <li>📍 Simpang Lima, Semarang</li>
+            <li>📍 Green Oase, Rumah Pewe</li>
+            <li className="pt-2">
+              <Link href="/stores" className="text-bimbi-mint hover:underline font-semibold">
+                Cari Toko Terdekat 📍
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        {/* Payment Column */}
+        <div>
+          <p className="font-display text-white text-base font-bold mb-4 uppercase tracking-wider">Pembayaran Aman</p>
+          <p className="text-sm text-slate-400 leading-relaxed">
+            Bayar gampang pakai QRIS — GoPay, OVO, Dana, ShopeePay, m-Banking, semua bisa scan! ✨
+          </p>
+          <div className="mt-3 flex gap-2 text-2xl">
+            💳 📱 🪙
+          </div>
         </div>
       </div>
-      <p className="text-center text-xs text-bimbi-ink/50 pb-6">© {new Date().getFullYear()} Bimbi Toys. Main terus, belajar terus!</p>
+
+      <div className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+        <p>© {new Date().getFullYear()} Bimbi Toys. Main terus, belajar terus!</p>
+      </div>
     </footer>
   );
 }
