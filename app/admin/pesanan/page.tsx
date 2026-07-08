@@ -71,7 +71,7 @@ export default async function AdminOrdersPage({
         <p className="text-slate-500 text-sm mt-1">{total} pesanan ditemukan.</p>
       </div>
 
-      <form className="flex flex-wrap gap-3 bg-white border border-slate-200 rounded-xl p-4">
+      <form className="flex flex-wrap gap-3 bg-white border border-slate-200 rounded-xl shadow-card p-4">
         <input
           type="text"
           name="q"
@@ -99,7 +99,7 @@ export default async function AdminOrdersPage({
         </button>
       </form>
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
         {orders.length === 0 ? (
           <EmptyState
             icon={isFiltered ? "🔍" : "📦"}

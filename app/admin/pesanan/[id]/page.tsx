@@ -36,7 +36,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
 
       {/* Prominent next-action */}
       {nextAction ? (
-        <div className="bg-white border border-bimbi-pink/30 rounded-xl p-5 flex flex-wrap items-center justify-between gap-4">
+        <div className="bg-white border border-bimbi-pink/30 rounded-xl shadow-card p-5 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="font-semibold text-slate-800">🔔 Perlu ditindaklanjuti</p>
             <p className="text-sm text-slate-500 mt-0.5">
@@ -57,14 +57,14 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
       ) : null}
 
       <div className="grid sm:grid-cols-2 gap-6">
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
           <h2 className="font-display font-bold text-slate-800 mb-3">👤 Pelanggan</h2>
           <p className="text-sm text-slate-700 font-semibold">{order.user.name}</p>
           <p className="text-sm text-slate-500">{order.user.email}</p>
           {order.user.phone && <p className="text-sm text-slate-500">{order.user.phone}</p>}
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
           <h2 className="font-display font-bold text-slate-800 mb-3">
             {order.fulfillment === "PICKUP" ? "🏬 Ambil di Toko" : "🚚 Dikirim ke Alamat"}
           </h2>
@@ -91,7 +91,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
         <h2 className="font-display font-bold text-slate-800 mb-3">🧾 Item Pesanan</h2>
         <div className="divide-y divide-slate-100">
           {order.items.map((item) => (
@@ -122,7 +122,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
         <h2 className="font-display font-bold text-slate-800 mb-2">💳 Status Pembayaran</h2>
         <p className="text-xs text-slate-400 mb-2">
           Status ini diatur otomatis oleh sistem pembayaran (Midtrans) dan tidak bisa diubah manual dari sini.

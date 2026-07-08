@@ -7,7 +7,7 @@ export default function NewCategoryPage() {
         <h1 className="font-display text-2xl font-bold text-slate-800">Tambah Kategori Baru</h1>
         <p className="text-slate-500 text-sm mt-1">Isi info kategori di bawah ini, lalu klik Simpan.</p>
       </div>
-      <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-card p-5 sm:p-6">
         <CategoryForm />
       </div>
     </div>

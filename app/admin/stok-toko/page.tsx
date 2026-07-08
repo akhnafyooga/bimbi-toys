@@ -25,7 +25,7 @@ export default async function AdminStoresPage() {
       </div>
 
       {stores.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-card">
           <EmptyState
             icon="🏬"
             message='Belum ada toko. Klik "Tambah Toko Baru" untuk mulai.'
@@ -36,7 +36,7 @@ export default async function AdminStoresPage() {
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {stores.map((s) => (
-            <div key={s.id} className="bg-white border border-slate-200 rounded-xl p-5">
+            <div key={s.id} className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
               <p className="font-display font-bold text-slate-800">{s.name}</p>
               <p className="text-sm text-slate-500 mt-1">{s.address}</p>
               <p className="text-sm text-slate-400 mt-1">🏙️ {s.city}{s.phone ? ` · ☎️ ${s.phone}` : ""}</p>

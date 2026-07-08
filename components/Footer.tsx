@@ -16,7 +16,8 @@ export default function Footer() {
             priority
           />
           <p className="text-sm text-slate-400 leading-relaxed">
-            Toko mainan online paling asyik se-Indonesia. Ambil langsung di toko terdekat atau kirim ke rumah. Semua bisa!
+            Toko mainan dan hadiah terlengkap di Indonesia.
+            <br></br>Ambil langsung di toko terdekat atau kirim ke rumah. Semua bisa!
           </p>
         </div>
 
@@ -51,9 +52,6 @@ export default function Footer() {
           <p className="text-sm text-slate-400 leading-relaxed">
             Bayar gampang pakai QRIS — GoPay, OVO, Dana, ShopeePay, m-Banking, semua bisa scan! ✨
           </p>
-          <div className="mt-3 flex gap-2 text-2xl">
-            💳 📱 🪙
-          </div>
         </div>
       </div>
 

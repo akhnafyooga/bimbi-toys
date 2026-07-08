@@ -63,12 +63,43 @@ export async function POST(req: Request) {
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
-  const { transactionId, qrisUrl } = await createQrisTransaction({
-    orderId: order.id,
-    grossAmount: total,
-    customerName: user!.name,
-    customerEmail: user!.email,
-  });
+  let transactionId: string;
+  let qrisUrl: string | undefined;
+  try {
+    ({ transactionId, qrisUrl } = await createQrisTransaction({
+      orderId: order.id,
+      grossAmount: total,
+      customerName: user!.name,
+      customerEmail: user!.email,
+    }));
+  } catch (err) {
+    // Payment gateway rejected/unreachable — remove the order we just created
+    // so no orphan PENDING_PAYMENT row lingers, and keep the cart intact.
+    await prisma.order.delete({ where: { id: order.id } });
+    console.error("Midtrans charge failed:", err);
+
+    // Surface the real Midtrans reason for configuration errors (bad/rejected
+    // API keys → 401/403) so the store owner can fix their setup instead of
+    // seeing a generic "try again" that never resolves.
+    const mid = err as { httpStatusCode?: string | number; ApiResponse?: { status_message?: string } };
+    const code = Number(mid?.httpStatusCode);
+    const reason = mid?.ApiResponse?.status_message;
+    if (code === 401 || code === 403) {
+      return NextResponse.json(
+        {
+          error: `Pembayaran belum bisa diproses karena pengaturan Midtrans belum benar${
+            reason ? ` (${reason})` : ""
+          }. Periksa MIDTRANS_SERVER_KEY di server.`,
+        },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Pembayaran sedang tidak bisa diproses. Coba lagi sebentar lagi ya." },
+      { status: 502 }
+    );
+  }
 
   await prisma.order.update({
     where: { id: order.id },

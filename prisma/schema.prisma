@@ -59,6 +59,10 @@ model Product {
   cartItems     CartItem[]
   orderItems    OrderItem[]
   stockByStore  StoreStock[]
+
+  @@index([categoryId])
+  @@index([featured])
+  @@index([createdAt])
 }
 
 model ProductImage {
@@ -68,6 +72,8 @@ model ProductImage {
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   position  Int      @default(0)
+
+  @@index([productId])
 }
 
 model WishlistItem {
@@ -79,6 +85,7 @@ model WishlistItem {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
+  @@index([productId])
 }
 
 model CartItem {
@@ -91,6 +98,7 @@ model CartItem {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
+  @@index([productId])
 }
 
 model StoreLocation {
@@ -114,6 +122,7 @@ model StoreStock {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([storeId, productId])
+  @@index([productId])
 }
 
 model Address {
@@ -129,6 +138,8 @@ model Address {
   detail     String  // street, house number, notes
   user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders     Order[]
+
+  @@index([userId])
 }
 
 enum FulfillmentType {
@@ -167,6 +178,10 @@ model Order {
   qrisUrl         String?         // QR code image URL returned by Midtrans
   paidAt          DateTime?
   createdAt       DateTime        @default(now())
+
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -177,4 +192,7 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   price     Int     // price at time of purchase
+
+  @@index([orderId])
+  @@index([productId])
 }

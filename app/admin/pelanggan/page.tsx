@@ -47,7 +47,7 @@ export default async function AdminCustomersPage({
         <p className="text-slate-500 text-sm mt-1">{total} pelanggan terdaftar. Data ini hanya untuk dilihat.</p>
       </div>
 
-      <form className="flex flex-wrap gap-3 bg-white border border-slate-200 rounded-xl p-4">
+      <form className="flex flex-wrap gap-3 bg-white border border-slate-200 rounded-xl shadow-card p-4">
         <input
           type="text"
           name="q"
@@ -60,7 +60,7 @@ export default async function AdminCustomersPage({
         </button>
       </form>
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
         {customers.length === 0 ? (
           <EmptyState icon={q ? "🔍" : "👥"} message={q ? "Tidak ada pelanggan yang cocok dengan pencarian kamu." : "Belum ada pelanggan yang mendaftar."} />
         ) : (

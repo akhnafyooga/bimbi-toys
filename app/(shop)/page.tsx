@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import ProductCard from "@/components/ProductCard";
+import OnboardingTour from "@/components/OnboardingTour";
 import Image from "next/image";
 import { formatIDR } from "@/lib/format";
 
@@ -40,10 +41,10 @@ export default async function HomePage({
     <div className="bg-slate-50 min-h-screen">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
         <div className="grid grid-cols-12 gap-6 sm:gap-8">
-          
+
           {/* LEFT SIDEBAR (col-span-12 on mobile, col-span-3 on desktop) */}
           <aside className="col-span-12 lg:col-span-3 order-2 lg:order-1 flex flex-col gap-6">
-            
+
             {/* 1. Category Vertical Menu */}
             <div className="border border-slate-200 bg-white rounded-md overflow-hidden shadow-sm">
               <div className="bg-bimbi-mint text-white px-4 py-3.5 flex items-center gap-2 font-display uppercase tracking-wider text-sm font-bold">
@@ -53,9 +54,8 @@ export default async function HomePage({
               <nav className="flex flex-col divide-y divide-slate-100">
                 <Link
                   href="/"
-                  className={`flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors hover:bg-slate-50 ${
-                    !category ? "text-bimbi-sky bg-blue-50/20" : "text-slate-600"
-                  }`}
+                  className={`flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors hover:bg-slate-50 ${!category ? "text-bimbi-sky bg-blue-50/20" : "text-slate-600"
+                    }`}
                 >
                   <span>🤖 Semua Mainan</span>
                   <span className="text-slate-300 text-xs">▶</span>
@@ -64,9 +64,8 @@ export default async function HomePage({
                   <Link
                     key={c.id}
                     href={`/?category=${c.slug}`}
-                    className={`flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors hover:bg-slate-50 ${
-                      category === c.slug ? "text-bimbi-sky bg-blue-50/20" : "text-slate-600"
-                    }`}
+                    className={`flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors hover:bg-slate-50 ${category === c.slug ? "text-bimbi-sky bg-blue-50/20" : "text-slate-600"
+                      }`}
                   >
                     <span>{c.emoji} {c.name}</span>
                     <span className="text-slate-300 text-xs">▶</span>
@@ -84,7 +83,7 @@ export default async function HomePage({
                     <span className="text-[10px] bg-bimbi-pink text-white px-1.5 py-0.5 rounded uppercase font-bold">Hemat!</span>
                   )}
                 </div>
-                
+
                 <Link href={`/product/${hotDealProduct.slug}`} className="group block w-full mt-3">
                   <div className="relative aspect-square w-full overflow-hidden bg-slate-50 rounded-lg flex items-center justify-center">
                     {hotDealProduct.images[0]?.url ? (
@@ -104,16 +103,16 @@ export default async function HomePage({
                       </span>
                     )}
                   </div>
-                  
+
                   <h4 className="mt-3 font-display text-sm font-semibold text-slate-800 line-clamp-2 hover:text-bimbi-sky transition-colors min-h-[2.4rem] leading-snug">
                     {hotDealProduct.name}
                   </h4>
-                  
+
                   {/* Rating stars */}
                   <div className="flex items-center justify-center gap-0.5 my-2 text-amber-400 text-xs">
                     <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
                   </div>
-                  
+
                   <div className="flex items-baseline justify-center gap-2 mt-1">
                     <span className="font-display font-bold text-base text-bimbi-sky">
                       {formatIDR(hotDealProduct.price)}
@@ -125,7 +124,7 @@ export default async function HomePage({
                     )}
                   </div>
                 </Link>
-                
+
                 <Link
                   href={`/product/${hotDealProduct.slug}`}
                   className="mt-4 w-full bg-bimbi-sky hover:bg-blue-800 text-white py-2 text-xs font-bold rounded-md transition-colors block text-center uppercase tracking-wider cursor-pointer"
@@ -139,7 +138,7 @@ export default async function HomePage({
             {specialOffers.length > 0 && (
               <div className="border border-slate-200 bg-white rounded-md p-4 shadow-sm">
                 <h4 className="border-b border-slate-100 pb-2 font-display text-sm font-bold text-bimbi-grape uppercase tracking-wider">
-                  ✨ Rekomendasi
+                Rekomendasi
                 </h4>
                 <div className="space-y-4 mt-3">
                   {specialOffers.map((p) => {
@@ -184,7 +183,7 @@ export default async function HomePage({
 
           {/* MAIN CONTENT AREA (col-span-12 on mobile, col-span-9 on desktop) */}
           <main className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-6">
-            
+
             {/* 1. Hero Banner */}
             <div className="relative overflow-hidden rounded-md bg-white border border-slate-100 shadow-sm min-h-[300px] flex flex-col sm:flex-row items-center justify-between p-6 sm:p-8 md:p-10 gap-6">
               <div className="flex-1 space-y-4 max-w-md text-left z-10">
@@ -202,7 +201,7 @@ export default async function HomePage({
                     href="#katalog"
                     className="inline-block rounded-md bg-bimbi-sky hover:bg-blue-800 px-6 py-3 font-bold text-white text-sm shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0"
                   >
-                    Mulai Belanja 🛍️
+                    Mulai Belanja
                   </Link>
                 </div>
               </div>
@@ -230,8 +229,8 @@ export default async function HomePage({
               <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
                 <span className="text-3xl">🚀</span>
                 <div>
-                  <h4 className="font-bold text-sm uppercase">Bebas Ongkir</h4>
-                  <p className="text-[11px] text-blue-100 leading-tight">Gratis ongkir belanja di atas Rp 200rb</p>
+                  <h4 className="font-bold text-sm uppercase">Pengiriman Langsung</h4>
+                  <p className="text-[11px] text-blue-100 leading-tight">Bisa langsung dikirim ke rumah kamu</p>
                 </div>
               </div>
               <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
@@ -254,16 +253,15 @@ export default async function HomePage({
                       : "Semua Koleksi Mainan"}
                   </span>
                 </h3>
-                
+
                 {/* Horizontal Category Tabs */}
                 <div className="flex flex-wrap gap-2 text-xs font-bold">
                   <Link
                     href="/"
-                    className={`px-3.5 py-2 rounded-full transition-all border ${
-                      !category
-                        ? "bg-bimbi-sky text-white border-bimbi-sky"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                    }`}
+                    className={`px-3.5 py-2 rounded-full transition-all border ${!category
+                      ? "bg-bimbi-sky text-white border-bimbi-sky"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                      }`}
                   >
                     Semua
                   </Link>
@@ -271,11 +269,10 @@ export default async function HomePage({
                     <Link
                       key={c.id}
                       href={`/?category=${c.slug}`}
-                      className={`px-3.5 py-2 rounded-full transition-all border ${
-                        category === c.slug
-                          ? "bg-bimbi-sky text-white border-bimbi-sky"
-                          : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                      }`}
+                      className={`px-3.5 py-2 rounded-full transition-all border ${category === c.slug
+                        ? "bg-bimbi-sky text-white border-bimbi-sky"
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                        }`}
                     >
                       {c.name}
                     </Link>
@@ -291,7 +288,7 @@ export default async function HomePage({
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 animate-pop-in">
+                <div data-tour="products" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 animate-pop-in">
                   {products.map((p) => (
                     <ProductCard
                       key={p.id}
@@ -345,6 +342,8 @@ export default async function HomePage({
 
         </div>
       </div>
+
+      <OnboardingTour />
     </div>
   );
 }

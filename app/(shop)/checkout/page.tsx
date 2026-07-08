@@ -23,7 +23,7 @@ export default async function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
-      <h1 className="font-display text-3xl text-bimbi-pink-dark mb-6">Checkout 🎁</h1>
+      <h1 className="font-display text-3xl text-bimbi-pink-dark mb-6">Checkout!</h1>
       <CheckoutClient cartItems={cartItems} subtotal={subtotal} stores={stores} addresses={addresses} />
     </div>
   );

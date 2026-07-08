@@ -9,10 +9,15 @@ import crypto from "crypto";
 
 const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
 
+// TEMP DEBUG — remove before committing/deploying (prints the secret key)
+console.log(process.env.MIDTRANS_SERVER_KEY);
+console.log(process.env.MIDTRANS_SERVER_KEY?.length);
+
 export const coreApi = new midtransClient.CoreApi({
   isProduction,
-  serverKey: process.env.MIDTRANS_SERVER_KEY!,
-  clientKey: process.env.MIDTRANS_CLIENT_KEY!,
+  // trim() guards against a stray space/newline accidentally copied into .env
+  serverKey: process.env.MIDTRANS_SERVER_KEY?.trim(),
+  clientKey: process.env.MIDTRANS_CLIENT_KEY?.trim(),
 });
 
 export async function createQrisTransaction(params: {

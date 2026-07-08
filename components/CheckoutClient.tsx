@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { formatIDR } from "@/lib/format";
@@ -46,10 +46,53 @@ export default function CheckoutClient({
   const [placing, setPlacing] = useState(false);
   const [qrisUrl, setQrisUrl] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<"waiting" | "paid" | "expired" | "cancelled">("waiting");
   const [error, setError] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const selectedAddress = addresses.find((a) => a.id === addressId);
   const total = subtotal + (fulfillment === "SHIPPING" ? selectedShipping?.cost ?? 0 : 0);
+
+  // Poll order status every 3 seconds while QRIS is shown
+  useEffect(() => {
+    if (!orderId || paymentStatus !== "waiting") return;
+
+    async function checkStatus() {
+      try {
+        const res = await fetch(`/api/orders/${orderId}`);
+        if (!res.ok) return;
+        const order = await res.json();
+
+        if (order.status === "PAID") {
+          setPaymentStatus("paid");
+        } else if (order.status === "EXPIRED") {
+          setPaymentStatus("expired");
+        } else if (order.status === "CANCELLED") {
+          setPaymentStatus("cancelled");
+        }
+      } catch {
+        // Network error — silently retry on next interval
+      }
+    }
+
+    // Check immediately, then every 3 seconds
+    checkStatus();
+    pollRef.current = setInterval(checkStatus, 3000);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [orderId, paymentStatus]);
+
+  // Auto-redirect to order page after payment confirmed
+  useEffect(() => {
+    if (paymentStatus === "paid" && orderId) {
+      const timeout = setTimeout(() => {
+        router.push(`/orders/${orderId}`);
+      }, 2500);
+      return () => clearTimeout(timeout);
+    }
+  }, [paymentStatus, orderId, router]);
 
   async function fetchShipping(city: string) {
     setLoadingShipping(true);
@@ -102,18 +145,69 @@ export default function CheckoutClient({
     }
     setQrisUrl(data.qrisUrl);
     setOrderId(data.orderId);
+    setPaymentStatus("waiting");
   }
 
-  // Payment success screen (QRIS shown, poll would happen on order page)
+  // QRIS payment screen with live status polling
   if (qrisUrl && orderId) {
+    // Payment confirmed
+    if (paymentStatus === "paid") {
+      return (
+        <div className="mx-auto max-w-md text-center rounded-3xl bg-white toy-shelf p-8">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+            <svg className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="font-display text-2xl text-green-700 mb-2">Pembayaran Berhasil!</p>
+          <p className="text-sm text-bimbi-ink/60 mb-6">Terima kasih, pesananmu sedang diproses.</p>
+          <p className="text-xs text-bimbi-ink/40 mb-4 animate-pulse">Mengalihkan ke halaman pesanan...</p>
+          <button
+            onClick={() => router.push(`/orders/${orderId}`)}
+            className="w-full rounded-full bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700 transition-colors"
+          >
+            Lihat Pesanan
+          </button>
+        </div>
+      );
+    }
+
+    // Payment expired or cancelled
+    if (paymentStatus === "expired" || paymentStatus === "cancelled") {
+      return (
+        <div className="mx-auto max-w-md text-center rounded-3xl bg-white toy-shelf p-8">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
+            <svg className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <p className="font-display text-2xl text-red-600 mb-2">
+            {paymentStatus === "expired" ? "Pembayaran Kedaluwarsa" : "Pembayaran Dibatalkan"}
+          </p>
+          <p className="text-sm text-bimbi-ink/60 mb-6">Silakan buat pesanan baru untuk mencoba lagi.</p>
+          <button
+            onClick={() => router.push("/cart")}
+            className="w-full rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white"
+          >
+            Kembali ke Keranjang
+          </button>
+        </div>
+      );
+    }
+
+    // Waiting for payment — show QRIS
     return (
       <div className="mx-auto max-w-md text-center rounded-3xl bg-white toy-shelf p-8">
-        <p className="font-display text-2xl text-bimbi-pink-dark mb-2">Scan buat Bayar! 📱</p>
+        <p className="font-display text-2xl text-bimbi-pink-dark mb-2">Scan buat Bayar!</p>
         <p className="text-sm text-bimbi-ink/60 mb-4">Total: <span className="font-bold">{formatIDR(total)}</span></p>
         <div className="relative mx-auto h-64 w-64 rounded-2xl overflow-hidden border-4 border-bimbi-sun">
           <Image src={qrisUrl} alt="QRIS code" fill className="object-contain bg-white" unoptimized />
         </div>
-        <p className="text-xs text-bimbi-ink/50 mt-4">
+        <div className="flex items-center justify-center gap-2 mt-4 text-sm text-bimbi-ink/60">
+          <span className="inline-block h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+          Menunggu pembayaran...
+        </div>
+        <p className="text-xs text-bimbi-ink/40 mt-2">
           Buka GoPay, OVO, Dana, ShopeePay, atau m-Banking, lalu scan QR di atas.
         </p>
         <button
@@ -135,9 +229,8 @@ export default function CheckoutClient({
           <div className="flex gap-3">
             <button
               onClick={() => setFulfillment("PICKUP")}
-              className={`flex-1 rounded-2xl border-2 px-4 py-3 font-bold text-left transition-colors ${
-                fulfillment === "PICKUP" ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
-              }`}
+              className={`flex-1 rounded-2xl border-2 px-4 py-3 font-bold text-left transition-colors ${fulfillment === "PICKUP" ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
+                }`}
             >
               🏪 Ambil di Toko
               <p className="text-xs font-normal text-bimbi-ink/50 mt-1">Gratis, ambil sendiri</p>
@@ -147,9 +240,8 @@ export default function CheckoutClient({
                 setFulfillment("SHIPPING");
                 if (selectedAddress) fetchShipping(selectedAddress.city);
               }}
-              className={`flex-1 rounded-2xl border-2 px-4 py-3 font-bold text-left transition-colors ${
-                fulfillment === "SHIPPING" ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
-              }`}
+              className={`flex-1 rounded-2xl border-2 px-4 py-3 font-bold text-left transition-colors ${fulfillment === "SHIPPING" ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
+                }`}
             >
               🚚 Dikirim ke Rumah
               <p className="text-xs font-normal text-bimbi-ink/50 mt-1">Bayar ongkir sesuai kurir</p>
@@ -164,9 +256,8 @@ export default function CheckoutClient({
               {stores.map((s) => (
                 <label
                   key={s.id}
-                  className={`flex items-start gap-3 rounded-xl border-2 p-3 cursor-pointer ${
-                    storeId === s.id ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
-                  }`}
+                  className={`flex items-start gap-3 rounded-xl border-2 p-3 cursor-pointer ${storeId === s.id ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
+                    }`}
                 >
                   <input
                     type="radio"
@@ -194,9 +285,8 @@ export default function CheckoutClient({
                 {addresses.map((a) => (
                   <label
                     key={a.id}
-                    className={`flex items-start gap-3 rounded-xl border-2 p-3 cursor-pointer ${
-                      addressId === a.id ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
-                    }`}
+                    className={`flex items-start gap-3 rounded-xl border-2 p-3 cursor-pointer ${addressId === a.id ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
+                      }`}
                   >
                     <input
                       type="radio"
@@ -250,11 +340,10 @@ export default function CheckoutClient({
                   {shippingOptions.map((opt) => (
                     <label
                       key={`${opt.courier}-${opt.service}`}
-                      className={`flex justify-between items-center rounded-xl border-2 p-3 cursor-pointer ${
-                        selectedShipping?.courier === opt.courier && selectedShipping?.service === opt.service
-                          ? "border-bimbi-pink bg-bimbi-pink/5"
-                          : "border-bimbi-ink/10"
-                      }`}
+                      className={`flex justify-between items-center rounded-xl border-2 p-3 cursor-pointer ${selectedShipping?.courier === opt.courier && selectedShipping?.service === opt.service
+                        ? "border-bimbi-pink bg-bimbi-pink/5"
+                        : "border-bimbi-ink/10"
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <input
@@ -312,7 +401,7 @@ export default function CheckoutClient({
           disabled={placing || (fulfillment === "SHIPPING" && (!selectedAddress || !selectedShipping))}
           className="mt-5 w-full rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white shadow-[0_4px_0_var(--color-bimbi-pink-dark)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform disabled:opacity-50"
         >
-          {placing ? "Membuat Pesanan..." : "Bayar dengan QRIS 📱"}
+          {placing ? "Membuat Pesanan..." : "Bayar dengan QRIS"}
         </button>
       </div>
     </div>

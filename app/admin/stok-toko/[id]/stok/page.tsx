@@ -26,7 +26,7 @@ export default async function StoreStockPage({ params }: { params: Promise<{ id:
         <p className="text-slate-500 text-sm mt-1">Atur jumlah stok tiap produk yang tersedia di toko ini.</p>
       </div>
       {items.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-card">
           <EmptyState icon="🧸" message="Belum ada produk untuk diatur stoknya. Tambahkan produk dulu di menu Produk." />
         </div>
       ) : (

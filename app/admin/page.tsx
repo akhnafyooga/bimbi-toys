@@ -69,7 +69,7 @@ export default async function AdminDashboardPage() {
         {cards.map((c) => (
           <div
             key={c.label}
-            className={`rounded-xl bg-white border p-4 sm:p-5 ${c.accent ? "border-bimbi-pink/40 ring-1 ring-bimbi-pink/20" : "border-slate-200"}`}
+            className={`rounded-xl bg-white border shadow-card p-4 sm:p-5 ${c.accent ? "border-bimbi-pink/40 ring-1 ring-bimbi-pink/20" : "border-slate-200"}`}
           >
             <div className="text-2xl">{c.icon}</div>
             <p className="mt-2 text-xl sm:text-2xl font-display font-bold text-slate-800">{c.value}</p>
@@ -80,7 +80,7 @@ export default async function AdminDashboardPage() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Orders needing action */}
-        <div className="rounded-xl bg-white border border-slate-200 p-5">
+        <div className="rounded-xl bg-white border border-slate-200 shadow-card p-5">
           <h2 className="font-display font-bold text-slate-800 mb-1">🔔 Perlu Ditindaklanjuti</h2>
           <p className="text-xs text-slate-500 mb-4">Pesanan ini menunggu kamu proses lebih lanjut.</p>
           {actionableOrders.length === 0 ? (
@@ -114,7 +114,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* Low stock */}
-        <div className="rounded-xl bg-white border border-slate-200 p-5">
+        <div className="rounded-xl bg-white border border-slate-200 shadow-card p-5">
           <h2 className="font-display font-bold text-slate-800 mb-1">📉 Stok Hampir Habis</h2>
           <p className="text-xs text-slate-500 mb-4">Produk dengan stok {LOW_STOCK_THRESHOLD} atau kurang.</p>
           {lowStockProducts.length === 0 ? (

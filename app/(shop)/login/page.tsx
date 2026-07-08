@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
 
@@ -7,21 +8,23 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ error?: string; callbackUrl?: string }>;
 }) {
-  const { callbackUrl } = await searchParams;
+  const { error, callbackUrl } = await searchParams;
 
   async function login(formData: FormData) {
     "use server";
+    const cb = (formData.get("callbackUrl") as string) || "/";
     try {
       await signIn("credentials", {
         email: formData.get("email"),
         password: formData.get("password"),
-        redirectTo: (formData.get("callbackUrl") as string) || "/",
+        redirectTo: cb,
       });
     } catch (err) {
       if (err instanceof AuthError) {
-        return; // NextAuth throws NEXT_REDIRECT internally on success; real errors land in ?error=
+        // Wrong email or password — bounce back to the form with a visible warning.
+        redirect(`/login?error=CredentialsSignin&callbackUrl=${encodeURIComponent(cb)}`);
       }
-      throw err;
+      throw err; // NEXT_REDIRECT on success must propagate
     }
   }
 
@@ -34,6 +37,15 @@ export default async function LoginPage({
       </div>
 
       <div className="rounded-3xl bg-white toy-shelf p-6 sm:p-8">
+        {error && (
+          <div className="mb-4 rounded-xl bg-bimbi-pink/10 border border-bimbi-pink/30 px-4 py-3 text-sm font-semibold text-bimbi-pink-dark animate-pop-in">
+            ⚠️ Gagal masuk. Email atau password salah — periksa lagi ya. Belum punya akun?{" "}
+            <Link href="/register" className="underline font-bold">
+              Daftar dulu di sini
+            </Link>
+            .
+          </div>
+        )}
         <form action={login} className="space-y-4">
           <input type="hidden" name="callbackUrl" value={callbackUrl ?? "/"} />
           <div>

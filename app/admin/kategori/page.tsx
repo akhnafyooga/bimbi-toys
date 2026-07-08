@@ -24,7 +24,7 @@ export default async function AdminCategoriesPage() {
         </Link>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
         {categories.length === 0 ? (
           <EmptyState
             icon="🏷️"

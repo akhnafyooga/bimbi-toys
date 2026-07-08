@@ -61,7 +61,7 @@ export default async function AdminProductsPage({
         </Link>
       </div>
 
-      <form className="flex flex-wrap gap-3 bg-white border border-slate-200 rounded-xl p-4">
+      <form className="flex flex-wrap gap-3 bg-white border border-slate-200 rounded-xl shadow-card p-4">
         <input
           type="text"
           name="q"
@@ -89,7 +89,7 @@ export default async function AdminProductsPage({
         </button>
       </form>
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
         {products.length === 0 ? (
           isFiltered ? (
             <EmptyState icon="🔍" message={`Tidak ada produk yang cocok dengan pencarian kamu.`} />

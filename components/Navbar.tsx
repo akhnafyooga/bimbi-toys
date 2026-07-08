@@ -91,6 +91,7 @@ export default async function Navbar() {
 
           {/* Search bar with Categories Dropdown */}
           <form
+            id="tour-search"
             action="/search"
             className="flex w-full max-w-2xl border-2 border-bimbi-sky rounded-md overflow-hidden bg-white shadow-sm"
           >
@@ -121,6 +122,7 @@ export default async function Navbar() {
 
           {/* Cart Box (Green) */}
           <Link
+            id="tour-cart"
             href="/cart"
             className="flex items-center gap-3 bg-bimbi-mint hover:bg-emerald-600 text-white px-5 py-2.5 rounded-md font-bold text-sm transition-colors shadow-sm shrink-0"
           >
