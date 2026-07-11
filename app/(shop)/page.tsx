@@ -290,41 +290,6 @@ export default async function HomePage({
               )}
             </section>
 
-            {/* 4. Lower Promotional Banners */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative rounded-md overflow-hidden aspect-[8/5] border border-slate-100 shadow-sm flex items-center p-6 bg-slate-900 group">
-                <Image
-                  src="/promo_dolls.png"
-                  alt="Dolls Collection"
-                  fill
-                  sizes="(max-w-7xl) 33vw, 50vw"
-                  className="object-cover opacity-75 group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="relative z-10 max-w-[200px] text-left space-y-2">
-                  <span className="text-[10px] bg-bimbi-mint text-white font-bold px-2 py-0.5 rounded uppercase">Boneka Lembut</span>
-                  <h4 className="font-display text-white text-lg font-bold uppercase leading-tight">Boneka &amp; Teman Bobo</h4>
-                  <p className="text-slate-200 text-xs leading-relaxed">Bahan premium berkualitas aman untuk bayi dan anak.</p>
-                  <Link href="/?category=boneka" className="inline-block text-[11px] font-bold text-white underline hover:text-bimbi-mint transition-colors">Lihat Koleksi →</Link>
-                </div>
-              </div>
-
-              <div className="relative rounded-md overflow-hidden aspect-[8/5] border border-slate-100 shadow-sm flex items-center p-6 bg-slate-900 group">
-                <Image
-                  src="/promo_action_figures.png"
-                  alt="Action Figures"
-                  fill
-                  sizes="(max-w-7xl) 33vw, 50vw"
-                  className="object-cover opacity-75 group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="relative z-10 max-w-[200px] text-left space-y-2">
-                  <span className="text-[10px] bg-bimbi-pink text-white font-bold px-2 py-0.5 rounded uppercase">Paling Keren</span>
-                  <h4 className="font-display text-white text-lg font-bold uppercase leading-tight">Robot &amp; Action Figure</h4>
-                  <p className="text-slate-200 text-xs leading-relaxed">Berbagai robot keren dengan artikulasi gerak dinamis.</p>
-                  <Link href="/?category=action-figure" className="inline-block text-[11px] font-bold text-white underline hover:text-bimbi-pink transition-colors">Lihat Koleksi →</Link>
-                </div>
-              </div>
-            </div>
-
           </main>
 
         </div>
