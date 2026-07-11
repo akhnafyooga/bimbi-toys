@@ -1,13 +1,13 @@
 // Bimbi Toys — Database schema
-// Stage 1: SQLite (zero-config local dev)
-// Stage 2: swap provider to "postgresql" + DATABASE_URL from Supabase/Neon/Vercel Postgres — see DEPLOYMENT.md
+// dev branch: Postgres (Neon) — deployable to Vercel. See DEPLOYMENT.md.
+// (The admin branch keeps the original SQLite provider for zero-config local dev.)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
