@@ -57,7 +57,7 @@ export default async function HomePage({
                   className={`flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors hover:bg-slate-50 ${!category ? "text-bimbi-sky bg-blue-50/20" : "text-slate-600"
                     }`}
                 >
-                  <span>🤖 Semua Mainan</span>
+                  <span>Semua Mainan</span>
                   <span className="text-slate-300 text-xs">▶</span>
                 </Link>
                 {categories.map((c) => (
@@ -245,13 +245,10 @@ export default async function HomePage({
             {/* 3. Catalog Section with Tab Bar */}
             <section id="katalog" className="scroll-mt-6 border border-slate-200 bg-white rounded-md p-4 sm:p-6 shadow-sm">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-4 mb-6 gap-4">
-                <h3 className="font-display text-lg font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  <span>🛍️</span>
-                  <span>
-                    {category
-                      ? categories.find((c) => c.slug === category)?.name
-                      : "Semua Koleksi Mainan"}
-                  </span>
+                <h3 className="font-display text-lg font-bold text-slate-800 uppercase tracking-wider">
+                  {category
+                    ? categories.find((c) => c.slug === category)?.name
+                    : "Semua Koleksi Mainan"}
                 </h3>
 
                 {/* Horizontal Category Tabs */}

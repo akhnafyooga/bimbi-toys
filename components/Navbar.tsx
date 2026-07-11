@@ -29,9 +29,9 @@ export default async function Navbar() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2 flex flex-col sm:flex-row justify-between items-center gap-2">
           {/* Left info */}
           <div className="flex items-center gap-4 text-white/80">
-            <span>🇮🇩 Rupiah (IDR)</span>
+            <span>Rupiah (IDR)</span>
             <span className="hidden md:inline text-white/40">|</span>
-            <span className="hidden md:inline">📞 +62 812-3456-7890</span>
+            <span className="hidden md:inline">+62 812-3456-7890</span>
           </div>
 
           {/* Right menu links */}
@@ -51,7 +51,7 @@ export default async function Navbar() {
             {session?.user ? (
               <div className="flex items-center gap-3">
                 <span className="text-white/90">
-                  Hai, {session.user.name?.split(" ")[0]}! 👋
+                  Hai, {session.user.name?.split(" ")[0]}!
                 </span>
                 <form
                   action={async () => {
@@ -162,7 +162,7 @@ export default async function Navbar() {
               href="/#katalog"
               className="bg-bimbi-pink hover:bg-bimbi-pink-dark px-4 py-3.5 font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-1"
             >
-              🔥 Penawaran Hari Ini
+              Penawaran Hari Ini
             </Link>
           </div>
         </div>
