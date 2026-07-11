@@ -207,31 +207,6 @@ export default async function HomePage({
               </div>
             </div>
 
-            {/* 2. Highlights Banner */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-bimbi-sky text-white rounded-md p-4 shadow-sm animate-pop-in">
-              <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
-                <span className="text-3xl"></span>
-                <div>
-                  <h4 className="font-bold text-sm uppercase">Aman Sampai ke Tangan</h4>
-                  <p className="text-[11px] text-blue-100 leading-tight">Membuat belanja lebih nyaman</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
-                <span className="text-3xl"></span>
-                <div>
-                  <h4 className="font-bold text-sm uppercase">Pengiriman Langsung</h4>
-                  <p className="text-[11px] text-blue-100 leading-tight">Bisa langsung dikirim ke rumah kamu</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
-                <span className="text-3xl"></span>
-                <div>
-                  <h4 className="font-bold text-sm uppercase">Koleksi Spesial</h4>
-                  <p className="text-[11px] text-blue-100 leading-tight">Ekstra diskon s.d 50% setiap hari</p>
-                </div>
-              </div>
-            </div>
-
             {/* 3. Catalog Section with Tab Bar */}
             <section id="katalog" className="scroll-mt-6 border border-slate-200 bg-white rounded-md p-4 sm:p-6 shadow-sm">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-4 mb-6 gap-4">
