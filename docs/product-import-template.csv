@@ -1,0 +1,4 @@
+name,description,price,compareAtPrice,stock,category,featured,imageUrls
+"Boneka Beruang Coklat","Boneka beruang lembut bahan premium, tinggi 30cm. Aman untuk anak.",189000,229000,12,Boneka,true,"https://res.cloudinary.com/demo/beruang-1.jpg|https://res.cloudinary.com/demo/beruang-2.jpg"
+"Mobil RC Offroad 4WD","Mobil remote control tahan banting, baterai isi ulang.",459000,,8,Diecast & RC,false,"https://res.cloudinary.com/demo/rc-offroad.jpg"
+"Puzzle Kayu Angka","Puzzle edukasi mengenal angka 1-10 dari kayu.",65000,,25,Mainan Edukasi,false,
