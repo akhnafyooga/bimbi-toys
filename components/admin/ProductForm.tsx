@@ -34,7 +34,6 @@ export default function ProductForm({ categories, product }: { categories: Categ
   const [price, setPrice] = useState(product ? String(product.price) : "");
   const [compareAtPrice, setCompareAtPrice] = useState(product?.compareAtPrice ? String(product.compareAtPrice) : "");
   const [stock, setStock] = useState(product ? String(product.stock) : "0");
-  const [minAge, setMinAge] = useState(product?.minAge ? String(product.minAge) : "");
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? categories[0]?.id ?? "");
   const [featured, setFeatured] = useState(product?.featured ?? false);
   const [images, setImages] = useState<ProductImageItem[]>(
@@ -85,7 +84,6 @@ export default function ProductForm({ categories, product }: { categories: Categ
       price: priceNum,
       compareAtPrice: compareAtPrice ? Number(compareAtPrice) : null,
       stock: stockNum,
-      minAge: minAge ? Number(minAge) : null,
       categoryId,
       featured,
       images,
@@ -200,29 +198,16 @@ export default function ProductForm({ categories, product }: { categories: Categ
         </FormField>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <FormField label="Stok" hint="Jumlah barang yang tersedia." error={errors.stock}>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-            placeholder="0"
-            className={inputClass}
-          />
-        </FormField>
-
-        <FormField label="Usia Minimal" hint="Dalam tahun, jika ada rekomendasi usia." optional>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={minAge}
-            onChange={(e) => setMinAge(e.target.value)}
-            placeholder="3"
-            className={inputClass}
-          />
-        </FormField>
-      </div>
+      <FormField label="Stok" hint="Jumlah barang yang tersedia." error={errors.stock}>
+        <input
+          type="number"
+          inputMode="numeric"
+          value={stock}
+          onChange={(e) => setStock(e.target.value)}
+          placeholder="0"
+          className={inputClass}
+        />
+      </FormField>
 
       <FormField label="Kategori" error={errors.categoryId}>
         <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={inputClass}>
