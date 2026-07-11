@@ -27,7 +27,7 @@ export default async function AdminCategoriesPage() {
       <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
         {categories.length === 0 ? (
           <EmptyState
-            icon="🏷️"
+            icon=""
             message='Belum ada kategori. Klik "Tambah Kategori Baru" untuk mulai.'
             actionHref="/admin/kategori/baru"
             actionLabel="+ Tambah Kategori Baru"
