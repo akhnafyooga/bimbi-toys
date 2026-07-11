@@ -217,14 +217,14 @@ export default async function HomePage({
                 </div>
               </div>
               <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
-                <span className="text-3xl">🚀</span>
+                <span className="text-3xl"></span>
                 <div>
                   <h4 className="font-bold text-sm uppercase">Pengiriman Langsung</h4>
                   <p className="text-[11px] text-blue-100 leading-tight">Bisa langsung dikirim ke rumah kamu</p>
                 </div>
               </div>
               <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
-                <span className="text-3xl">🎁</span>
+                <span className="text-3xl"></span>
                 <div>
                   <h4 className="font-bold text-sm uppercase">Koleksi Spesial</h4>
                   <p className="text-[11px] text-blue-100 leading-tight">Ekstra diskon s.d 50% setiap hari</p>
