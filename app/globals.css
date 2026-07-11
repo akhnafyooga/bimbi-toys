@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+:root {
+  --color-bimbi-pink: #ff5e5e;
+  /* Red accent / discount */
+  --color-bimbi-pink-dark: #dc2626;
+  /* Dark Red */
+  --color-bimbi-sky: #fa9150;
+  /* Primary Blue */
+  --color-bimbi-sun: rgba(15, 86, 210, 0.08);
+  /* Light Blue wash */
+  --color-bimbi-grape: #160098;
+  /* Navy Blue */
+  --color-bimbi-cream: #f4f6fa;
+  /* Cool light background */
+  --color-bimbi-ink: #1e293b;
+  /* Slate Ink */
+  --color-bimbi-mint: #10b981;
+  /* Primary Green */
+}
+
+@theme inline {
+  --color-bimbi-pink: var(--color-bimbi-pink);
+  --color-bimbi-pink-dark: var(--color-bimbi-pink-dark);
+  --color-bimbi-sky: var(--color-bimbi-sky);
+  --color-bimbi-sun: var(--color-bimbi-sun);
+  --color-bimbi-grape: var(--color-bimbi-grape);
+  --color-bimbi-cream: var(--color-bimbi-cream);
+  --color-bimbi-ink: var(--color-bimbi-ink);
+  --color-bimbi-mint: var(--color-bimbi-mint);
+  --font-display: var(--font-baloo);
+  --font-body: var(--font-nunito);
+}
+
+body {
+  background: var(--color-bimbi-cream);
+  color: var(--color-bimbi-ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+/* subtle two-layer elevation for cards, panels, and tables */
+.shadow-card {
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 2px 6px rgba(16, 24, 40, 0.06);
+}
+
+/* slightly stronger lift on hover for interactive cards */
+.shadow-card-hover {
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+.shadow-card-hover:hover {
+  box-shadow:
+    0 2px 4px rgba(16, 24, 40, 0.06),
+    0 8px 20px rgba(16, 24, 40, 0.10);
+}
+
+/* the "shelf" a product card sits on — the page's signature detail */
+.toy-shelf {
+  box-shadow:
+    0 10px 0 -2px rgba(0, 0, 0, 0.05),
+    0 14px 0 -4px var(--color-bimbi-sun),
+    0 22px 20px -12px rgba(43, 43, 43, 0.25);
+}
+
+/* hanging price tag shape */
+.price-tag {
+  position: relative;
+  clip-path: polygon(12% 0, 100% 0, 100% 100%, 12% 100%, 0 50%);
+}
+
+@keyframes wiggle {
+
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+.animate-wiggle-hover:hover {
+  animation: wiggle 0.4s ease-in-out infinite;
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}

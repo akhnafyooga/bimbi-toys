@@ -1,0 +1,198 @@
+// Bimbi Toys — Database schema
+// Stage 1: SQLite (zero-config local dev)
+// Stage 2: swap provider to "postgresql" + DATABASE_URL from Supabase/Neon/Vercel Postgres — see DEPLOYMENT.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  STAFF
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  phone         String?
+  role          Role      @default(CUSTOMER)
+  createdAt     DateTime  @default(now())
+
+  wishlist      WishlistItem[]
+  cartItems     CartItem[]
+  orders        Order[]
+  addresses     Address[]
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  emoji    String?   // playful category icon, e.g. "🧸"
+  products Product[]
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  description   String
+  price         Int       // in IDR, smallest unit (Rupiah, no decimals)
+  compareAtPrice Int?     // for "coret harga" discount display
+  stock         Int       @default(0)
+  minAge        Int?      // recommended minimum age
+  images        ProductImage[]
+  categoryId    String
+  category      Category  @relation(fields: [categoryId], references: [id])
+  featured      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  wishlistedBy  WishlistItem[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  stockByStore  StoreStock[]
+
+  @@index([categoryId])
+  @@index([featured])
+  @@index([createdAt])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  url       String
+  alt       String?
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  position  Int      @default(0)
+
+  @@index([productId])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+}
+
+model StoreLocation {
+  id        String   @id @default(cuid())
+  name      String
+  city      String
+  address   String
+  lat       Float
+  lng       Float
+  phone     String?
+  stock     StoreStock[]
+  orders    Order[]
+}
+
+model StoreStock {
+  id        String   @id @default(cuid())
+  storeId   String
+  productId String
+  quantity  Int      @default(0)
+  store     StoreLocation @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, productId])
+  @@index([productId])
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  label      String  // e.g. "Rumah", "Kantor"
+  recipient  String
+  phone      String
+  province   String
+  city       String
+  district   String
+  postalCode String
+  detail     String  // street, house number, notes
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders     Order[]
+
+  @@index([userId])
+}
+
+enum FulfillmentType {
+  PICKUP
+  SHIPPING
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PACKED
+  SHIPPED
+  READY_FOR_PICKUP
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+model Order {
+  id              String          @id @default(cuid())
+  orderNumber     String          @unique // human-friendly, e.g. BIMBI-20260705-0001
+  userId          String
+  user            User            @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  fulfillment     FulfillmentType
+  storeId         String?
+  store           StoreLocation?  @relation(fields: [storeId], references: [id])
+  addressId       String?
+  address         Address?        @relation(fields: [addressId], references: [id])
+  shippingCourier String?         // e.g. "JNE REG", "SiCepat BEST"
+  shippingCost    Int             @default(0)
+  subtotal        Int
+  total           Int
+  status          OrderStatus     @default(PENDING_PAYMENT)
+  midtransOrderId String?         @unique
+  qrisUrl         String?         // QR code image URL returned by Midtrans
+  paidAt          DateTime?
+  createdAt       DateTime        @default(now())
+
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Int     // price at time of purchase
+
+  @@index([orderId])
+  @@index([productId])
+}
