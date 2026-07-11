@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import "../globals.css";
 import { auth, signOut } from "@/lib/auth";
 import Providers from "@/components/Providers";
@@ -49,8 +50,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             {/* Top bar */}
             <header className="bg-bimbi-grape text-white sticky top-0 z-40 shadow-sm">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-                <Link href="/admin" className="font-display font-bold text-lg flex items-center gap-2 shrink-0">
-                  🧸 Bimbi Toys <span className="text-white/60 font-normal text-sm hidden sm:inline">Panel Admin</span>
+                <Link href="/admin" className="flex items-center gap-3 shrink-0">
+                  <span className="bg-white rounded-md px-2 py-1 flex items-center">
+                    <Image
+                      src="/logo.png"
+                      alt="Bimbi Toys"
+                      width={140}
+                      height={56}
+                      className="h-8 w-auto object-contain"
+                      priority
+                    />
+                  </span>
+                  <span className="text-white/60 font-normal text-sm hidden sm:inline">Panel Admin</span>
                 </Link>
                 <div className="flex items-center gap-3 sm:gap-4 text-sm">
                   <Link
