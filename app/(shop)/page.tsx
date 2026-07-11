@@ -206,132 +206,131 @@ export default async function HomePage({
                 </div>
               </div>
             </div>
-        </div>
 
-        {/* 2. Highlights Banner */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-bimbi-sky text-white rounded-md p-4 shadow-sm animate-pop-in">
-          <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
-            <span className="text-3xl">🛡️</span>
-            <div>
-              <h4 className="font-bold text-sm uppercase">Garansi Uang Kembali</h4>
-              <p className="text-[11px] text-blue-100 leading-tight">30 hari jaminan pengembalian dana</p>
+            {/* 2. Highlights Banner */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-bimbi-sky text-white rounded-md p-4 shadow-sm animate-pop-in">
+              <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
+                <span className="text-3xl"></span>
+                <div>
+                  <h4 className="font-bold text-sm uppercase">Aman Sampai ke Tangan</h4>
+                  <p className="text-[11px] text-blue-100 leading-tight">Membuat belanja lebih nyaman</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
+                <span className="text-3xl">🚀</span>
+                <div>
+                  <h4 className="font-bold text-sm uppercase">Pengiriman Langsung</h4>
+                  <p className="text-[11px] text-blue-100 leading-tight">Bisa langsung dikirim ke rumah kamu</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
+                <span className="text-3xl">🎁</span>
+                <div>
+                  <h4 className="font-bold text-sm uppercase">Koleksi Spesial</h4>
+                  <p className="text-[11px] text-blue-100 leading-tight">Ekstra diskon s.d 50% setiap hari</p>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
-            <span className="text-3xl">🚀</span>
-            <div>
-              <h4 className="font-bold text-sm uppercase">Pengiriman Langsung</h4>
-              <p className="text-[11px] text-blue-100 leading-tight">Bisa langsung dikirim ke rumah kamu</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3.5 px-4 py-2 border-r-0 md:border-r border-blue-600/40 last:border-0">
-            <span className="text-3xl">🎁</span>
-            <div>
-              <h4 className="font-bold text-sm uppercase">Koleksi Spesial</h4>
-              <p className="text-[11px] text-blue-100 leading-tight">Ekstra diskon s.d 50% setiap hari</p>
-            </div>
-          </div>
-        </div>
 
-        {/* 3. Catalog Section with Tab Bar */}
-        <section id="katalog" className="scroll-mt-6 border border-slate-200 bg-white rounded-md p-4 sm:p-6 shadow-sm">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-4 mb-6 gap-4">
-            <h3 className="font-display text-lg font-bold text-slate-800 uppercase tracking-wider">
-              {category
-                ? categories.find((c) => c.slug === category)?.name
-                : "Semua Koleksi Mainan"}
-            </h3>
+            {/* 3. Catalog Section with Tab Bar */}
+            <section id="katalog" className="scroll-mt-6 border border-slate-200 bg-white rounded-md p-4 sm:p-6 shadow-sm">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-4 mb-6 gap-4">
+                <h3 className="font-display text-lg font-bold text-slate-800 uppercase tracking-wider">
+                  {category
+                    ? categories.find((c) => c.slug === category)?.name
+                    : "Semua Koleksi Mainan"}
+                </h3>
 
-            {/* Horizontal Category Tabs */}
-            <div className="flex flex-wrap gap-2 text-xs font-bold">
-              <Link
-                href="/"
-                className={`px-3.5 py-2 rounded-full transition-all border ${!category
-                  ? "bg-bimbi-sky text-white border-bimbi-sky"
-                  : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                  }`}
-              >
-                Semua
-              </Link>
-              {categories.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/?category=${c.slug}`}
-                  className={`px-3.5 py-2 rounded-full transition-all border ${category === c.slug
-                    ? "bg-bimbi-sky text-white border-bimbi-sky"
-                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                    }`}
-                >
-                  {c.name}
-                </Link>
-              ))}
-            </div>
-          </div>
+                {/* Horizontal Category Tabs */}
+                <div className="flex flex-wrap gap-2 text-xs font-bold">
+                  <Link
+                    href="/"
+                    className={`px-3.5 py-2 rounded-full transition-all border ${!category
+                      ? "bg-bimbi-sky text-white border-bimbi-sky"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                      }`}
+                  >
+                    Semua
+                  </Link>
+                  {categories.map((c) => (
+                    <Link
+                      key={c.id}
+                      href={`/?category=${c.slug}`}
+                      className={`px-3.5 py-2 rounded-full transition-all border ${category === c.slug
+                        ? "bg-bimbi-sky text-white border-bimbi-sky"
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                        }`}
+                    >
+                      {c.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
 
-          {products.length === 0 ? (
-            <div className="text-center py-12">
-              <span className="text-5xl">🧸</span>
-              <p className="text-slate-500 mt-3 text-sm font-semibold">
-                Belum ada mainan di kategori ini. Coba lihat kategori lain, yuk!
-              </p>
-            </div>
-          ) : (
-            <div data-tour="products" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 animate-pop-in">
-              {products.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  slug={p.slug}
-                  name={p.name}
-                  price={p.price}
-                  compareAtPrice={p.compareAtPrice}
-                  imageUrl={p.images[0]?.url ?? ""}
+              {products.length === 0 ? (
+                <div className="text-center py-12">
+                  <span className="text-5xl">🧸</span>
+                  <p className="text-slate-500 mt-3 text-sm font-semibold">
+                    Belum ada mainan di kategori ini. Coba lihat kategori lain, yuk!
+                  </p>
+                </div>
+              ) : (
+                <div data-tour="products" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 animate-pop-in">
+                  {products.map((p) => (
+                    <ProductCard
+                      key={p.id}
+                      slug={p.slug}
+                      name={p.name}
+                      price={p.price}
+                      compareAtPrice={p.compareAtPrice}
+                      imageUrl={p.images[0]?.url ?? ""}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* 4. Lower Promotional Banners */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="relative rounded-md overflow-hidden aspect-[8/5] border border-slate-100 shadow-sm flex items-center p-6 bg-slate-900 group">
+                <Image
+                  src="/promo_dolls.png"
+                  alt="Dolls Collection"
+                  fill
+                  sizes="(max-w-7xl) 33vw, 50vw"
+                  className="object-cover opacity-75 group-hover:scale-105 transition-transform duration-700"
                 />
-              ))}
-            </div>
-          )}
-        </section>
+                <div className="relative z-10 max-w-[200px] text-left space-y-2">
+                  <span className="text-[10px] bg-bimbi-mint text-white font-bold px-2 py-0.5 rounded uppercase">Boneka Lembut</span>
+                  <h4 className="font-display text-white text-lg font-bold uppercase leading-tight">Boneka &amp; Teman Bobo</h4>
+                  <p className="text-slate-200 text-xs leading-relaxed">Bahan premium berkualitas aman untuk bayi dan anak.</p>
+                  <Link href="/?category=boneka" className="inline-block text-[11px] font-bold text-white underline hover:text-bimbi-mint transition-colors">Lihat Koleksi →</Link>
+                </div>
+              </div>
 
-        {/* 4. Lower Promotional Banners */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative rounded-md overflow-hidden aspect-[8/5] border border-slate-100 shadow-sm flex items-center p-6 bg-slate-900 group">
-            <Image
-              src="/promo_dolls.png"
-              alt="Dolls Collection"
-              fill
-              sizes="(max-w-7xl) 33vw, 50vw"
-              className="object-cover opacity-75 group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="relative z-10 max-w-[200px] text-left space-y-2">
-              <span className="text-[10px] bg-bimbi-mint text-white font-bold px-2 py-0.5 rounded uppercase">Boneka Lembut</span>
-              <h4 className="font-display text-white text-lg font-bold uppercase leading-tight">Boneka &amp; Teman Bobo</h4>
-              <p className="text-slate-200 text-xs leading-relaxed">Bahan premium berkualitas aman untuk bayi dan anak.</p>
-              <Link href="/?category=boneka" className="inline-block text-[11px] font-bold text-white underline hover:text-bimbi-mint transition-colors">Lihat Koleksi →</Link>
+              <div className="relative rounded-md overflow-hidden aspect-[8/5] border border-slate-100 shadow-sm flex items-center p-6 bg-slate-900 group">
+                <Image
+                  src="/promo_action_figures.png"
+                  alt="Action Figures"
+                  fill
+                  sizes="(max-w-7xl) 33vw, 50vw"
+                  className="object-cover opacity-75 group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="relative z-10 max-w-[200px] text-left space-y-2">
+                  <span className="text-[10px] bg-bimbi-pink text-white font-bold px-2 py-0.5 rounded uppercase">Paling Keren</span>
+                  <h4 className="font-display text-white text-lg font-bold uppercase leading-tight">Robot &amp; Action Figure</h4>
+                  <p className="text-slate-200 text-xs leading-relaxed">Berbagai robot keren dengan artikulasi gerak dinamis.</p>
+                  <Link href="/?category=action-figure" className="inline-block text-[11px] font-bold text-white underline hover:text-bimbi-pink transition-colors">Lihat Koleksi →</Link>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="relative rounded-md overflow-hidden aspect-[8/5] border border-slate-100 shadow-sm flex items-center p-6 bg-slate-900 group">
-            <Image
-              src="/promo_action_figures.png"
-              alt="Action Figures"
-              fill
-              sizes="(max-w-7xl) 33vw, 50vw"
-              className="object-cover opacity-75 group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="relative z-10 max-w-[200px] text-left space-y-2">
-              <span className="text-[10px] bg-bimbi-pink text-white font-bold px-2 py-0.5 rounded uppercase">Paling Keren</span>
-              <h4 className="font-display text-white text-lg font-bold uppercase leading-tight">Robot &amp; Action Figure</h4>
-              <p className="text-slate-200 text-xs leading-relaxed">Berbagai robot keren dengan artikulasi gerak dinamis.</p>
-              <Link href="/?category=action-figure" className="inline-block text-[11px] font-bold text-white underline hover:text-bimbi-pink transition-colors">Lihat Koleksi →</Link>
-            </div>
-          </div>
+          </main>
+
         </div>
-
-      </main>
-
-    </div>
       </div >
 
-    <OnboardingTour />
+      <OnboardingTour />
     </div >
   );
 }
