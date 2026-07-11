@@ -1,26 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { STORE_CONTACTS, isContactReady, waLink } from "@/lib/storeContacts";
 
 export default function ProductActions({
   productId,
+  productName,
   isLoggedIn,
   initialWishlisted,
   stock,
 }: {
   productId: string;
+  productName: string;
   isLoggedIn: boolean;
   initialWishlisted: boolean;
   stock: number;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [qty, setQty] = useState(1);
   const [wishlisted, setWishlisted] = useState(initialWishlisted);
   const [loading, setLoading] = useState<"cart" | "wishlist" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [showStores, setShowStores] = useState(false);
+
+  // Anyone not signed in is sent to login and returned here afterwards.
+  function requireLogin() {
+    if (isLoggedIn) return false;
+    router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
+    return true;
+  }
 
   async function addToCart() {
+    if (requireLogin()) return;
     setLoading("cart");
     setMessage(null);
     const res = await fetch("/api/cart", {
@@ -30,7 +43,7 @@ export default function ProductActions({
     });
     setLoading(null);
     if (res.ok) {
-      setMessage("Masuk keranjang! 🛒");
+      setMessage("Masuk keranjang!");
       router.refresh();
     } else {
       setMessage("Gagal menambah ke keranjang.");
@@ -38,6 +51,7 @@ export default function ProductActions({
   }
 
   async function toggleWishlist() {
+    if (requireLogin()) return;
     setLoading("wishlist");
     const res = await fetch("/api/wishlist", {
       method: "POST",
@@ -51,6 +65,13 @@ export default function ProductActions({
       router.refresh();
     }
   }
+
+  function openStores() {
+    if (requireLogin()) return;
+    setShowStores((v) => !v);
+  }
+
+  const waMessage = `Halo Bimbi Toys, saya mau tanya soal produk "${productName}".`;
 
   return (
     <div className="space-y-3">
@@ -74,22 +95,20 @@ export default function ProductActions({
       </div>
 
       <div className="flex gap-3">
-        <a
-          href="https://wa.me/6281399773429"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={openStores}
           className="flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 font-bold text-white shadow-[0_4px_0_#128C7E] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform"
-          title="Tanya via WhatsApp"
+          title="Hubungi toko terdekat via WhatsApp"
         >
           <span className="text-xl">💬</span>
           <span className="hidden sm:inline">WhatsApp</span>
-        </a>
+        </button>
         <button
           onClick={addToCart}
           disabled={loading !== null || stock === 0}
           className="flex-1 rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white shadow-[0_4px_0_var(--color-bimbi-pink-dark)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform disabled:opacity-50"
         >
-          {stock === 0 ? "Stok Habis" : loading === "cart" ? "Menambah..." : "Masuk Keranjang 🛒"}
+          {stock === 0 ? "Stok Habis" : loading === "cart" ? "Menambah..." : "Masuk Keranjang"}
         </button>
         <button
           onClick={toggleWishlist}
@@ -100,6 +119,47 @@ export default function ProductActions({
           {wishlisted ? "💖" : "🤍"}
         </button>
       </div>
+
+      {/* Nearest-store WhatsApp chooser */}
+      {showStores && (
+        <div className="rounded-2xl border-2 border-[#25D366]/30 bg-white p-3">
+          <p className="px-1 pb-2 text-sm font-semibold text-bimbi-ink/70">
+            Pilih toko terdekat untuk chat via WhatsApp:
+          </p>
+          <ul className="space-y-1">
+            {STORE_CONTACTS.map((store) => {
+              const ready = isContactReady(store.whatsapp);
+              return (
+                <li key={store.id}>
+                  {ready ? (
+                    <a
+                      href={waLink(store.whatsapp, waMessage)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between rounded-xl px-3 py-2 hover:bg-[#25D366]/10 transition-colors"
+                    >
+                      <span>
+                        <span className="font-semibold text-bimbi-ink">{store.name}</span>
+                        <span className="block text-xs text-bimbi-ink/50">{store.area}</span>
+                      </span>
+                      <span className="text-sm font-bold text-[#128C7E]">Chat →</span>
+                    </a>
+                  ) : (
+                    <div className="flex items-center justify-between rounded-xl px-3 py-2 opacity-50">
+                      <span>
+                        <span className="font-semibold text-bimbi-ink">{store.name}</span>
+                        <span className="block text-xs text-bimbi-ink/50">{store.area}</span>
+                      </span>
+                      <span className="text-xs text-bimbi-ink/40">Segera hadir</span>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
       {message && <p className="text-sm font-semibold text-bimbi-mint">{message}</p>}
     </div>
   );

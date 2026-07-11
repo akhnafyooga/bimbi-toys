@@ -71,6 +71,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div className="mt-6">
           <ProductActions
             productId={product.id}
+            productName={product.name}
             isLoggedIn={isLoggedIn}
             initialWishlisted={wishlisted}
             stock={product.stock}
