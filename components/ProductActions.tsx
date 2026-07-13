@@ -80,14 +80,14 @@ export default function ProductActions({
         <div className="flex items-center rounded-md border-2 border-bimbi-ink/10 overflow-hidden">
           <button
             onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="px-3 py-2 font-bold hover:bg-bimbi-cream"
+            className="btn-press px-3 py-2 font-bold hover:bg-bimbi-cream"
           >
             −
           </button>
           <span className="px-4 font-bold">{qty}</span>
           <button
             onClick={() => setQty((q) => Math.min(stock, q + 1))}
-            className="px-3 py-2 font-bold hover:bg-bimbi-cream"
+            className="btn-press px-3 py-2 font-bold hover:bg-bimbi-cream"
           >
             +
           </button>
@@ -114,10 +114,13 @@ export default function ProductActions({
         <button
           onClick={toggleWishlist}
           disabled={loading !== null}
-          className="rounded-full border-2 border-bimbi-pink/30 px-5 py-3 text-xl hover:bg-bimbi-pink/5 transition-colors"
+          className="btn-press rounded-full border-2 border-bimbi-pink/30 px-5 py-3 text-xl hover:bg-bimbi-pink/5 transition-colors"
           title="Simpan ke wishlist"
         >
-          {wishlisted ? "💖" : "🤍"}
+          {/* key retriggers the pop animation on every toggle */}
+          <span key={String(wishlisted)} className="inline-block animate-heart-pop">
+            {wishlisted ? "💖" : "🤍"}
+          </span>
         </button>
       </div>
 
@@ -166,16 +169,16 @@ export default function ProductActions({
       {/* Added-to-cart confirmation popup */}
       {showCartPopup && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-bimbi-ink/40 p-4"
+          className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-bimbi-ink/40 p-4"
           onClick={() => setShowCartPopup(false)}
         >
           <div
             role="dialog"
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-3xl border-2 border-bimbi-pink/20 bg-white p-6 text-center shadow-xl"
+            className="animate-pop-in w-full max-w-sm rounded-3xl border-2 border-bimbi-pink/20 bg-white p-6 text-center shadow-xl"
           >
-            <div className="text-4xl">🛒</div>
+            <div className="animate-cart-hop text-4xl">🛒</div>
             <p className="mt-3 font-bold text-bimbi-ink">
               Berhasil ditambahkan ke keranjang!
             </p>

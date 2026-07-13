@@ -108,3 +108,80 @@ h4,
 .animate-pop-in {
   animation: pop-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out both;
+}
+
+/* celebratory pop for the wishlist heart and small icons */
+@keyframes heart-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.4) rotate(-8deg);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-heart-pop {
+  animation: heart-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* little hop for the cart icon inside the success popup */
+@keyframes cart-hop {
+  0% {
+    transform: translateY(0);
+  }
+
+  35% {
+    transform: translateY(-10px) rotate(-6deg);
+  }
+
+  70% {
+    transform: translateY(0) rotate(3deg);
+  }
+
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+}
+
+.animate-cart-hop {
+  animation: cart-hop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+/* tactile press feedback for small buttons (qty steppers etc.) */
+.btn-press {
+  transition: transform 0.1s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.85);
+}
+
+/* honor the OS "reduce motion" accessibility setting */
+@media (prefers-reduced-motion: reduce) {
+
+  .animate-pop-in,
+  .animate-fade-in,
+  .animate-heart-pop,
+  .animate-cart-hop,
+  .animate-wiggle-hover:hover {
+    animation: none;
+  }
+}
