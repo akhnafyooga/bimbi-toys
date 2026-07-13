@@ -24,6 +24,7 @@ export default function ProductActions({
   const [loading, setLoading] = useState<"cart" | "wishlist" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [showStores, setShowStores] = useState(false);
+  const [showCartPopup, setShowCartPopup] = useState(false);
 
   // Anyone not signed in is sent to login and returned here afterwards.
   function requireLogin() {
@@ -43,7 +44,7 @@ export default function ProductActions({
     });
     setLoading(null);
     if (res.ok) {
-      setMessage("Masuk keranjang!");
+      setShowCartPopup(true);
       router.refresh();
     } else {
       setMessage("Gagal menambah ke keranjang.");
@@ -161,6 +162,46 @@ export default function ProductActions({
       )}
 
       {message && <p className="text-sm font-semibold text-bimbi-mint">{message}</p>}
+
+      {/* Added-to-cart confirmation popup */}
+      {showCartPopup && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-bimbi-ink/40 p-4"
+          onClick={() => setShowCartPopup(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-3xl border-2 border-bimbi-pink/20 bg-white p-6 text-center shadow-xl"
+          >
+            <div className="text-4xl">🛒</div>
+            <p className="mt-3 font-bold text-bimbi-ink">
+              Berhasil ditambahkan ke keranjang!
+            </p>
+            <p className="mt-1 text-sm text-bimbi-ink/70">
+              Apakah kamu ingin melihat keranjangmu sekarang?
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setShowCartPopup(false);
+                  router.push("/cart");
+                }}
+                className="rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white shadow-[0_4px_0_var(--color-bimbi-pink-dark)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform"
+              >
+                Lihat Keranjang
+              </button>
+              <button
+                onClick={() => setShowCartPopup(false)}
+                className="rounded-full px-6 py-2 text-sm font-semibold text-bimbi-ink/60 hover:bg-bimbi-cream transition-colors"
+              >
+                Lanjut Belanja
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
