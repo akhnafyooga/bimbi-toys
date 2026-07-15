@@ -8,13 +8,13 @@ export default async function CheckoutPage() {
   if (!session?.user) redirect("/login?callbackUrl=/checkout");
   const userId = (session.user as { id: string }).id;
 
-  const [cartItems, stores, addresses] = await Promise.all([
+  const [cartItems, stores, user] = await Promise.all([
     prisma.cartItem.findMany({
       where: { userId },
       include: { product: { include: { images: { orderBy: { position: "asc" }, take: 1 } } } },
     }),
     prisma.storeLocation.findMany({ orderBy: { city: "asc" } }),
-    prisma.address.findMany({ where: { userId } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { phone: true } }),
   ]);
 
   if (cartItems.length === 0) redirect("/cart");
@@ -24,7 +24,12 @@ export default async function CheckoutPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
       <h1 className="font-display text-3xl text-bimbi-pink-dark mb-6">Checkout!</h1>
-      <CheckoutClient cartItems={cartItems} subtotal={subtotal} stores={stores} addresses={addresses} />
+      <CheckoutClient
+        cartItems={cartItems}
+        subtotal={subtotal}
+        stores={stores}
+        userPhone={user?.phone ?? null}
+      />
     </div>
   );
 }

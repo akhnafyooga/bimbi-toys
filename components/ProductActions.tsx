@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { STORE_CONTACTS, isContactReady, waLink } from "@/lib/storeContacts";
+import { isContactReady, waLink, type StoreContact } from "@/lib/storeContacts";
 
 export default function ProductActions({
   productId,
@@ -10,12 +10,14 @@ export default function ProductActions({
   isLoggedIn,
   initialWishlisted,
   stock,
+  stores,
 }: {
   productId: string;
   productName: string;
   isLoggedIn: boolean;
   initialWishlisted: boolean;
   stock: number;
+  stores: StoreContact[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -95,7 +97,7 @@ export default function ProductActions({
         <span className="text-sm text-bimbi-ink/60">{stock} stok tersedia</span>
       </div>
 
-      <div className="flex gap-3">
+      <div className="mt-8 flex gap-6">
         <button
           onClick={openStores}
           className="flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 font-bold text-white shadow-[0_4px_0_#128C7E] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform"
@@ -126,15 +128,15 @@ export default function ProductActions({
 
       {/* Nearest-store WhatsApp chooser */}
       {showStores && (
-        <div className="rounded-2xl border-2 border-[#25D366]/30 bg-white p-3">
+        <div className="mt-10 rounded-2xl border-2 border-[#25D366]/30 bg-white p-3 animate-pop-in">
           <p className="px-1 pb-2 text-sm font-semibold text-bimbi-ink/70">
             Pilih toko terdekat untuk chat via WhatsApp:
           </p>
           <ul className="space-y-1">
-            {STORE_CONTACTS.map((store) => {
+            {stores.map((store, i) => {
               const ready = isContactReady(store.whatsapp);
               return (
-                <li key={store.id}>
+                <li key={store.id} className="animate-rise-in" style={{ animationDelay: `${i * 70}ms` }}>
                   {ready ? (
                     <a
                       href={waLink(store.whatsapp, waMessage)}

@@ -1,7 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 
-export default function Footer() {
+export default async function Footer() {
+  // Single source of truth: the same StoreLocation rows the admin panel edits.
+  const stores = await prisma.storeLocation.findMany({
+    orderBy: { city: "asc" },
+    select: { id: true, name: true, city: true },
+  });
+
   return (
     <footer className="mt-20 bg-slate-900 text-slate-300 border-t-4 border-bimbi-sky">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 grid gap-8 sm:grid-cols-4">
@@ -21,26 +28,16 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Links Column */}
-        <div>
-          <p className="font-display text-white text-base font-bold mb-4 uppercase tracking-wider">Kategori Populer</p>
-          <ul className="text-sm space-y-2 text-slate-400">
-            <li><Link href="/?category=action-figure" className="hover:text-white transition-colors">Action Figure</Link></li>
-            <li><Link href="/?category=boneka" className="hover:text-white transition-colors">Boneka</Link></li>
-            <li><Link href="/?category=board-game" className="hover:text-white transition-colors">Board Game</Link></li>
-            <li><Link href="/?category=mainan-edukasi" className="hover:text-white transition-colors">Mainan Edukasi</Link></li>
-          </ul>
-        </div>
-
         {/* Stores Column */}
         <div>
           <p className="font-display text-white text-base font-bold mb-4 uppercase tracking-wider">Layanan Toko</p>
           <ul className="text-sm space-y-2 text-slate-400">
-            <li>📍 Simpang Lima, Semarang</li>
-            <li>📍 Green Oase, Rumah Pewe</li>
+            {stores.map((s) => (
+              <li key={s.id}>📍 {s.name} — {s.city}</li>
+            ))}
             <li className="pt-2">
               <Link href="/stores" className="text-bimbi-mint hover:underline font-semibold">
-                Cari Toko Terdekat 📍
+                Cari Toko Terdekat
               </Link>
             </li>
           </ul>

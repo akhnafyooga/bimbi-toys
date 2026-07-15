@@ -3,6 +3,8 @@ import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import { formatIDR } from "@/lib/format";
+import CategoryNav from "@/components/CategoryNav";
+import CartBadge from "@/components/CartBadge";
 
 export default async function Navbar() {
   const session = await auth();
@@ -26,31 +28,40 @@ export default async function Navbar() {
     <header className="w-full z-50 flex flex-col bg-white">
       {/* 1. TOP UTILITY BAR (Navy Blue) */}
       <div className="w-full bg-bimbi-grape text-white text-[13px] border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2 flex flex-col sm:flex-row justify-between items-center gap-2">
-          {/* Left info */}
-          <div className="flex items-center gap-4 text-white/80">
-            <span>Rupiah (IDR)</span>
-            <span className="hidden md:inline text-white/40">|</span>
-            <span className="hidden md:inline">+62 812-3456-7890</span>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2 flex justify-between items-center gap-2">
+          {/* Left info (desktop only) */}
+          <div className="hidden md:flex items-center gap-4 text-white/80">
+            <span>+62 812-3456-7890</span>
           </div>
 
-          {/* Right menu links */}
-          <div className="flex items-center gap-4 sm:gap-6 font-semibold">
-            <Link href="/stores" className="hover:text-bimbi-pink transition-colors">
-              📍 Toko Kami
+          {/* Mobile: greeting on the left */}
+          <div className="md:hidden text-white/90 font-semibold truncate">
+            {session?.user ? `Hai, ${session.user.name?.split(" ")[0]}!` : ""}
+          </div>
+
+          {/* Right menu: full words on desktop, compact icon+badge row on phones */}
+          <div className="flex items-center gap-5 sm:gap-6 font-semibold">
+            <Link href="/stores" className="hover:text-bimbi-pink transition-colors chip-spring">
+              📍<span className="hidden sm:inline"> Toko Kami</span>
             </Link>
-            <span className="text-white/20">|</span>
-            <Link href="/wishlist" className="hover:text-bimbi-pink transition-colors flex items-center gap-1">
-              💖 Wishlist ({wishlistCount})
+            <span className="hidden sm:inline text-white/20">|</span>
+            <Link href="/wishlist" className="hover:text-bimbi-pink transition-colors chip-spring relative flex items-center gap-1">
+              💖<span className="hidden sm:inline"> Wishlist ({wishlistCount})</span>
+              <span className="sm:hidden">
+                <CartBadge count={wishlistCount} variant="bubble" />
+              </span>
             </Link>
-            <span className="text-white/20">|</span>
-            <Link href="/cart" className="hover:text-bimbi-pink transition-colors flex items-center gap-1">
-              🛒 Keranjang ({cartCount})
+            <span className="hidden sm:inline text-white/20">|</span>
+            <Link href="/cart" className="hover:text-bimbi-pink transition-colors chip-spring relative flex items-center gap-1">
+              🛒<span className="hidden sm:inline"> Keranjang <CartBadge count={cartCount} variant="inline" /></span>
+              <span className="sm:hidden">
+                <CartBadge count={cartCount} variant="bubble" />
+              </span>
             </Link>
-            <span className="text-white/20">|</span>
+            <span className="hidden sm:inline text-white/20">|</span>
             {session?.user ? (
               <div className="flex items-center gap-3">
-                <span className="text-white/90">
+                <span className="hidden sm:inline text-white/90">
                   Hai, {session.user.name?.split(" ")[0]}!
                 </span>
                 <form
@@ -120,11 +131,11 @@ export default async function Navbar() {
             </button>
           </form>
 
-          {/* Cart Box (Green) */}
+          {/* Cart Box (Green) — desktop only; phones use the 🛒 badge above */}
           <Link
             id="tour-cart"
             href="/cart"
-            className="flex items-center gap-3 bg-bimbi-mint hover:bg-emerald-600 text-white px-5 py-2.5 rounded-md font-bold text-sm transition-colors shadow-sm shrink-0"
+            className="hidden md:flex items-center gap-3 bg-bimbi-mint hover:bg-emerald-600 text-white px-5 py-2.5 rounded-md font-bold text-sm transition-colors shadow-sm shrink-0 chip-spring"
           >
             <span className="text-lg">🛒</span>
             <div className="flex flex-col text-left">
@@ -140,24 +151,8 @@ export default async function Navbar() {
       {/* 3. BOTTOM NAVIGATION BAR (Primary Blue) */}
       <div className="w-full bg-bimbi-sky text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center">
-          <nav className="flex flex-wrap items-center">
-            <Link
-              href="/"
-              className="px-5 py-3.5 font-bold text-sm hover:bg-blue-800 transition-colors border-r border-blue-600/40"
-            >
-              HOME
-            </Link>
-            {categories.slice(0, 7).map((c) => (
-              <Link
-                key={c.id}
-                href={`/?category=${c.slug}`}
-                className="px-4 py-3.5 font-semibold text-xs hover:bg-blue-800 transition-colors border-r border-blue-600/40 uppercase"
-              >
-                {c.name}
-              </Link>
-            ))}
-          </nav>
-          <div className="hidden lg:flex items-center">
+          <CategoryNav categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }))} />
+          <div className="hidden lg:flex items-center shrink-0">
             <Link
               href="/#katalog"
               className="bg-bimbi-pink hover:bg-bimbi-pink-dark px-4 py-3.5 font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-1"

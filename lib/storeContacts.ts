@@ -1,26 +1,19 @@
-// Bimbi Toys — per-store WhatsApp contacts.
+// Bimbi Toys — store WhatsApp contact helpers.
 //
-// TODO (fill later): replace each `whatsapp` value with the real number in
-// international format — digits only, no "+", spaces, or dashes.
-// Example: the number 0813-9977-3429 becomes "6281399773429".
-// Leaving a value as "62XXXXXXXXXX" simply shows the store as "coming soon".
+// Store data (name, address, phone) lives in ONE place: the StoreLocation
+// table, edited from the admin panel (Admin → Stok Toko). Pages that need a
+// contact list fetch it there and map it into this shape — there is no
+// hardcoded store list anymore, so footer/checkout/product pages can't drift
+// apart. A store whose phone is empty or invalid simply shows "Segera hadir".
 
 export type StoreContact = {
   id: string;
   name: string;
   area: string;
-  whatsapp: string;
+  whatsapp: string; // normalized international format, e.g. "6281399773429", or "" when not set
 };
 
-export const STORE_CONTACTS: StoreContact[] = [
-  { id: "pamularsih", name: "Bimbi Toys Pamularsih", area: "Jl. Pamularsih, Semarang", whatsapp: "62XXXXXXXXXX" },
-  { id: "menoreh", name: "Bimbi Toys Menoreh", area: "Jl. Menoreh, Semarang", whatsapp: "62XXXXXXXXXX" },
-  { id: "hamka", name: "Bimbi Toys Prof. Dr. Hamka", area: "Jl. Prof. Dr. Hamka, Semarang", whatsapp: "62XXXXXXXXXX" },
-  { id: "sekaran", name: "Bimbi Toys Sekaran", area: "Sekaran, Gunungpati, Semarang", whatsapp: "62XXXXXXXXXX" },
-  { id: "boja", name: "Bimbi Toys Boja", area: "Boja, Kendal", whatsapp: "62XXXXXXXXXX" },
-];
-
-// A number still on the placeholder isn't clickable yet.
+// A store without a usable number isn't clickable yet.
 export function isContactReady(whatsapp: string) {
   return /^\d{9,15}$/.test(whatsapp);
 }

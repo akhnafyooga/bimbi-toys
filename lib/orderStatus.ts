@@ -27,6 +27,15 @@ export const ORDER_STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
 // Statuses where staff still need to do something to move the order along.
 export const ACTIONABLE_STATUSES: OrderStatus[] = ["PAID", "PACKED"];
 
+// Status labels that differ for buyer-arranged courier orders. Use this
+// wherever the order's fulfillment type is known.
+export function orderStatusLabel(status: OrderStatus, fulfillment: FulfillmentType): string {
+  if (fulfillment === "SELF_COURIER" && status === "READY_FOR_PICKUP") {
+    return "Siap Diambil Kurir";
+  }
+  return ORDER_STATUS_LABEL[status];
+}
+
 // What staff can advance an order to next, and the button label to show.
 // Payment status itself (PENDING_PAYMENT -> PAID) is never in this map —
 // that's set only by the Midtrans webhook, never by a staff click.
@@ -38,12 +47,14 @@ export function getNextStatus(
     return { next: "PACKED", label: "Tandai Sudah Dikemas" };
   }
   if (status === "PACKED") {
-    return fulfillment === "SHIPPING"
-      ? { next: "SHIPPED", label: "Tandai Sudah Dikirim" }
-      : { next: "READY_FOR_PICKUP", label: "Tandai Siap Diambil" };
+    if (fulfillment === "SHIPPING") return { next: "SHIPPED", label: "Tandai Sudah Dikirim" };
+    if (fulfillment === "SELF_COURIER") return { next: "READY_FOR_PICKUP", label: "Siap Diambil Kurir" };
+    return { next: "READY_FOR_PICKUP", label: "Tandai Siap Diambil" };
   }
   if (status === "SHIPPED" || status === "READY_FOR_PICKUP") {
-    return { next: "COMPLETED", label: "Tandai Selesai" };
+    return fulfillment === "SELF_COURIER"
+      ? { next: "COMPLETED", label: "Sudah Diambil Kurir" }
+      : { next: "COMPLETED", label: "Tandai Selesai" };
   }
   return null;
 }

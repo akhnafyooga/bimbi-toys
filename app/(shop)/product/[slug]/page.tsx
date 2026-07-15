@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { formatIDR } from "@/lib/format";
+import { normalizePhone } from "@/lib/phone";
 import ProductActions from "@/components/ProductActions";
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -11,16 +12,29 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const isLoggedIn = !!session?.user;
   const userId = session?.user ? (session.user as { id: string }).id : null;
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      images: { orderBy: { position: "asc" } },
-      category: true,
-      stockByStore: { include: { store: true } },
-    },
-  });
+  const [product, storeLocations] = await Promise.all([
+    prisma.product.findUnique({
+      where: { slug },
+      include: {
+        images: { orderBy: { position: "asc" } },
+        category: true,
+        stockByStore: { include: { store: true } },
+      },
+    }),
+    prisma.storeLocation.findMany({ orderBy: { city: "asc" } }),
+  ]);
 
   if (!product) notFound();
+
+  // WhatsApp chooser reads the same StoreLocation rows the admin panel edits.
+  // Phones are typed free-form in the admin (e.g. "0812-3456-7890"); normalize
+  // to the wa.me format here, and an empty/invalid one shows as "Segera hadir".
+  const storeContacts = storeLocations.map((s) => ({
+    id: s.id,
+    name: s.name,
+    area: `${s.address}, ${s.city}`,
+    whatsapp: normalizePhone(s.phone ?? "") ?? "",
+  }));
 
   const wishlisted = userId
     ? !!(await prisma.wishlistItem.findUnique({
@@ -75,6 +89,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             isLoggedIn={isLoggedIn}
             initialWishlisted={wishlisted}
             stock={product.stock}
+            stores={storeContacts}
           />
         </div>
 

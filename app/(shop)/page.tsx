@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import ProductCard from "@/components/ProductCard";
 import OnboardingTour from "@/components/OnboardingTour";
+import CategoryDropdown from "@/components/CategoryDropdown";
+import Reveal from "@/components/Reveal";
 import Image from "next/image";
 import { formatIDR } from "@/lib/format";
 
@@ -76,6 +78,7 @@ export default async function HomePage({
 
             {/* 2. Hot Deals Widget (without countdown) */}
             {hotDealProduct && (
+              <Reveal>
               <div className="border border-slate-200 bg-white rounded-md p-4 flex flex-col items-center text-center shadow-sm">
                 <div className="border-b border-slate-100 pb-2 w-full text-left font-display text-sm font-bold text-bimbi-pink flex items-center justify-between">
                   <span>🔥 PROMO HITS</span>
@@ -132,10 +135,12 @@ export default async function HomePage({
                   Detail Mainan
                 </Link>
               </div>
+              </Reveal>
             )}
 
             {/* 3. Special Offers Recommendations */}
             {specialOffers.length > 0 && (
+              <Reveal delay={100}>
               <div className="border border-slate-200 bg-white rounded-md p-4 shadow-sm">
                 <h4 className="border-b border-slate-100 pb-2 font-display text-sm font-bold text-bimbi-grape uppercase tracking-wider">
                   Rekomendasi
@@ -178,6 +183,7 @@ export default async function HomePage({
                   })}
                 </div>
               </div>
+              </Reveal>
             )}
           </aside>
 
@@ -186,6 +192,10 @@ export default async function HomePage({
 
             {/* 1. Hero Banner */}
             <div className="relative overflow-hidden rounded-md bg-white border border-slate-100 shadow-sm min-h-[300px] flex flex-col sm:flex-row items-center justify-between p-6 sm:p-8 md:p-10 gap-6">
+              {/* Floating toys — decorative, kept behind and to the right of the text */}
+              <span aria-hidden className="animate-float pointer-events-none select-none absolute right-6 top-8 text-6xl opacity-20">🧸</span>
+              <span aria-hidden className="animate-float-slow pointer-events-none select-none absolute right-28 bottom-8 text-5xl opacity-15">🚂</span>
+              <span aria-hidden className="animate-float pointer-events-none select-none absolute right-44 top-16 text-4xl opacity-10" style={{ animationDelay: "2.5s" }}>🎈</span>
               <div className="flex-1 space-y-4 max-w-md text-left z-10">
                 <span className="text-xs font-bold uppercase tracking-widest text-bimbi-pink bg-red-50 px-2.5 py-1 rounded-full">
                   Tentang Bimbi Toys
@@ -208,6 +218,7 @@ export default async function HomePage({
             </div>
 
             {/* 3. Catalog Section with Tab Bar */}
+            <Reveal>
             <section id="katalog" className="scroll-mt-6 border border-slate-200 bg-white rounded-md p-4 sm:p-6 shadow-sm">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-4 mb-6 gap-4">
                 <h3 className="font-display text-lg font-bold text-slate-800 uppercase tracking-wider">
@@ -216,30 +227,11 @@ export default async function HomePage({
                     : "Semua Koleksi Mainan"}
                 </h3>
 
-                {/* Horizontal Category Tabs */}
-                <div className="flex flex-wrap gap-2 text-xs font-bold">
-                  <Link
-                    href="/"
-                    className={`px-3.5 py-2 rounded-full transition-all border ${!category
-                      ? "bg-bimbi-sky text-white border-bimbi-sky"
-                      : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                      }`}
-                  >
-                    Semua
-                  </Link>
-                  {categories.map((c) => (
-                    <Link
-                      key={c.id}
-                      href={`/?category=${c.slug}`}
-                      className={`px-3.5 py-2 rounded-full transition-all border ${category === c.slug
-                        ? "bg-bimbi-sky text-white border-bimbi-sky"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                        }`}
-                    >
-                      {c.name}
-                    </Link>
-                  ))}
-                </div>
+                {/* Category filter dropdown — stays tidy however many categories exist */}
+                <CategoryDropdown
+                  categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name, emoji: c.emoji }))}
+                  current={category}
+                />
               </div>
 
               {products.length === 0 ? (
@@ -264,6 +256,7 @@ export default async function HomePage({
                 </div>
               )}
             </section>
+            </Reveal>
 
           </main>
 

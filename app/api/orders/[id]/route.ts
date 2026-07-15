@@ -16,5 +16,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Pesanan tidak ditemukan." }, { status: 404 });
   }
 
+  // Buyer-arranged courier: withhold the pickup store until staff mark the
+  // order ready. The buyer can't book a courier early because the address
+  // never reaches the browser — not even in the JSON.
+  if (
+    order.fulfillment === "SELF_COURIER" &&
+    ["PENDING_PAYMENT", "PAID", "PACKED"].includes(order.status)
+  ) {
+    return NextResponse.json({ ...order, store: null });
+  }
+
   return NextResponse.json(order);
 }

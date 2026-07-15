@@ -145,6 +145,7 @@ model Address {
 enum FulfillmentType {
   PICKUP
   SHIPPING
+  SELF_COURIER
 }
 
 enum OrderStatus {
@@ -171,6 +172,7 @@ model Order {
   address         Address?        @relation(fields: [addressId], references: [id])
   shippingCourier String?         // e.g. "JNE REG", "SiCepat BEST"
   shippingCost    Int             @default(0)
+  contactPhone    String?         // buyer's WA number, captured at checkout (62xxx format)
   subtotal        Int
   total           Int
   status          OrderStatus     @default(PENDING_PAYMENT)

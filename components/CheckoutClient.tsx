@@ -4,20 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { formatIDR } from "@/lib/format";
-import type { ShippingOption } from "@/lib/shipping";
+import { normalizePhone } from "@/lib/phone";
 
 type Store = { id: string; name: string; city: string; address: string };
-type Address = {
-  id: string;
-  label: string;
-  recipient: string;
-  phone: string;
-  city: string;
-  province: string;
-  district: string;
-  postalCode: string;
-  detail: string;
-};
 type CartItem = {
   id: string;
   quantity: number;
@@ -28,21 +17,17 @@ export default function CheckoutClient({
   cartItems,
   subtotal,
   stores,
-  addresses,
+  userPhone,
 }: {
   cartItems: CartItem[];
   subtotal: number;
   stores: Store[];
-  addresses: Address[];
+  userPhone: string | null;
 }) {
   const router = useRouter();
-  const [fulfillment, setFulfillment] = useState<"PICKUP" | "SHIPPING">("PICKUP");
+  const [fulfillment, setFulfillment] = useState<"PICKUP" | "SELF_COURIER">("PICKUP");
+  const [contactPhone, setContactPhone] = useState(userPhone ?? "");
   const [storeId, setStoreId] = useState(stores[0]?.id ?? "");
-  const [addressId, setAddressId] = useState(addresses[0]?.id ?? "");
-  const [showAddressForm, setShowAddressForm] = useState(addresses.length === 0);
-  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
-  const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
-  const [loadingShipping, setLoadingShipping] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [qrisUrl, setQrisUrl] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -50,8 +35,8 @@ export default function CheckoutClient({
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const selectedAddress = addresses.find((a) => a.id === addressId);
-  const total = subtotal + (fulfillment === "SHIPPING" ? selectedShipping?.cost ?? 0 : 0);
+  const normalizedPhone = normalizePhone(contactPhone);
+  const total = subtotal;
 
   // Poll order status every 3 seconds while QRIS is shown
   useEffect(() => {
@@ -94,35 +79,6 @@ export default function CheckoutClient({
     }
   }, [paymentStatus, orderId, router]);
 
-  async function fetchShipping(city: string) {
-    setLoadingShipping(true);
-    const res = await fetch("/api/shipping-cost", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ city, weightGrams: cartItems.length * 500 }),
-    });
-    const data = await res.json();
-    setShippingOptions(data);
-    setSelectedShipping(data[0] ?? null);
-    setLoadingShipping(false);
-  }
-
-  async function saveAddress(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    const payload = Object.fromEntries(form.entries());
-    const res = await fetch("/api/addresses", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const newAddress = await res.json();
-    setAddressId(newAddress.id);
-    setShowAddressForm(false);
-    fetchShipping(newAddress.city);
-    router.refresh();
-  }
-
   async function placeOrder() {
     setPlacing(true);
     setError(null);
@@ -131,10 +87,8 @@ export default function CheckoutClient({
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         fulfillment,
-        storeId: fulfillment === "PICKUP" ? storeId : undefined,
-        addressId: fulfillment === "SHIPPING" ? addressId : undefined,
-        shippingCourier: selectedShipping ? `${selectedShipping.courier} ${selectedShipping.service}` : undefined,
-        shippingCost: selectedShipping?.cost ?? 0,
+        storeId,
+        contactPhone: fulfillment === "SELF_COURIER" ? normalizedPhone : undefined,
       }),
     });
     const data = await res.json();
@@ -226,37 +180,37 @@ export default function CheckoutClient({
         {/* Fulfillment choice */}
         <div className="rounded-2xl bg-white toy-shelf p-5">
           <p className="font-display text-lg mb-3">Cara Terima Barang</p>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => setFulfillment("PICKUP")}
-              className={`flex-1 rounded-2xl border-2 px-4 py-3 font-bold text-left transition-colors ${fulfillment === "PICKUP" ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
+              className={`chip-spring flex-1 rounded-2xl border-2 px-4 py-3 font-bold text-left transition-colors ${fulfillment === "PICKUP" ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
                 }`}
             >
               🏪 Ambil di Toko
               <p className="text-xs font-normal text-bimbi-ink/50 mt-1">Gratis, ambil sendiri</p>
             </button>
             <button
-              onClick={() => {
-                setFulfillment("SHIPPING");
-                if (selectedAddress) fetchShipping(selectedAddress.city);
-              }}
-              className={`flex-1 rounded-2xl border-2 px-4 py-3 font-bold text-left transition-colors ${fulfillment === "SHIPPING" ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
+              onClick={() => setFulfillment("SELF_COURIER")}
+              className={`chip-spring flex-1 rounded-2xl border-2 px-4 py-3 font-bold text-left transition-colors ${fulfillment === "SELF_COURIER" ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
                 }`}
             >
-              🚚 Dikirim ke Rumah
-              <p className="text-xs font-normal text-bimbi-ink/50 mt-1">Bayar ongkir sesuai kurir</p>
+              🛵 Pesan Kurir Sendiri
+              <p className="text-xs font-normal text-bimbi-ink/50 mt-1">
+                Kamu pesan GoSend/Grab sendiri, bayar ke kurir
+              </p>
             </button>
           </div>
         </div>
 
-        {fulfillment === "PICKUP" && (
-          <div className="rounded-2xl bg-white toy-shelf p-5">
-            <p className="font-display text-lg mb-3">Pilih Toko</p>
+        <div className="rounded-2xl bg-white toy-shelf p-5">
+            <p className="font-display text-lg mb-3">
+              {fulfillment === "PICKUP" ? "Pilih Toko" : "Pilih Toko Tempat Kurir Ambil Barang"}
+            </p>
             <div className="space-y-2">
               {stores.map((s) => (
                 <label
                   key={s.id}
-                  className={`flex items-start gap-3 rounded-xl border-2 p-3 cursor-pointer ${storeId === s.id ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
+                  className={`chip-spring flex items-start gap-3 rounded-xl border-2 p-3 cursor-pointer ${storeId === s.id ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
                     }`}
                 >
                   <input
@@ -273,98 +227,39 @@ export default function CheckoutClient({
                 </label>
               ))}
             </div>
-          </div>
-        )}
 
-        {fulfillment === "SHIPPING" && (
-          <div className="rounded-2xl bg-white toy-shelf p-5">
-            <p className="font-display text-lg mb-3">Alamat Pengiriman</p>
-
-            {!showAddressForm && addresses.length > 0 && (
-              <div className="space-y-2 mb-3">
-                {addresses.map((a) => (
-                  <label
-                    key={a.id}
-                    className={`flex items-start gap-3 rounded-xl border-2 p-3 cursor-pointer ${addressId === a.id ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
-                      }`}
-                  >
-                    <input
-                      type="radio"
-                      name="address"
-                      checked={addressId === a.id}
-                      onChange={() => {
-                        setAddressId(a.id);
-                        fetchShipping(a.city);
-                      }}
-                      className="mt-1"
-                    />
-                    <div>
-                      <p className="font-bold">{a.label} — {a.recipient}</p>
-                      <p className="text-sm text-bimbi-ink/60">
-                        {a.detail}, {a.district}, {a.city}, {a.province} {a.postalCode}
-                      </p>
-                      <p className="text-sm text-bimbi-ink/60">{a.phone}</p>
-                    </div>
+            {fulfillment === "SELF_COURIER" && (
+              <div className="mt-4 space-y-3">
+                <div>
+                  <label htmlFor="contactPhone" className="font-display text-base block mb-1">
+                    No. WhatsApp Kamu
                   </label>
-                ))}
-                <button
-                  onClick={() => setShowAddressForm(true)}
-                  className="text-sm font-bold text-bimbi-grape hover:underline"
-                >
-                  + Tambah alamat baru
-                </button>
-              </div>
-            )}
-
-            {showAddressForm && (
-              <form onSubmit={saveAddress} className="grid sm:grid-cols-2 gap-3">
-                <input name="label" placeholder="Label (Rumah/Kantor)" required className="rounded-xl border-2 border-bimbi-ink/10 px-3 py-2 sm:col-span-2" />
-                <input name="recipient" placeholder="Nama penerima" required className="rounded-xl border-2 border-bimbi-ink/10 px-3 py-2" />
-                <input name="phone" placeholder="No. HP" required className="rounded-xl border-2 border-bimbi-ink/10 px-3 py-2" />
-                <input name="province" placeholder="Provinsi" required className="rounded-xl border-2 border-bimbi-ink/10 px-3 py-2" />
-                <input name="city" placeholder="Kota/Kabupaten" required className="rounded-xl border-2 border-bimbi-ink/10 px-3 py-2" />
-                <input name="district" placeholder="Kecamatan" required className="rounded-xl border-2 border-bimbi-ink/10 px-3 py-2" />
-                <input name="postalCode" placeholder="Kode Pos" required className="rounded-xl border-2 border-bimbi-ink/10 px-3 py-2" />
-                <textarea name="detail" placeholder="Nama jalan, no. rumah, patokan" required className="rounded-xl border-2 border-bimbi-ink/10 px-3 py-2 sm:col-span-2" />
-                <button className="sm:col-span-2 rounded-full bg-bimbi-grape px-4 py-2 font-bold text-white">
-                  Simpan Alamat
-                </button>
-              </form>
-            )}
-
-            {selectedAddress && !showAddressForm && (
-              <div className="mt-4">
-                <p className="font-display text-base mb-2">Pilih Kurir</p>
-                {loadingShipping && <p className="text-sm text-bimbi-ink/50">Menghitung ongkir...</p>}
-                <div className="space-y-2">
-                  {shippingOptions.map((opt) => (
-                    <label
-                      key={`${opt.courier}-${opt.service}`}
-                      className={`flex justify-between items-center rounded-xl border-2 p-3 cursor-pointer ${selectedShipping?.courier === opt.courier && selectedShipping?.service === opt.service
-                        ? "border-bimbi-pink bg-bimbi-pink/5"
-                        : "border-bimbi-ink/10"
-                        }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="shipping"
-                          checked={selectedShipping?.courier === opt.courier && selectedShipping?.service === opt.service}
-                          onChange={() => setSelectedShipping(opt)}
-                        />
-                        <div>
-                          <p className="font-bold">{opt.courier} {opt.service}</p>
-                          <p className="text-xs text-bimbi-ink/50">Estimasi {opt.etaDays}</p>
-                        </div>
-                      </div>
-                      <span className="font-bold">{formatIDR(opt.cost)}</span>
-                    </label>
-                  ))}
+                  <input
+                    id="contactPhone"
+                    type="tel"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    placeholder="0812-3456-7890"
+                    className="w-full rounded-xl border-2 border-bimbi-ink/10 px-3 py-2"
+                  />
+                  {contactPhone.trim() !== "" && (
+                    <p className={`mt-1 text-xs font-semibold ${normalizedPhone ? "text-bimbi-mint" : "text-red-500"}`}>
+                      {normalizedPhone
+                        ? `✓ Kami akan hubungi kamu di +${normalizedPhone}`
+                        : "Nomor belum valid — contoh: 0812-3456-7890"}
+                    </p>
+                  )}
+                </div>
+                <div className="rounded-xl bg-amber-50 border-2 border-amber-200 p-3 text-sm text-amber-800">
+                  <p className="font-bold">🙅 Jangan pesan kurir dulu ya!</p>
+                  <p className="mt-1">
+                    Tunggu sampai status pesananmu <span className="font-bold">"Siap Diambil Kurir"</span> —
+                    kami kabari via WhatsApp. Alamat pickup &amp; kode pesanan baru muncul setelah barang siap.
+                  </p>
                 </div>
               </div>
             )}
-          </div>
-        )}
+        </div>
 
         {error && <p className="text-sm font-semibold text-red-500">{error}</p>}
       </div>
@@ -385,10 +280,10 @@ export default function CheckoutClient({
             <span>Subtotal</span>
             <span>{formatIDR(subtotal)}</span>
           </div>
-          {fulfillment === "SHIPPING" && (
+          {fulfillment === "SELF_COURIER" && (
             <div className="flex justify-between text-sm">
               <span>Ongkir</span>
-              <span>{formatIDR(selectedShipping?.cost ?? 0)}</span>
+              <span className="text-bimbi-ink/60">Bayar langsung ke kurir 🛵</span>
             </div>
           )}
           <div className="flex justify-between font-display text-lg text-bimbi-pink-dark pt-2">
@@ -398,7 +293,7 @@ export default function CheckoutClient({
         </div>
         <button
           onClick={placeOrder}
-          disabled={placing || (fulfillment === "SHIPPING" && (!selectedAddress || !selectedShipping))}
+          disabled={placing || !storeId || (fulfillment === "SELF_COURIER" && !normalizedPhone)}
           className="mt-5 w-full rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white shadow-[0_4px_0_var(--color-bimbi-pink-dark)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform disabled:opacity-50"
         >
           {placing ? "Membuat Pesanan..." : "Bayar dengan QRIS"}

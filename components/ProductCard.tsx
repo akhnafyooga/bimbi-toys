@@ -16,7 +16,7 @@ export default function ProductCard({ slug, name, price, compareAtPrice, imageUr
   return (
     <Link
       href={`/product/${slug}`}
-      className="group block rounded-md bg-white border border-slate-100 hover:border-bimbi-sky/20 p-3.5 shadow-card shadow-card-hover flex flex-col justify-between"
+      className="group block rounded-md bg-white border border-slate-100 hover:border-bimbi-sky/20 p-3.5 shadow-card shadow-card-hover card-lively flex flex-col justify-between"
     >
       <div>
         <div className="relative aspect-square overflow-hidden rounded-lg bg-slate-50 flex items-center justify-center">

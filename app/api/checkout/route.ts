@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createQrisTransaction } from "@/lib/midtrans";
+import { normalizePhone } from "@/lib/phone";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -9,11 +10,12 @@ export async function POST(req: Request) {
 
   const userId = (session.user as { id: string }).id;
   const body = await req.json() as {
-    fulfillment: "PICKUP" | "SHIPPING";
+    fulfillment: "PICKUP" | "SHIPPING" | "SELF_COURIER";
     storeId?: string;
     addressId?: string;
     shippingCourier?: string;
     shippingCost?: number;
+    contactPhone?: string;
   };
 
   const cartItems = await prisma.cartItem.findMany({
@@ -31,6 +33,21 @@ export async function POST(req: Request) {
   if (body.fulfillment === "SHIPPING" && !body.addressId) {
     return NextResponse.json({ error: "Pilih atau tambahkan alamat pengiriman dulu." }, { status: 400 });
   }
+  // Buyer-arranged courier: needs the pickup store and a working WA number,
+  // validated server-side — the UI check alone can't be trusted.
+  let contactPhone: string | null = null;
+  if (body.fulfillment === "SELF_COURIER") {
+    if (!body.storeId) {
+      return NextResponse.json({ error: "Pilih dulu toko tempat kurir mengambil barang." }, { status: 400 });
+    }
+    contactPhone = normalizePhone(body.contactPhone ?? "");
+    if (!contactPhone) {
+      return NextResponse.json(
+        { error: "Nomor WhatsApp tidak valid. Contoh format: 0812-3456-7890." },
+        { status: 400 }
+      );
+    }
+  }
 
   const subtotal = cartItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
   const shippingCost = body.fulfillment === "SHIPPING" ? body.shippingCost ?? 0 : 0;
@@ -45,9 +62,10 @@ export async function POST(req: Request) {
       orderNumber,
       userId,
       fulfillment: body.fulfillment,
-      storeId: body.fulfillment === "PICKUP" ? body.storeId : undefined,
+      storeId: body.fulfillment !== "SHIPPING" ? body.storeId : undefined,
       addressId: body.fulfillment === "SHIPPING" ? body.addressId : undefined,
-      shippingCourier: body.shippingCourier,
+      contactPhone,
+      shippingCourier: body.fulfillment === "SHIPPING" ? body.shippingCourier : undefined,
       shippingCost,
       subtotal,
       total,
@@ -62,6 +80,11 @@ export async function POST(req: Request) {
   });
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  // Remember the buyer's WA number on their profile so it pre-fills next time.
+  if (contactPhone && !user?.phone) {
+    await prisma.user.update({ where: { id: userId }, data: { phone: contactPhone } });
+  }
 
   let transactionId: string;
   let qrisUrl: string | undefined;

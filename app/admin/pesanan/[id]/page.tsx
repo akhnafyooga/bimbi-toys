@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatIDR, formatDateTimeID } from "@/lib/format";
-import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE_CLASS, getNextStatus } from "@/lib/orderStatus";
+import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE_CLASS, getNextStatus, orderStatusLabel } from "@/lib/orderStatus";
 import AdvanceOrderStatusButton from "@/components/admin/AdvanceOrderStatusButton";
+import { waLink } from "@/lib/storeContacts";
+import { displayPhone } from "@/lib/phone";
 
 export default async function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,9 +32,32 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           <p className="text-slate-500 text-sm mt-1">Dipesan {formatDateTimeID(order.createdAt)}</p>
         </div>
         <span className={`text-sm font-bold px-3 py-1.5 rounded-full ${ORDER_STATUS_BADGE_CLASS[order.status]}`}>
-          {ORDER_STATUS_LABEL[order.status]}
+          {orderStatusLabel(order.status, order.fulfillment)}
         </span>
       </div>
+
+      {/* Self-courier order ready: nudge the buyer to book their courier */}
+      {order.fulfillment === "SELF_COURIER" && order.status === "READY_FOR_PICKUP" && order.contactPhone && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-emerald-800">📲 Kabari pembeli via WhatsApp</p>
+            <p className="text-sm text-emerald-700/80 mt-0.5">
+              Barang sudah siap — kirim pesan supaya pembeli memesan kurirnya sekarang.
+            </p>
+          </div>
+          <a
+            href={waLink(
+              order.contactPhone,
+              `Halo ${order.user.name}! Pesananmu ${order.orderNumber} di Bimbi Toys sudah siap 🎉 Silakan pesan GoSend/GrabExpress sekarang ya — alamat pickup & kode pesanan ada di halaman pesananmu.`
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-sm px-5 py-2.5 rounded-md transition-colors"
+          >
+            💬 Kirim WA ke {displayPhone(order.contactPhone)}
+          </a>
+        </div>
+      )}
 
       {/* Prominent next-action */}
       {nextAction ? (
@@ -61,14 +86,22 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           <h2 className="font-display font-bold text-slate-800 mb-3">👤 Pelanggan</h2>
           <p className="text-sm text-slate-700 font-semibold">{order.user.name}</p>
           <p className="text-sm text-slate-500">{order.user.email}</p>
-          {order.user.phone && <p className="text-sm text-slate-500">{order.user.phone}</p>}
+          {order.contactPhone ? (
+            <p className="text-sm text-slate-500">WA: {displayPhone(order.contactPhone)}</p>
+          ) : (
+            order.user.phone && <p className="text-sm text-slate-500">{order.user.phone}</p>
+          )}
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
           <h2 className="font-display font-bold text-slate-800 mb-3">
-            {order.fulfillment === "PICKUP" ? "🏬 Ambil di Toko" : "🚚 Dikirim ke Alamat"}
+            {order.fulfillment === "PICKUP"
+              ? "🏬 Ambil di Toko"
+              : order.fulfillment === "SELF_COURIER"
+                ? "🛵 Kurir Sendiri — Pickup di Toko"
+                : "🚚 Dikirim ke Alamat"}
           </h2>
-          {order.fulfillment === "PICKUP" && order.store ? (
+          {order.fulfillment !== "SHIPPING" && order.store ? (
             <>
               <p className="text-sm text-slate-700 font-semibold">{order.store.name}</p>
               <p className="text-sm text-slate-500">{order.store.address}, {order.store.city}</p>

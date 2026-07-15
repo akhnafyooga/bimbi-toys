@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatIDR, formatDateTimeID } from "@/lib/format";
-import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE_CLASS } from "@/lib/orderStatus";
+import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE_CLASS, orderStatusLabel } from "@/lib/orderStatus";
 import { ORDERS_PER_PAGE } from "@/lib/constants";
 import Pagination from "@/components/admin/Pagination";
 import EmptyState from "@/components/admin/EmptyState";
@@ -128,6 +128,9 @@ export default async function AdminOrdersPage({
                       <Link href={`/admin/pesanan/${o.id}`} className="font-semibold text-bimbi-sky hover:underline">
                         {o.orderNumber}
                       </Link>
+                      {o.fulfillment === "SELF_COURIER" && (
+                        <span className="ml-1.5" title="Pembeli pesan kurir sendiri">🛵</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       <p>{o.user.name}</p>
@@ -137,7 +140,7 @@ export default async function AdminOrdersPage({
                     <td className="px-4 py-3 font-semibold text-slate-800">{formatIDR(o.total)}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${ORDER_STATUS_BADGE_CLASS[o.status]}`}>
-                        {ORDER_STATUS_LABEL[o.status]}
+                        {orderStatusLabel(o.status, o.fulfillment)}
                       </span>
                     </td>
                   </tr>
