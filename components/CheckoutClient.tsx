@@ -294,7 +294,7 @@ export default function CheckoutClient({
         <button
           onClick={placeOrder}
           disabled={placing || !storeId || (fulfillment === "SELF_COURIER" && !normalizedPhone)}
-          className="mt-5 w-full rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white shadow-[0_4px_0_var(--color-bimbi-pink-dark)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform disabled:opacity-50"
+          className="mt-5 w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-6 py-3 font-extrabold text-white transition-colors chip-spring disabled:opacity-50"
         >
           {placing ? "Membuat Pesanan..." : "Bayar dengan QRIS"}
         </button>

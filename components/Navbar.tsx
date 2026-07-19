@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import Image from "next/image";
 import { formatIDR } from "@/lib/format";
 import CategoryNav from "@/components/CategoryNav";
 import CartBadge from "@/components/CartBadge";
+import BrandLogo from "@/components/BrandLogo";
+import AppIcon from "@/components/AppIcon";
 
 export default async function Navbar() {
   const session = await auth();
   const userId = session?.user ? (session.user as { id: string }).id : null;
 
-  const [cartCount, wishlistCount, categories, cartItems] = await Promise.all([
+  const [cartCount, wishlistCount, categories, cartItems, defaultStore] = await Promise.all([
     userId ? prisma.cartItem.count({ where: { userId } }) : 0,
     userId ? prisma.wishlistItem.count({ where: { userId } }) : 0,
     prisma.category.findMany({ orderBy: { name: "asc" } }),
@@ -20,97 +21,52 @@ export default async function Navbar() {
           include: { product: true },
         })
       : [],
+    prisma.storeLocation.findFirst({ orderBy: { city: "asc" } }),
   ]);
 
   const cartTotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   return (
     <header className="w-full z-50 flex flex-col bg-white">
-      {/* 1. TOP UTILITY BAR (Navy Blue) */}
-      <div className="w-full bg-bimbi-grape text-white text-[13px] border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2 flex justify-between items-center gap-2">
-          {/* Left info (desktop only) */}
-          <div className="hidden md:flex items-center gap-4 text-white/80">
-            <span>+62 812-3456-7890</span>
-          </div>
-
-          {/* Mobile: greeting on the left */}
-          <div className="md:hidden text-white/90 font-semibold truncate">
-            {session?.user ? `Hai, ${session.user.name?.split(" ")[0]}!` : ""}
-          </div>
-
-          {/* Right menu: full words on desktop, compact icon+badge row on phones */}
-          <div className="flex items-center gap-5 sm:gap-6 font-semibold">
-            <Link href="/stores" className="hover:text-bimbi-pink transition-colors chip-spring">
-              📍<span className="hidden sm:inline"> Toko Kami</span>
-            </Link>
-            <span className="hidden sm:inline text-white/20">|</span>
-            <Link href="/wishlist" className="hover:text-bimbi-pink transition-colors chip-spring relative flex items-center gap-1">
-              💖<span className="hidden sm:inline"> Wishlist ({wishlistCount})</span>
-              <span className="sm:hidden">
-                <CartBadge count={wishlistCount} variant="bubble" />
-              </span>
-            </Link>
-            <span className="hidden sm:inline text-white/20">|</span>
-            <Link href="/cart" className="hover:text-bimbi-pink transition-colors chip-spring relative flex items-center gap-1">
-              🛒<span className="hidden sm:inline"> Keranjang <CartBadge count={cartCount} variant="inline" /></span>
-              <span className="sm:hidden">
-                <CartBadge count={cartCount} variant="bubble" />
-              </span>
-            </Link>
-            <span className="hidden sm:inline text-white/20">|</span>
-            {session?.user ? (
-              <div className="flex items-center gap-3">
-                <span className="hidden sm:inline text-white/90">
-                  Hai, {session.user.name?.split(" ")[0]}!
-                </span>
-                <form
-                  action={async () => {
-                    "use server";
-                    await signOut({ redirectTo: "/" });
-                  }}
-                  className="inline"
-                >
-                  <button className="text-[13px] font-bold text-bimbi-pink hover:underline cursor-pointer">
-                    Keluar
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <Link href="/login" className="hover:text-bimbi-pink transition-colors font-bold">
-                Masuk / Daftar
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 2. MIDDLE BRANDING ROW (White) */}
-      <div className="w-full border-b border-slate-100">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
-          {/* Logo on the left */}
-          <Link href="/" className="flex items-center gap-2 shrink-0 group">
-            <Image
-              src="/logo.png"
-              alt="Bimbi Toys"
-              width={200}
-              height={80}
-              className="h-14 w-auto object-contain transition-transform group-hover:scale-105"
-              priority
-            />
+      {/* ROW 1 — solid blue brand bar: logo, store pill, search, account/cart */}
+      <div className="w-full bg-bimbi-pink text-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {/* Logo slot (user artwork goes in public/brand/) */}
+          <Link
+            href="/"
+            className="shrink-0 chip-spring bg-white rounded-md px-2 py-1 flex items-center"
+            title="Bimbi Toys"
+          >
+            <BrandLogo variant="mark" height={36} />
           </Link>
 
-          {/* Search bar with Categories Dropdown */}
+          {/* Store pickup pill */}
+          {defaultStore && (
+            <Link
+              href="/stores"
+              className="hidden lg:flex items-center gap-2 rounded-full bg-bimbi-pink-dark/60 hover:bg-bimbi-pink-dark px-4 py-2 text-sm font-bold transition-colors chip-spring"
+            >
+              <AppIcon name="location" size={22} />
+              <span className="flex flex-col leading-tight text-left">
+                <span>Ambil di toko</span>
+                <span className="text-[11px] font-normal text-white/80">
+                  {defaultStore.name} · {defaultStore.city}
+                </span>
+              </span>
+            </Link>
+          )}
+
+          {/* Search — big white pill */}
           <form
             id="tour-search"
             action="/search"
-            className="flex w-full max-w-2xl border-2 border-bimbi-sky rounded-md overflow-hidden bg-white shadow-sm"
+            className="order-last w-full md:order-none md:w-auto md:flex-1 flex items-center rounded-full bg-white overflow-hidden"
           >
             <select
               name="category"
-              className="bg-slate-50 border-r border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none hover:bg-slate-100 cursor-pointer max-w-[150px] sm:max-w-none font-semibold rounded-none"
+              className="hidden sm:block bg-transparent text-slate-600 text-xs font-bold pl-4 pr-2 py-2.5 outline-none cursor-pointer max-w-[140px]"
             >
-              <option value="">Semua Kategori</option>
+              <option value="">Semua</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.slug}>
                   {c.name}
@@ -120,42 +76,91 @@ export default async function Navbar() {
             <input
               type="text"
               name="q"
-              placeholder="Cari mainan favoritmu di sini..."
-              className="flex-1 px-4 py-2 text-sm outline-none placeholder:text-slate-400 text-bimbi-ink"
+              placeholder="Cari semua di Bimbi Toys online dan di toko"
+              className="flex-1 px-4 py-2.5 text-sm text-bimbi-ink outline-none placeholder:text-slate-400 bg-transparent"
             />
             <button
               type="submit"
-              className="bg-bimbi-sky hover:bg-blue-800 text-white px-6 py-2.5 font-bold text-sm transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+              aria-label="Cari"
+              className="m-1 h-8 w-8 shrink-0 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center transition-colors btn-press"
             >
-              Cari 🔍
+              <AppIcon name="search" size={18} />
             </button>
           </form>
 
-          {/* Cart Box (Green) — desktop only; phones use the 🛒 badge above */}
-          <Link
-            id="tour-cart"
-            href="/cart"
-            className="hidden md:flex items-center gap-3 bg-bimbi-mint hover:bg-emerald-600 text-white px-5 py-2.5 rounded-md font-bold text-sm transition-colors shadow-sm shrink-0 chip-spring"
-          >
-            <span className="text-lg">🛒</span>
-            <div className="flex flex-col text-left">
-              <span className="text-[10px] uppercase tracking-wider text-emerald-100 font-semibold leading-tight">Keranjang</span>
-              <span className="text-xs leading-none">
-                {cartCount > 0 ? `${cartCount} item - ${formatIDR(cartTotal)}` : "Kosong"}
+          {/* Right cluster */}
+          <div className="ml-auto flex items-center gap-4 sm:gap-5 text-sm font-semibold">
+            <Link
+              href="/wishlist"
+              className="relative flex items-center gap-2 hover:underline chip-spring"
+              title="Wishlist"
+            >
+              <AppIcon name="wishlist" size={22} />
+              <span className="hidden xl:flex flex-col leading-tight text-left">
+                <span className="text-[11px] font-normal text-white/80">Disimpan</span>
+                <span>Wishlist</span>
               </span>
-            </div>
-          </Link>
+              <span className="xl:hidden">
+                <CartBadge count={wishlistCount} variant="bubble" />
+              </span>
+            </Link>
+
+            {session?.user ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden xl:flex flex-col leading-tight text-left">
+                  <span className="text-[11px] font-normal text-white/80">
+                    Hai, {session.user.name?.split(" ")[0]}!
+                  </span>
+                  <span>Akunmu</span>
+                </span>
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/" });
+                  }}
+                  className="inline"
+                >
+                  <button className="font-bold text-wm-yellow hover:underline cursor-pointer">
+                    Keluar
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <Link href="/login" className="flex items-center gap-2 hover:underline chip-spring">
+                <span className="text-lg">👤</span>
+                <span className="hidden xl:flex flex-col leading-tight text-left">
+                  <span className="text-[11px] font-normal text-white/80">Masuk</span>
+                  <span>Akun</span>
+                </span>
+              </Link>
+            )}
+
+            <Link
+              id="tour-cart"
+              href="/cart"
+              className="relative flex flex-col items-center leading-tight hover:underline chip-spring"
+              title="Keranjang"
+            >
+              <span className="relative">
+                <AppIcon name="cart" size={26} />
+                <CartBadge count={cartCount} variant="bubble" />
+              </span>
+              <span className="text-[11px] font-bold mt-0.5">
+                {cartCount > 0 ? formatIDR(cartTotal) : "Rp 0"}
+              </span>
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* 3. BOTTOM NAVIGATION BAR (Primary Blue) */}
-      <div className="w-full bg-bimbi-sky text-white">
+      {/* ROW 2 — white category strip (sliding, with arrows) */}
+      <div className="w-full bg-white border-b border-slate-200 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center">
           <CategoryNav categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }))} />
           <div className="hidden lg:flex items-center shrink-0">
             <Link
               href="/#katalog"
-              className="bg-bimbi-pink hover:bg-bimbi-pink-dark px-4 py-3.5 font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-1"
+              className="px-4 py-3 font-bold text-xs uppercase tracking-wider text-wm-red hover:underline transition-colors"
             >
               Penawaran Hari Ini
             </Link>

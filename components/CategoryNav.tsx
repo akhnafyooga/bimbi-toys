@@ -5,8 +5,8 @@ import { useRef } from "react";
 
 type Category = { id: string; slug: string; name: string };
 
-// The orange category bar: one sliding row on every screen size.
-// Desktop gets ‹ › arrow buttons; on touch you just swipe.
+// The category strip: one sliding row on every screen size, Walmart-style
+// dark links on white. Desktop gets ‹ › arrow buttons; on touch you swipe.
 export default function CategoryNav({ categories }: { categories: Category[] }) {
   const rowRef = useRef<HTMLElement>(null);
 
@@ -19,7 +19,7 @@ export default function CategoryNav({ categories }: { categories: Category[] }) 
       <button
         aria-label="Geser kategori ke kiri"
         onClick={() => slide(-1)}
-        className="hidden sm:flex shrink-0 items-center justify-center w-8 self-stretch font-bold text-white/70 hover:text-white hover:bg-blue-800 transition-colors btn-press"
+        className="hidden sm:flex shrink-0 items-center justify-center w-8 self-stretch font-bold text-slate-400 hover:text-bimbi-pink transition-colors btn-press"
       >
         ‹
       </button>
@@ -30,15 +30,15 @@ export default function CategoryNav({ categories }: { categories: Category[] }) 
       >
         <Link
           href="/"
-          className="shrink-0 px-5 py-3.5 font-bold text-sm hover:bg-blue-800 transition-colors border-r border-blue-600/40 chip-spring"
+          className="shrink-0 px-4 py-3 font-bold text-sm text-slate-800 hover:text-bimbi-pink border-b-2 border-transparent hover:border-bimbi-pink transition-colors chip-spring"
         >
-          HOME
+          Home
         </Link>
         {categories.map((c) => (
           <Link
             key={c.id}
             href={`/?category=${c.slug}`}
-            className="shrink-0 px-4 py-3.5 font-semibold text-xs hover:bg-blue-800 transition-colors border-r border-blue-600/40 uppercase chip-spring"
+            className="shrink-0 px-4 py-3 font-semibold text-sm text-slate-600 hover:text-bimbi-pink border-b-2 border-transparent hover:border-bimbi-pink transition-colors chip-spring"
           >
             {c.name}
           </Link>
@@ -48,17 +48,17 @@ export default function CategoryNav({ categories }: { categories: Category[] }) 
       {/* edge fade hints that the row keeps going */}
       <div
         aria-hidden
-        className="pointer-events-none absolute right-8 top-0 bottom-0 w-8 bg-gradient-to-l from-bimbi-sky to-transparent hidden sm:block"
+        className="pointer-events-none absolute right-8 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent hidden sm:block"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-bimbi-sky to-transparent sm:hidden"
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent sm:hidden"
       />
 
       <button
         aria-label="Geser kategori ke kanan"
         onClick={() => slide(1)}
-        className="hidden sm:flex shrink-0 items-center justify-center w-8 self-stretch font-bold text-white/70 hover:text-white hover:bg-blue-800 transition-colors btn-press"
+        className="hidden sm:flex shrink-0 items-center justify-center w-8 self-stretch font-bold text-slate-400 hover:text-bimbi-pink transition-colors btn-press"
       >
         ›
       </button>

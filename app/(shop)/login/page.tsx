@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
+import BrandLogo from "@/components/BrandLogo";
 
 export default async function LoginPage({
   searchParams,
@@ -30,15 +31,18 @@ export default async function LoginPage({
 
   return (
     <div className="mx-auto max-w-md px-4 py-16">
-      <div className="text-center mb-8">
-        <span className="text-5xl">🔑</span>
-        <h1 className="font-display text-3xl mt-2 text-bimbi-pink-dark">Masuk Yuk!</h1>
-        <p className="text-bimbi-ink/60 mt-1">Biar bisa lihat harga & belanja mainan seru</p>
+      {/* Walmart-style minimal centered form */}
+      <div className="text-center mb-8 flex flex-col items-center gap-4">
+        <BrandLogo variant="full" height={44} className="text-slate-400" />
+        <h1 className="text-2xl font-extrabold text-bimbi-ink">Masuk atau buat akunmu</h1>
+        <p className="text-sm text-slate-500 -mt-2 max-w-xs">
+          Masukkan email dan password untuk lihat harga &amp; belanja mainan seru.
+        </p>
       </div>
 
-      <div className="rounded-3xl bg-white toy-shelf p-6 sm:p-8">
+      <div>
         {error && (
-          <div className="mb-4 rounded-xl bg-bimbi-pink/10 border border-bimbi-pink/30 px-4 py-3 text-sm font-semibold text-bimbi-pink-dark animate-pop-in">
+          <div className="mb-4 rounded-lg bg-red-50 border border-wm-red/30 px-4 py-3 text-sm font-semibold text-wm-red animate-pop-in">
             ⚠️ Gagal masuk. Email atau password salah — periksa lagi ya. Belum punya akun?{" "}
             <Link href="/register" className="underline font-bold">
               Daftar dulu di sini
@@ -49,40 +53,46 @@ export default async function LoginPage({
         <form action={login} className="space-y-4">
           <input type="hidden" name="callbackUrl" value={callbackUrl ?? "/"} />
           <div>
-            <label className="text-sm font-bold">Email</label>
+            <label className="text-sm font-extrabold text-bimbi-ink">Email</label>
             <input
               name="email"
               type="email"
               required
               placeholder="kamu@email.com"
-              className="mt-1 w-full rounded-xl border-2 border-bimbi-ink/10 px-4 py-2.5 focus:outline-none focus:border-bimbi-pink"
+              className="mt-1 w-full rounded-lg border border-slate-400 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-bimbi-pink"
             />
           </div>
           <div>
-            <label className="text-sm font-bold">Password</label>
+            <label className="text-sm font-extrabold text-bimbi-ink">Password</label>
             <input
               name="password"
               type="password"
               required
               placeholder="••••••••"
-              className="mt-1 w-full rounded-xl border-2 border-bimbi-ink/10 px-4 py-2.5 focus:outline-none focus:border-bimbi-pink"
+              className="mt-1 w-full rounded-lg border border-slate-400 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-bimbi-pink"
             />
           </div>
-          <button className="w-full rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white shadow-[0_4px_0_var(--color-bimbi-pink-dark)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform">
+          <p className="text-xs text-slate-400">
+            Keamanan data pribadimu adalah prioritas kami.
+          </p>
+          <button className="w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-6 py-3 font-extrabold text-white transition-colors chip-spring">
             Masuk
           </button>
         </form>
-        <p className="text-xs text-center text-bimbi-ink/40 mt-4">
+        <p className="text-xs text-center text-slate-400 mt-4">
           Demo: demo@bimbitoys.id / bimbi123
         </p>
       </div>
 
-      <p className="text-center mt-6 text-sm text-bimbi-ink/70">
-        Belum punya akun?{" "}
-        <Link href="/register" className="font-bold text-bimbi-grape hover:underline">
+      <div className="mt-8 rounded-lg bg-bimbi-sun p-5 text-center">
+        <p className="font-extrabold text-bimbi-ink">Belum punya akun?</p>
+        <Link
+          href="/register"
+          className="mt-3 inline-block rounded-full border border-bimbi-ink px-6 py-2 text-sm font-extrabold text-bimbi-ink hover:bg-white transition-colors chip-spring"
+        >
           Daftar sekarang
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

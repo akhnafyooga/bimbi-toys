@@ -1,22 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --color-bimbi-pink: #ff5e5e;
-  /* Red accent / discount */
-  --color-bimbi-pink-dark: #dc2626;
-  /* Dark Red */
-  --color-bimbi-sky: #fa9150;
-  /* Primary Blue */
-  --color-bimbi-sun: rgba(15, 86, 210, 0.08);
-  /* Light Blue wash */
-  --color-bimbi-grape: #160098;
-  /* Navy Blue */
-  --color-bimbi-cream: #f4f6fa;
-  /* Cool light background */
-  --color-bimbi-ink: #1e293b;
-  /* Slate Ink */
-  --color-bimbi-mint: #10b981;
-  /* Primary Green */
+  /* Walmart-look palette (walmart branch). Token NAMES are kept so every
+     existing bg-bimbi-* / text-bimbi-* class reskins automatically. */
+  --color-bimbi-pink: #0071dc;
+  /* Primary blue — CTAs, links, prices */
+  --color-bimbi-pink-dark: #004c91;
+  /* Darker blue — hover/pressed */
+  --color-bimbi-sky: #0071dc;
+  /* Primary blue (was orange) */
+  --color-bimbi-sun: #e6f1fc;
+  /* Light blue wash */
+  --color-bimbi-grape: #001e60;
+  /* Deep navy */
+  --color-bimbi-cream: #f2f2f2;
+  /* Light gray background */
+  --color-bimbi-ink: #2e2f32;
+  /* Near-black text */
+  --color-bimbi-mint: #2a8703;
+  /* Savings green */
+  --color-wm-yellow: #ffc220;
+  /* Spark yellow accent */
+  --color-wm-red: #de1c24;
+  /* Deal / Rollback-style badge red */
 }
 
 @theme inline {
@@ -28,14 +34,17 @@
   --color-bimbi-cream: var(--color-bimbi-cream);
   --color-bimbi-ink: var(--color-bimbi-ink);
   --color-bimbi-mint: var(--color-bimbi-mint);
-  --font-display: var(--font-baloo);
+  --color-wm-yellow: var(--color-wm-yellow);
+  --color-wm-red: var(--color-wm-red);
+  /* One clean sans everywhere — headings are just heavier weights */
+  --font-display: var(--font-nunito);
   --font-body: var(--font-nunito);
 }
 
 body {
-  background: var(--color-bimbi-cream);
+  background: #ffffff;
   color: var(--color-bimbi-ink);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-nunito), system-ui, sans-serif;
 }
 
 h1,
@@ -43,7 +52,8 @@ h2,
 h3,
 h4,
 .font-display {
-  font-family: var(--font-display), system-ui, sans-serif;
+  font-family: var(--font-nunito), system-ui, sans-serif;
+  font-weight: 800;
 }
 
 /* subtle two-layer elevation for cards, panels, and tables */
@@ -63,12 +73,12 @@ h4,
     0 8px 20px rgba(16, 24, 40, 0.10);
 }
 
-/* the "shelf" a product card sits on — the page's signature detail */
+/* was the playful "toy shelf" — now a flat Walmart-style card */
 .toy-shelf {
+  border: 1px solid #e6e7e8;
   box-shadow:
-    0 10px 0 -2px rgba(0, 0, 0, 0.05),
-    0 14px 0 -4px var(--color-bimbi-sun),
-    0 22px 20px -12px rgba(43, 43, 43, 0.25);
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 2px 6px rgba(16, 24, 40, 0.06);
 }
 
 /* hanging price tag shape */

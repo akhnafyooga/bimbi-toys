@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { isContactReady, waLink, type StoreContact } from "@/lib/storeContacts";
+import AppIcon from "@/components/AppIcon";
 
 export default function ProductActions({
   productId,
@@ -97,33 +98,34 @@ export default function ProductActions({
         <span className="text-sm text-bimbi-ink/60">{stock} stok tersedia</span>
       </div>
 
-      <div className="mt-8 flex gap-6">
-        <button
-          onClick={openStores}
-          className="flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 font-bold text-white shadow-[0_4px_0_#128C7E] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform"
-          title="Hubungi toko terdekat via WhatsApp"
-        >
-          <span className="text-xl">💬</span>
-          <span className="hidden sm:inline">WhatsApp</span>
-        </button>
+      <div className="mt-4 flex flex-col gap-2">
         <button
           onClick={addToCart}
           disabled={loading !== null || stock === 0}
-          className="flex-1 rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white shadow-[0_4px_0_var(--color-bimbi-pink-dark)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform disabled:opacity-50"
+          className="w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-6 py-3 font-extrabold text-white transition-colors chip-spring disabled:opacity-50"
         >
           {stock === 0 ? "Stok Habis" : loading === "cart" ? "Menambah..." : "Masuk Keranjang"}
         </button>
-        <button
-          onClick={toggleWishlist}
-          disabled={loading !== null}
-          className="btn-press rounded-full border-2 border-bimbi-pink/30 px-5 py-3 text-xl hover:bg-bimbi-pink/5 transition-colors"
-          title="Simpan ke wishlist"
-        >
-          {/* key retriggers the pop animation on every toggle */}
-          <span key={String(wishlisted)} className="inline-block animate-heart-pop">
-            {wishlisted ? "💖" : "🤍"}
-          </span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={openStores}
+            className="flex-1 flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-2.5 font-bold text-[#128C7E] hover:border-[#25D366] transition-colors chip-spring"
+            title="Hubungi toko terdekat via WhatsApp"
+          >
+            <span className="text-lg">💬</span> WhatsApp
+          </button>
+          <button
+            onClick={toggleWishlist}
+            disabled={loading !== null}
+            className="btn-press rounded-full border border-slate-300 px-4 py-2.5 text-lg hover:border-bimbi-pink transition-colors"
+            title="Simpan ke wishlist"
+          >
+            {/* key retriggers the pop animation on every toggle */}
+            <span key={String(wishlisted)} className="inline-block animate-heart-pop">
+              {wishlisted ? "💖" : "🤍"}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Nearest-store WhatsApp chooser */}
@@ -180,7 +182,9 @@ export default function ProductActions({
             onClick={(e) => e.stopPropagation()}
             className="animate-pop-in w-full max-w-sm rounded-3xl border-2 border-bimbi-pink/20 bg-white p-6 text-center shadow-xl"
           >
-            <div className="animate-cart-hop text-4xl">🛒</div>
+            <div className="animate-cart-hop flex justify-center">
+              <AppIcon name="cart" size={48} />
+            </div>
             <p className="mt-3 font-bold text-bimbi-ink">
               Berhasil ditambahkan ke keranjang!
             </p>
@@ -193,7 +197,7 @@ export default function ProductActions({
                   setShowCartPopup(false);
                   router.push("/cart");
                 }}
-                className="rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white shadow-[0_4px_0_var(--color-bimbi-pink-dark)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform"
+                className="rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-6 py-3 font-extrabold text-white transition-colors chip-spring"
               >
                 Lihat Keranjang
               </button>

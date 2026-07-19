@@ -86,7 +86,7 @@ export default function RegisterPage() {
           {error && <p className="text-sm font-semibold text-red-500">{error}</p>}
           <button
             disabled={loading}
-            className="w-full rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white shadow-[0_4px_0_var(--color-bimbi-pink-dark)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform disabled:opacity-50"
+            className="w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-6 py-3 font-extrabold text-white transition-colors chip-spring disabled:opacity-50"
           >
             {loading ? "Mendaftar..." : "Daftar"}
           </button>

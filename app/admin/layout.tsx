@@ -1,17 +1,11 @@
 import type { Metadata } from "next";
-import { Baloo_2, Nunito } from "next/font/google";
+import { Nunito } from "next/font/google";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import "../globals.css";
 import { auth, signOut } from "@/lib/auth";
 import Providers from "@/components/Providers";
-
-const baloo = Baloo_2({
-  variable: "--font-baloo",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-});
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -44,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <html lang="id">
-      <body className={`${baloo.variable} ${nunito.variable} antialiased bg-slate-100`}>
+      <body className={`${nunito.variable} antialiased bg-slate-100`}>
         <Providers>
           <div className="min-h-screen flex flex-col">
             {/* Top bar */}

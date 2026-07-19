@@ -108,7 +108,7 @@ export default function CartList({ items }: { items: Item[] }) {
         <p className="text-xs text-bimbi-ink/50 mb-4">Ongkir dihitung di halaman checkout</p>
         <Link
           href="/checkout"
-          className="block text-center w-full rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white shadow-[0_4px_0_var(--color-bimbi-pink-dark)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-transform"
+          className="block text-center w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-6 py-3 font-extrabold text-white transition-colors chip-spring"
         >
           Checkout Sekarang
         </Link>

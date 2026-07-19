@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { formatIDR } from "@/lib/format";
 import { normalizePhone } from "@/lib/phone";
 import ProductActions from "@/components/ProductActions";
+import AppIcon from "@/components/AppIcon";
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -27,8 +28,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!product) notFound();
 
   // WhatsApp chooser reads the same StoreLocation rows the admin panel edits.
-  // Phones are typed free-form in the admin (e.g. "0812-3456-7890"); normalize
-  // to the wa.me format here, and an empty/invalid one shows as "Segera hadir".
   const storeContacts = storeLocations.map((s) => ({
     id: s.id,
     name: s.name,
@@ -45,67 +44,98 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const discount = product.compareAtPrice
     ? Math.round((1 - product.price / product.compareAtPrice) * 100)
     : 0;
+  const savings = product.compareAtPrice ? product.compareAtPrice - product.price : 0;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10 grid md:grid-cols-2 gap-10">
-      {/* Gallery */}
-      <div>
-        <div className="toy-shelf relative aspect-square rounded-3xl overflow-hidden bg-white">
-          <Image src={product.images[0]?.url ?? ""} alt={product.name} fill className="object-cover" priority />
-        </div>
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 grid lg:grid-cols-12 gap-8">
+      {/* Gallery: thumbnail rail + main image */}
+      <div className="lg:col-span-6 flex gap-3">
         {product.images.length > 1 && (
-          <div className="mt-4 flex gap-3">
+          <div className="hidden sm:flex flex-col gap-2 shrink-0">
             {product.images.map((img) => (
-              <div key={img.id} className="relative h-20 w-20 rounded-xl overflow-hidden border-2 border-bimbi-pink/20">
+              <div
+                key={img.id}
+                className="relative h-16 w-16 rounded-md overflow-hidden border border-slate-200 hover:border-bimbi-pink transition-colors"
+              >
                 <Image src={img.url} alt={product.name} fill className="object-cover" />
               </div>
             ))}
           </div>
         )}
+        <div className="relative flex-1 aspect-square rounded-lg overflow-hidden bg-slate-50 border border-slate-100">
+          {product.images[0]?.url ? (
+            <Image src={product.images[0].url} alt={product.name} fill className="object-contain bg-white" priority />
+          ) : (
+            <div className="flex h-full items-center justify-center text-7xl text-slate-200">🧸</div>
+          )}
+        </div>
       </div>
 
-      {/* Info */}
-      <div>
-        <p className="text-sm font-bold text-bimbi-sky">{product.category.emoji} {product.category.name}</p>
-        <h1 className="font-display text-3xl sm:text-4xl mt-1 text-bimbi-ink">{product.name}</h1>
+      {/* Middle: badges, title, description */}
+      <div className="lg:col-span-3">
+        <div className="flex items-center gap-2">
+          {discount > 0 && (
+            <span className="rounded-sm bg-wm-red px-2 py-0.5 text-[11px] font-extrabold text-white">
+              Hemat {discount}%
+            </span>
+          )}
+          <span className="text-xs font-bold text-bimbi-pink">
+            {product.category.emoji} {product.category.name}
+          </span>
+        </div>
 
-        <div className="mt-4">
-          <div className="price-tag inline-block bg-bimbi-sun px-6 py-3">
-            <div className="flex items-baseline gap-2">
-              <span className="font-display text-3xl text-bimbi-ink">{formatIDR(product.price)}</span>
-              {discount > 0 && (
-                <span className="text-sm text-bimbi-ink/50 line-through">{formatIDR(product.compareAtPrice!)}</span>
-              )}
-            </div>
+        <h1 className="mt-2 text-2xl font-extrabold text-bimbi-ink leading-snug">{product.name}</h1>
+
+        <div className="mt-1 flex items-center gap-1 text-amber-400 text-sm">
+          <span>★★★★</span><span className="text-slate-200">★</span>
+          <span className="text-xs text-slate-400 ml-1">Produk asli &amp; bergaransi toko</span>
+        </div>
+
+        <h2 className="mt-6 pb-2 border-b border-slate-200 font-extrabold text-bimbi-ink">Deskripsi</h2>
+        <p className="mt-3 text-sm text-slate-600 leading-relaxed">{product.description}</p>
+      </div>
+
+      {/* Right: buy box */}
+      <div className="lg:col-span-3">
+        <div className="rounded-lg border border-slate-200 shadow-card p-4 lg:sticky lg:top-4">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-3xl font-extrabold text-bimbi-ink">{formatIDR(product.price)}</span>
+            {product.compareAtPrice && (
+              <span className="text-sm text-slate-400 line-through">{formatIDR(product.compareAtPrice)}</span>
+            )}
           </div>
-        </div>
+          {savings > 0 && (
+            <p className="text-sm font-bold text-bimbi-mint mt-0.5">Hemat {formatIDR(savings)}</p>
+          )}
+          <p className="text-xs text-slate-400 mt-1">Harga saat dibeli online.</p>
 
-        <p className="mt-6 text-bimbi-ink/80 leading-relaxed">{product.description}</p>
+          <div className="mt-4">
+            <ProductActions
+              productId={product.id}
+              productName={product.name}
+              isLoggedIn={isLoggedIn}
+              initialWishlisted={wishlisted}
+              stock={product.stock}
+              stores={storeContacts}
+            />
+          </div>
 
-        <div className="mt-6">
-          <ProductActions
-            productId={product.id}
-            productName={product.name}
-            isLoggedIn={isLoggedIn}
-            initialWishlisted={wishlisted}
-            stock={product.stock}
-            stores={storeContacts}
-          />
-        </div>
-
-        {/* Pickup availability */}
-        <div className="mt-8 rounded-2xl bg-white toy-shelf p-4">
-          <p className="font-display text-lg text-bimbi-grape mb-2">📍 Ambil di Toko</p>
-          <ul className="space-y-1 text-sm">
-            {product.stockByStore.map((s) => (
-              <li key={s.id} className="flex justify-between">
-                <span>{s.store.name} — {s.store.city}</span>
-                <span className={s.quantity > 0 ? "text-bimbi-mint font-semibold" : "text-bimbi-ink/40"}>
-                  {s.quantity > 0 ? `${s.quantity} stok` : "Kosong"}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {/* Pickup availability */}
+          <div className="mt-5 border-t border-slate-200 pt-4">
+            <p className="font-extrabold text-sm text-bimbi-ink mb-2 flex items-center gap-1.5">
+              <AppIcon name="location" size={16} /> Ambil di Toko
+            </p>
+            <ul className="space-y-1 text-sm">
+              {product.stockByStore.map((s) => (
+                <li key={s.id} className="flex justify-between">
+                  <span className="text-slate-600">{s.store.name} — {s.store.city}</span>
+                  <span className={s.quantity > 0 ? "text-bimbi-mint font-bold" : "text-slate-300"}>
+                    {s.quantity > 0 ? `${s.quantity} stok` : "Kosong"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>
