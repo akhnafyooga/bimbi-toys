@@ -30,11 +30,11 @@ export default async function Navbar() {
     <header className="w-full z-50 flex flex-col bg-white">
       {/* ROW 1 — solid blue brand bar: logo, store pill, search, account/cart */}
       <div className="w-full bg-bimbi-pink text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2 ">
           {/* Logo slot (user artwork goes in public/brand/) */}
           <Link
             href="/"
-            className="shrink-0 chip-spring rounded-md px-2 py-1 flex items-center"
+            className="shrink-0 chip-spring rounded-md px-2 py-1 flex items-center drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
             title="Bimbi Toys"
           >
             <BrandLogo variant="mark" height={36} />
