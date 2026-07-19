@@ -34,7 +34,7 @@ export default async function Navbar() {
           {/* Logo slot (user artwork goes in public/brand/) */}
           <Link
             href="/"
-            className="shrink-0 chip-spring bg-white rounded-md px-2 py-1 flex items-center"
+            className="shrink-0 chip-spring rounded-md px-2 py-1 flex items-center"
             title="Bimbi Toys"
           >
             <BrandLogo variant="mark" height={36} />

@@ -19,8 +19,8 @@ export default async function Footer() {
         </Link>
 
         <p className="text-sm text-slate-500 max-w-md">
-          Toko mainan dan hadiah terlengkap di Indonesia. Ambil langsung di toko
-          terdekat atau pesan kurirmu sendiri — bayar gampang pakai QRIS. ✨
+          Toko mainan, hadiah, dan perlengkapan terlengkap. Ambil langsung di toko
+          terdekat atau pesan antar — bayar gampang pakai QRIS.
         </p>
 
         {/* Category links row */}
