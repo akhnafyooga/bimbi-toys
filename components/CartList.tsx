@@ -45,7 +45,6 @@ export default function CartList({ items }: { items: Item[] }) {
   if (items.length === 0) {
     return (
       <div className="text-center py-20">
-        <span className="text-6xl">🛒</span>
         <p className="font-display text-2xl mt-4">Keranjang kamu masih kosong</p>
         <p className="text-bimbi-ink/60 mt-1">Yuk cari mainan favoritmu!</p>
         <Link href="/" className="inline-block mt-4 rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white">
