@@ -28,7 +28,7 @@ export default async function HomePage({
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex flex-col gap-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-10 pb-6 flex flex-col gap-8">
 
         {/* 1. Hero Banner — background image slot: public/brand/hero.jpg
             (light-blue fallback shows until the file exists) */}

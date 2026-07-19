@@ -27,7 +27,7 @@ export default async function Navbar() {
   const cartTotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   return (
-    <header className="w-full h-16 z-50 flex flex-col bg-white">
+    <header className="w-full z-50 flex flex-col bg-white">
       {/* ROW 1 — solid blue brand bar: logo, store pill, search, account/cart */}
       <div className="w-full bg-bimbi-pink text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
