@@ -30,12 +30,14 @@ export default async function HomePage({
     <div className="bg-white min-h-screen">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex flex-col gap-8">
 
-        {/* 1. Hero Banner — flat, Walmart-clean */}
-        <div className="relative overflow-hidden rounded-lg bg-bimbi-sun min-h-[240px] flex flex-col sm:flex-row items-center justify-between p-6 sm:p-8 md:p-10 gap-6">
-          {/* Floating toys — decorative, kept subtle behind the text */}
-          <span aria-hidden className="animate-float pointer-events-none select-none absolute right-6 top-8 text-6xl opacity-20">🧸</span>
-          <span aria-hidden className="animate-float-slow pointer-events-none select-none absolute right-28 bottom-8 text-5xl opacity-15">🚂</span>
-          <span aria-hidden className="animate-float pointer-events-none select-none absolute right-44 top-16 text-4xl opacity-10" style={{ animationDelay: "2.5s" }}>🎈</span>
+        {/* 1. Hero Banner — background image slot: public/brand/hero.jpg
+            (light-blue fallback shows until the file exists) */}
+        <div
+          className="relative overflow-hidden rounded-lg bg-bimbi-sun min-h-[240px] md:min-h-[300px] flex flex-col sm:flex-row items-center justify-between p-6 sm:p-8 md:p-10 gap-6 bg-cover bg-center"
+          style={{ backgroundImage: "url(/brand/hero.jpg)" }}
+        >
+          {/* readability wash so the headline stays legible over any photo */}
+          <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent" />
           <div className="flex-1 space-y-3 max-w-lg text-left z-10">
             <span className="text-xs font-extrabold uppercase tracking-widest text-bimbi-pink">
               Tentang Bimbi Toys
