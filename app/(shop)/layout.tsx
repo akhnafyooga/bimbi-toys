@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "../globals.css";
 import Navbar from "@/components/Navbar";
+import NavbarGate from "@/components/NavbarGate";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
 
@@ -22,7 +23,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="id">
       <body className={`${nunito.variable} antialiased flex min-h-screen flex-col`}>
         <Providers>
-          <Navbar />
+          <NavbarGate>
+            <Navbar />
+          </NavbarGate>
           <main className="flex-1">{children}</main>
           <Footer />
         </Providers>

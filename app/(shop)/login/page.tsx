@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
-import BrandLogo from "@/components/BrandLogo";
 
 export default async function LoginPage({
   searchParams,
@@ -33,7 +32,6 @@ export default async function LoginPage({
     <div className="mx-auto max-w-md px-4 py-16">
       {/* Walmart-style minimal centered form */}
       <div className="text-center mb-8 flex flex-col items-center gap-4">
-        <BrandLogo variant="full" height={44} className="text-slate-400" />
         <h1 className="text-2xl font-extrabold text-bimbi-ink">Masuk atau buat akunmu</h1>
         <p className="text-sm text-slate-500 -mt-2 max-w-xs">
           Masukkan email dan password untuk lihat harga &amp; belanja mainan seru.
