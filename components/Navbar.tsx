@@ -32,9 +32,10 @@ export default async function Navbar() {
       <div className="w-full bg-bimbi-pink text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 md:py-5 flex flex-wrap items-center gap-x-4 gap-y-2">
           {/* Logo slot (user artwork goes in public/brand/) */}
+          {/* White chip so the logo's blue bands don't blend into the blue bar */}
           <Link
             href="/"
-            className="shrink-0 chip-spring rounded-md px-2 py-1 flex items-center drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
+            className="shrink-0 chip-spring rounded-lg bg-white px-3 py-1.5 flex items-center shadow-sm"
             title="Bimbi Toys"
           >
             <BrandLogo variant="mark" height={44} />

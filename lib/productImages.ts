@@ -8,6 +8,13 @@ import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/lib/constants";
 
 const MIN_IMAGE_BYTES = 5_000; // skip blank/broken 1x1s and error pages
 
+// Time budget so one product can't blow a serverless request's wall-clock limit
+// (Vercel Hobby kills functions at 10s). Each candidate download is capped, and
+// we stop trying candidates once the phase deadline passes — worst case stays
+// well under 10s so the caller can safely run one product per request.
+const DOWNLOAD_TIMEOUT_MS = 3_000; // per candidate
+const DOWNLOAD_DEADLINE_MS = 7_000; // stop starting new candidates after this
+
 export type FillResult = "filled" | "no-result" | "error";
 
 export async function fillImageForProduct(p: { id: string; name: string }): Promise<FillResult> {
@@ -18,11 +25,13 @@ export async function fillImageForProduct(p: { id: string; name: string }): Prom
     return "error";
   }
 
+  const started = Date.now();
   for (const c of candidates) {
+    if (Date.now() - started > DOWNLOAD_DEADLINE_MS) break; // out of time budget
     try {
       const res = await fetch(c.imageUrl, {
         headers: { "User-Agent": "Mozilla/5.0" },
-        signal: AbortSignal.timeout(10_000),
+        signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
       });
       if (!res.ok) continue;
 

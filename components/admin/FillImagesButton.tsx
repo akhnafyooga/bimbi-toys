@@ -18,12 +18,14 @@ export default function FillImagesButton() {
     let totalFilled = 0;
 
     try {
-      // Hard cap the loop as a safety net (20 batches × up to 5 = 100 products/run).
-      for (let batch = 0; batch < 40; batch++) {
+      // One product per request keeps each serverless call well under Vercel
+      // Hobby's 10s cap; the loop drives the volume. Cap is a safety net —
+      // 300 requests = 300 products in a single click.
+      for (let batch = 0; batch < 300; batch++) {
         const res = await fetch("/api/admin/products/fill-images", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ limit: 5 }),
+          body: JSON.stringify({ limit: 1 }),
         });
         const data = await res.json().catch(() => ({}));
 
