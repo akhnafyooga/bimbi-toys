@@ -28,40 +28,107 @@ export default async function Navbar() {
 
   return (
     <header className="w-full z-50 flex flex-col bg-white">
-      {/* ROW 1 — solid blue brand bar: logo, store pill, search, account/cart */}
+      {/* ROW 1 — solid blue brand bar: centered logo, account left, cart right, search below */}
       <div className="w-full bg-bimbi-pink text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 md:py-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-          {/* Logo slot (user artwork goes in public/brand/) */}
-          {/* White chip so the logo's blue bands don't blend into the blue bar */}
-          <Link
-            href="/"
-            className="shrink-0 chip-spring rounded-lg bg-white px-3 py-1.5 flex items-center shadow-sm"
-            title="Bimbi Toys"
-          >
-            <BrandLogo variant="mark" height={44} />
-          </Link>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 md:py-4">
+          {/* Top line: account (left) · logo (center) · wishlist + cart (right) */}
+          <div className="flex items-center gap-2">
+            {/* Left cluster — account / login (+ store pill on large screens) */}
+            <div className="flex-1 flex items-center gap-3 min-w-0 text-sm font-semibold">
+              {session?.user ? (
+                <div className="flex items-center gap-2">
+                  <span className="hidden xl:flex flex-col leading-tight text-left">
+                    <span className="text-[11px] font-normal text-white/80">
+                      Hai, {session.user.name?.split(" ")[0]}!
+                    </span>
+                    <span>Akunmu</span>
+                  </span>
+                  <form
+                    action={async () => {
+                      "use server";
+                      await signOut({ redirectTo: "/" });
+                    }}
+                    className="inline"
+                  >
+                    <button className="font-bold text-wm-yellow hover:underline cursor-pointer">
+                      Keluar
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <Link href="/login" className="flex items-center gap-2 hover:underline chip-spring">
+                  <span className="font-bold sm:hidden">Masuk</span>
+                  <span className="hidden sm:flex flex-col leading-tight text-left">
+                    <span className="text-[11px] font-normal text-white/80">Masuk</span>
+                    <span>Akun</span>
+                  </span>
+                </Link>
+              )}
 
-          {/* Store pickup pill */}
-          {defaultStore && (
+              {defaultStore && (
+                <Link
+                  href="/stores"
+                  className="hidden lg:flex items-center gap-2 rounded-full bg-bimbi-pink-dark/60 hover:bg-bimbi-pink-dark px-4 py-2 text-sm font-bold transition-colors chip-spring"
+                >
+                  <AppIcon name="location" size={22} />
+                  <span className="flex flex-col leading-tight text-left">
+                    <span>Ambil di toko</span>
+                    <span className="text-[11px] font-normal text-white/80">
+                      {defaultStore.name} · {defaultStore.city}
+                    </span>
+                  </span>
+                </Link>
+              )}
+            </div>
+
+            {/* Centered logo — white chip so its blue bands don't blend into the blue bar */}
             <Link
-              href="/stores"
-              className="hidden lg:flex items-center gap-2 rounded-full bg-bimbi-pink-dark/60 hover:bg-bimbi-pink-dark px-4 py-2 text-sm font-bold transition-colors chip-spring"
+              href="/"
+              className="shrink-0 chip-spring rounded-lg bg-white px-2.5 py-1 flex items-center shadow-sm"
+              title="Bimbi Toys"
             >
-              <AppIcon name="location" size={22} />
-              <span className="flex flex-col leading-tight text-left">
-                <span>Ambil di toko</span>
-                <span className="text-[11px] font-normal text-white/80">
-                  {defaultStore.name} · {defaultStore.city}
-                </span>
-              </span>
+              <BrandLogo variant="mark" height={36} heightClass="h-7 sm:h-8" />
             </Link>
-          )}
 
-          {/* Search — big white pill */}
+            {/* Right cluster — wishlist + cart */}
+            <div className="flex-1 flex items-center justify-end gap-4 sm:gap-5 text-sm font-semibold">
+              <Link
+                href="/wishlist"
+                className="relative flex items-center gap-2 hover:underline chip-spring"
+                title="Wishlist"
+              >
+                <AppIcon name="wishlist" size={22} />
+                <span className="hidden xl:flex flex-col leading-tight text-left">
+                  <span className="text-[11px] font-normal text-white/80">Disimpan</span>
+                  <span>Wishlist</span>
+                </span>
+                <span className="xl:hidden">
+                  <CartBadge count={wishlistCount} variant="bubble" />
+                </span>
+              </Link>
+
+              <Link
+                id="tour-cart"
+                href="/cart"
+                className="relative flex flex-col items-center leading-tight hover:underline chip-spring"
+                title="Keranjang"
+              >
+                <span className="relative">
+                  <AppIcon name="cart" size={26} />
+                  <CartBadge count={cartCount} variant="bubble" />
+                </span>
+                <span className="text-[11px] font-bold mt-0.5">
+                  {cartCount > 0 ? formatIDR(cartTotal) : "Rp 0"}
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Search — big white pill, full width on its own row */}
           <form
             id="tour-search"
             action="/search"
-            className="order-last w-full md:order-none md:w-auto md:flex-1 flex items-center rounded-full bg-white overflow-hidden"
+            className="mt-3 w-full flex items-center rounded-full bg-white overflow-hidden"
           >
             <select
               name="category"
@@ -88,69 +155,6 @@ export default async function Navbar() {
               <AppIcon name="search" size={18} />
             </button>
           </form>
-
-          {/* Right cluster */}
-          <div className="ml-auto flex items-center gap-4 sm:gap-5 text-sm font-semibold">
-            <Link
-              href="/wishlist"
-              className="relative flex items-center gap-2 hover:underline chip-spring"
-              title="Wishlist"
-            >
-              <AppIcon name="wishlist" size={22} />
-              <span className="hidden xl:flex flex-col leading-tight text-left">
-                <span className="text-[11px] font-normal text-white/80">Disimpan</span>
-                <span>Wishlist</span>
-              </span>
-              <span className="xl:hidden">
-                <CartBadge count={wishlistCount} variant="bubble" />
-              </span>
-            </Link>
-
-            {session?.user ? (
-              <div className="flex items-center gap-2">
-                <span className="hidden xl:flex flex-col leading-tight text-left">
-                  <span className="text-[11px] font-normal text-white/80">
-                    Hai, {session.user.name?.split(" ")[0]}!
-                  </span>
-                  <span>Akunmu</span>
-                </span>
-                <form
-                  action={async () => {
-                    "use server";
-                    await signOut({ redirectTo: "/" });
-                  }}
-                  className="inline"
-                >
-                  <button className="font-bold text-wm-yellow hover:underline cursor-pointer">
-                    Keluar
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <Link href="/login" className="flex items-center gap-2 hover:underline chip-spring">
-                <span className="font-bold xl:hidden">Masuk</span>
-                <span className="hidden xl:flex flex-col leading-tight text-left">
-                  <span className="text-[11px] font-normal text-white/80">Masuk</span>
-                  <span>Akun</span>
-                </span>
-              </Link>
-            )}
-
-            <Link
-              id="tour-cart"
-              href="/cart"
-              className="relative flex flex-col items-center leading-tight hover:underline chip-spring"
-              title="Keranjang"
-            >
-              <span className="relative">
-                <AppIcon name="cart" size={26} />
-                <CartBadge count={cartCount} variant="bubble" />
-              </span>
-              <span className="text-[11px] font-bold mt-0.5">
-                {cartCount > 0 ? formatIDR(cartTotal) : "Rp 0"}
-              </span>
-            </Link>
-          </div>
         </div>
       </div>
 

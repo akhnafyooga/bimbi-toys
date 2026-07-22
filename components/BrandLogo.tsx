@@ -9,10 +9,14 @@ import { useEffect, useRef, useState } from "react";
 export default function BrandLogo({
   variant,
   height = 40,
+  heightClass,
   className = "",
 }: {
   variant: "mark" | "full";
   height?: number;
+  // Optional Tailwind height class(es) for responsive sizing (e.g. "h-9 sm:h-11").
+  // When set it drives the rendered height instead of the fixed `height` px.
+  heightClass?: string;
   className?: string;
 }) {
   const [missing, setMissing] = useState(false);
@@ -29,8 +33,8 @@ export default function BrandLogo({
   if (missing) {
     return (
       <span
-        className={`inline-flex items-center justify-center rounded-md border-2 border-dashed border-current opacity-60 px-2 text-[10px] font-extrabold uppercase tracking-widest select-none ${className}`}
-        style={{ height, minWidth: variant === "mark" ? height : height * 3 }}
+        className={`inline-flex items-center justify-center rounded-md border-2 border-dashed border-current opacity-60 px-2 text-[10px] font-extrabold uppercase tracking-widest select-none ${heightClass ?? ""} ${className}`}
+        style={{ height: heightClass ? undefined : height, minWidth: variant === "mark" ? height : height * 3 }}
         title="Tempatkan file logo di public/brand/"
       >
         LOGO
