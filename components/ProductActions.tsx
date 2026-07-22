@@ -112,7 +112,7 @@ export default function ProductActions({
             className="flex-1 flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-2.5 font-bold text-[#128C7E] hover:border-[#25D366] transition-colors chip-spring"
             title="Hubungi toko terdekat via WhatsApp"
           >
-            <span className="text-lg">💬</span> WhatsApp
+            WhatsApp
           </button>
           <button
             onClick={toggleWishlist}
@@ -120,9 +120,13 @@ export default function ProductActions({
             className="btn-press rounded-full border border-slate-300 px-4 py-2.5 text-lg hover:border-bimbi-pink transition-colors"
             title="Simpan ke wishlist"
           >
-            {/* key retriggers the pop animation on every toggle */}
-            <span key={String(wishlisted)} className="inline-block animate-heart-pop">
-              {wishlisted ? "💖" : "🤍"}
+            {/* key retriggers the pop animation on every toggle; the heart
+                icon dims when the product isn't wishlisted yet */}
+            <span
+              key={String(wishlisted)}
+              className={`inline-block animate-heart-pop ${wishlisted ? "" : "opacity-30 grayscale"}`}
+            >
+              <AppIcon name="wishlist" size={20} />
             </span>
           </button>
         </div>

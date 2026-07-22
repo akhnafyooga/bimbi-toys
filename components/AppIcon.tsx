@@ -5,10 +5,10 @@ import { useEffect, useRef, useState } from "react";
 // Brand icon slots. Drop the artwork at public/brand/icons/<name>.png —
 // until a file exists, the original emoji shows as fallback.
 const FALLBACK: Record<string, string> = {
-  cart: "🛒",
-  location: "📍",
-  search: "🔍",
-  wishlist: "💖",
+  cart: "",
+  location: "",
+  search: "",
+  wishlist: "",
 };
 
 export default function AppIcon({

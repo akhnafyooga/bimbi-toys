@@ -32,7 +32,7 @@ export default function ProductCard({ slug, name, price, compareAtPrice, imageUr
               className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="text-5xl text-slate-300">🧸</div>
+            <div className="text-5xl text-slate-300"></div>
           )}
           {discount > 0 && (
             <span className="absolute top-2 left-2 rounded-sm bg-wm-red px-1.5 py-0.5 text-[11px] font-extrabold text-white z-10">

@@ -183,18 +183,22 @@ export default function CheckoutClient({
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => setFulfillment("PICKUP")}
-              className={`chip-spring flex-1 rounded-2xl border-2 px-4 py-3 font-bold text-left transition-colors ${fulfillment === "PICKUP" ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
+              className={`chip-spring flex-1 rounded-2xl border-2 px-4 py-3 text-left transition-colors ${fulfillment === "PICKUP"
+                ? "border-bimbi-pink bg-bimbi-sun font-extrabold text-bimbi-pink-dark ring-1 ring-bimbi-pink"
+                : "border-bimbi-ink/10 font-bold hover:border-bimbi-pink/40"
                 }`}
             >
-              🏪 Ambil di Toko
+              Ambil di Toko
               <p className="text-xs font-normal text-bimbi-ink/50 mt-1">Gratis, ambil sendiri</p>
             </button>
             <button
               onClick={() => setFulfillment("SELF_COURIER")}
-              className={`chip-spring flex-1 rounded-2xl border-2 px-4 py-3 font-bold text-left transition-colors ${fulfillment === "SELF_COURIER" ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
+              className={`chip-spring flex-1 rounded-2xl border-2 px-4 py-3 text-left transition-colors ${fulfillment === "SELF_COURIER"
+                ? "border-bimbi-pink bg-bimbi-sun font-extrabold text-bimbi-pink-dark ring-1 ring-bimbi-pink"
+                : "border-bimbi-ink/10 font-bold hover:border-bimbi-pink/40"
                 }`}
             >
-              🛵 Pesan Kurir Sendiri
+              Pesan Antar
               <p className="text-xs font-normal text-bimbi-ink/50 mt-1">
                 Kamu pesan GoSend/Grab sendiri, bayar ke kurir
               </p>
@@ -210,7 +214,9 @@ export default function CheckoutClient({
               {stores.map((s) => (
                 <label
                   key={s.id}
-                  className={`chip-spring flex items-start gap-3 rounded-xl border-2 p-3 cursor-pointer ${storeId === s.id ? "border-bimbi-pink bg-bimbi-pink/5" : "border-bimbi-ink/10"
+                  className={`chip-spring flex items-start gap-3 rounded-xl border-2 p-3 cursor-pointer transition-colors ${storeId === s.id
+                    ? "border-bimbi-pink bg-bimbi-sun ring-1 ring-bimbi-pink"
+                    : "border-bimbi-ink/10 hover:border-bimbi-pink/40"
                     }`}
                 >
                   <input
@@ -251,7 +257,7 @@ export default function CheckoutClient({
                   )}
                 </div>
                 <div className="rounded-xl bg-amber-50 border-2 border-amber-200 p-3 text-sm text-amber-800">
-                  <p className="font-bold">🙅 Jangan pesan kurir dulu ya!</p>
+                  <p className="font-bold"> Jangan pesan kurir dulu ya!</p>
                   <p className="mt-1">
                     Tunggu sampai status pesananmu <span className="font-bold">"Siap Diambil Kurir"</span> —
                     kami kabari via WhatsApp. Alamat pickup &amp; kode pesanan baru muncul setelah barang siap.
@@ -283,7 +289,7 @@ export default function CheckoutClient({
           {fulfillment === "SELF_COURIER" && (
             <div className="flex justify-between text-sm">
               <span>Ongkir</span>
-              <span className="text-bimbi-ink/60">Bayar langsung ke kurir 🛵</span>
+              <span className="text-bimbi-ink/60">Bayar langsung ke kurir </span>
             </div>
           )}
           <div className="flex justify-between font-display text-lg text-bimbi-pink-dark pt-2">

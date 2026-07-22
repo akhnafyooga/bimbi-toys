@@ -45,7 +45,7 @@ export default async function AdminCategoriesPage() {
               {categories.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-semibold text-slate-800">
-                    {c.emoji} {c.name}
+                    {c.name}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{c._count.products}</td>
                   <td className="px-4 py-3">

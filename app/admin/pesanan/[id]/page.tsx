@@ -40,7 +40,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
       {order.fulfillment === "SELF_COURIER" && order.status === "READY_FOR_PICKUP" && order.contactPhone && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="font-semibold text-emerald-800">📲 Kabari pembeli via WhatsApp</p>
+            <p className="font-semibold text-emerald-800"> Kabari pembeli via WhatsApp</p>
             <p className="text-sm text-emerald-700/80 mt-0.5">
               Barang sudah siap — kirim pesan supaya pembeli memesan kurirnya sekarang.
             </p>
@@ -48,13 +48,13 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           <a
             href={waLink(
               order.contactPhone,
-              `Halo ${order.user.name}! Pesananmu ${order.orderNumber} di Bimbi Toys sudah siap 🎉 Silakan pesan GoSend/GrabExpress sekarang ya — alamat pickup & kode pesanan ada di halaman pesananmu.`
+              `Halo ${order.user.name}! Pesananmu ${order.orderNumber} di Bimbi Toys sudah siap Silakan pesan GoSend/GrabExpress sekarang ya — alamat pickup & kode pesanan ada di halaman pesananmu.`
             )}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-sm px-5 py-2.5 rounded-md transition-colors"
           >
-            💬 Kirim WA ke {displayPhone(order.contactPhone)}
+             Kirim WA ke {displayPhone(order.contactPhone)}
           </a>
         </div>
       )}
@@ -63,7 +63,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
       {nextAction ? (
         <div className="bg-white border border-bimbi-pink/30 rounded-xl shadow-card p-5 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="font-semibold text-slate-800">🔔 Perlu ditindaklanjuti</p>
+            <p className="font-semibold text-slate-800"> Perlu ditindaklanjuti</p>
             <p className="text-sm text-slate-500 mt-0.5">
               Klik tombol ini kalau pesanan sudah {nextAction.next === "PACKED" ? "selesai dikemas" : "diproses"}.
             </p>
@@ -72,7 +72,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
         </div>
       ) : order.status === "PENDING_PAYMENT" ? (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-700">
-          ⏳ Menunggu pelanggan menyelesaikan pembayaran. Status ini akan berubah otomatis begitu pembayaran diterima —
+           Menunggu pelanggan menyelesaikan pembayaran. Status ini akan berubah otomatis begitu pembayaran diterima —
           tidak perlu diubah manual.
         </div>
       ) : isTerminal ? (
@@ -83,7 +83,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
 
       <div className="grid sm:grid-cols-2 gap-6">
         <div className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
-          <h2 className="font-display font-bold text-slate-800 mb-3">👤 Pelanggan</h2>
+          <h2 className="font-display font-bold text-slate-800 mb-3"> Pelanggan</h2>
           <p className="text-sm text-slate-700 font-semibold">{order.user.name}</p>
           <p className="text-sm text-slate-500">{order.user.email}</p>
           {order.contactPhone ? (
@@ -96,10 +96,10 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
         <div className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
           <h2 className="font-display font-bold text-slate-800 mb-3">
             {order.fulfillment === "PICKUP"
-              ? "🏬 Ambil di Toko"
+              ? "Ambil di Toko"
               : order.fulfillment === "SELF_COURIER"
-                ? "🛵 Kurir Sendiri — Pickup di Toko"
-                : "🚚 Dikirim ke Alamat"}
+                ? "Pesan Antar — Pickup di Toko"
+                : "Dikirim ke Alamat"}
           </h2>
           {order.fulfillment !== "SHIPPING" && order.store ? (
             <>
@@ -125,7 +125,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
-        <h2 className="font-display font-bold text-slate-800 mb-3">🧾 Item Pesanan</h2>
+        <h2 className="font-display font-bold text-slate-800 mb-3"> Item Pesanan</h2>
         <div className="divide-y divide-slate-100">
           {order.items.map((item) => (
             <div key={item.id} className="py-3 flex items-center justify-between gap-3">
@@ -156,7 +156,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
-        <h2 className="font-display font-bold text-slate-800 mb-2">💳 Status Pembayaran</h2>
+        <h2 className="font-display font-bold text-slate-800 mb-2"> Status Pembayaran</h2>
         <p className="text-xs text-slate-400 mb-2">
           Status ini diatur otomatis oleh sistem pembayaran (Midtrans) dan tidak bisa diubah manual dari sini.
         </p>

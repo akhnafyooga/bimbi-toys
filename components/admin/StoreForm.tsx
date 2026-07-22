@@ -67,7 +67,7 @@ export default function StoreForm({ store }: { store?: StoreData }) {
       return;
     }
 
-    setBanner({ type: "success", message: "✅ Toko berhasil disimpan" });
+    setBanner({ type: "success", message: " Toko berhasil disimpan" });
     setTimeout(() => router.push("/admin/stok-toko"), 700);
   }
 

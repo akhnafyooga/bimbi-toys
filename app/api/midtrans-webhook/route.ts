@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   console.log("[midtrans-webhook] Signature valid:", valid);
 
   if (!valid) {
-    console.log("[midtrans-webhook] ❌ Signature mismatch — rejecting");
+    console.log("[midtrans-webhook] Signature mismatch — rejecting");
     return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
   }
 
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     },
   });
 
-  console.log("[midtrans-webhook] ✅ Order updated successfully");
+  console.log("[midtrans-webhook] Order updated successfully");
 
   return NextResponse.json({ ok: true });
 }

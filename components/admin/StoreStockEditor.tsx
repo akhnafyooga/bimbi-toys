@@ -44,7 +44,7 @@ export default function StoreStockEditor({ storeId, items }: { storeId: string; 
       setBanner({ type: "error", message: data.error ?? "Gagal menyimpan stok. Coba lagi ya." });
       return;
     }
-    setBanner({ type: "success", message: "✅ Stok berhasil disimpan" });
+    setBanner({ type: "success", message: " Stok berhasil disimpan" });
   }
 
   return (

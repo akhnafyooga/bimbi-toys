@@ -43,7 +43,7 @@ export default async function LoginPage({
       <div>
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 border border-wm-red/30 px-4 py-3 text-sm font-semibold text-wm-red animate-pop-in">
-            ⚠️ Gagal masuk. Email atau password salah — periksa lagi ya. Belum punya akun?{" "}
+             Gagal masuk. Email atau password salah — periksa lagi ya. Belum punya akun?{" "}
             <Link href="/register" className="underline font-bold">
               Daftar dulu di sini
             </Link>

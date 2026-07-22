@@ -48,11 +48,11 @@ export default function CategoryNav({ categories }: { categories: Category[] }) 
       {/* edge fade hints that the row keeps going */}
       <div
         aria-hidden
-        className="pointer-events-none absolute right-8 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent hidden sm:block"
+        className="pointer-events-none absolute right-8 top-0 bottom-0 w-8 bg-gradient-to-l from-bimbi-cream to-transparent hidden sm:block"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent sm:hidden"
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-bimbi-cream to-transparent sm:hidden"
       />
 
       <button

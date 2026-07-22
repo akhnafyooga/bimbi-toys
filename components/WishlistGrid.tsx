@@ -59,7 +59,7 @@ export default function WishlistGrid({ items }: { items: Item[] }) {
               onClick={() => moveToCart(item.productId)}
               className="flex-1 rounded-full bg-bimbi-pink px-3 py-2 text-xs font-bold text-white"
             >
-              🛒 Beli
+               Beli
             </button>
             <button
               onClick={() => removeFromWishlist(item.productId)}

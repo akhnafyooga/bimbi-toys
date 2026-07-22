@@ -77,7 +77,7 @@ export default async function AdminProductsPage({
           <option value="">Semua Kategori</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.emoji} {c.name}
+              {c.name}
             </option>
           ))}
         </select>
@@ -92,10 +92,10 @@ export default async function AdminProductsPage({
       <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
         {products.length === 0 ? (
           isFiltered ? (
-            <EmptyState icon="🔍" message={`Tidak ada produk yang cocok dengan pencarian kamu.`} />
+            <EmptyState icon="" message={`Tidak ada produk yang cocok dengan pencarian kamu.`} />
           ) : (
             <EmptyState
-              icon="🧸"
+              icon=""
               message="Belum ada produk. Klik &quot;Tambah Produk Baru&quot; untuk mulai."
               actionHref="/admin/produk/baru"
               actionLabel="+ Tambah Produk Baru"
@@ -122,17 +122,17 @@ export default async function AdminProductsPage({
                           {p.images[0] ? (
                             <Image src={p.images[0].url} alt={p.name} fill sizes="44px" className="object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-lg">🧸</div>
+                            <div className="w-full h-full flex items-center justify-center text-lg"></div>
                           )}
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-slate-800 truncate max-w-[220px]">{p.name}</p>
-                          {p.featured && <span className="text-[10px] font-bold text-bimbi-pink-dark">⭐ Unggulan</span>}
+                          {p.featured && <span className="text-[10px] font-bold text-bimbi-pink-dark"> Unggulan</span>}
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-600">
-                      {p.category.emoji} {p.category.name}
+                      {p.category.name}
                     </td>
                     <td className="px-4 py-3 font-semibold text-slate-800">{formatIDR(p.price)}</td>
                     <td className="px-4 py-3">

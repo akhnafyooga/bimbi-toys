@@ -19,12 +19,12 @@ export const metadata: Metadata = {
 };
 
 const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard", icon: "📊" },
-  { href: "/admin/produk", label: "Produk", icon: "🧸" },
-  { href: "/admin/kategori", label: "Kategori", icon: "🏷️" },
-  { href: "/admin/pesanan", label: "Pesanan", icon: "📦" },
-  { href: "/admin/stok-toko", label: "Stok Toko", icon: "🏬" },
-  { href: "/admin/pelanggan", label: "Pelanggan", icon: "👥" },
+  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/produk", label: "Produk" },
+  { href: "/admin/kategori", label: "Kategori" },
+  { href: "/admin/pesanan", label: "Pesanan" },
+  { href: "/admin/stok-toko", label: "Stok Toko" },
+  { href: "/admin/pelanggan", label: "Pelanggan" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -63,7 +63,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                     className="hidden sm:inline text-white/80 hover:text-white transition-colors"
                     target="_blank"
                   >
-                    Lihat Toko ↗
+                    Lihat Toko
                   </Link>
                   <span className="hidden md:inline text-white/90">
                     {session.user.name} <span className="text-white/50">({session.user.role === "ADMIN" ? "Admin" : "Staf"})</span>
@@ -91,7 +91,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                     href={item.href}
                     className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-600 hover:text-bimbi-sky hover:bg-bimbi-sun border-b-2 border-transparent hover:border-bimbi-sky transition-colors whitespace-nowrap"
                   >
-                    <span>{item.icon}</span> {item.label}
+                    {item.label}
                   </Link>
                 ))}
               </div>

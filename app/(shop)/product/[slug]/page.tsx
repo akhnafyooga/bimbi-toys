@@ -66,7 +66,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           {product.images[0]?.url ? (
             <Image src={product.images[0].url} alt={product.name} fill className="object-contain bg-white" priority />
           ) : (
-            <div className="flex h-full items-center justify-center text-7xl text-slate-200">🧸</div>
+            <div className="flex h-full items-center justify-center text-7xl text-slate-200"></div>
           )}
         </div>
       </div>
@@ -80,7 +80,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </span>
           )}
           <span className="text-xs font-bold text-bimbi-pink">
-            {product.category.emoji} {product.category.name}
+            {product.category.name}
           </span>
         </div>
 

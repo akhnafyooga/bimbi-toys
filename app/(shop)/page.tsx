@@ -65,7 +65,7 @@ export default async function HomePage({
           <Reveal>
             <section>
               <div className="flex items-baseline justify-between mb-3">
-                <h2 className="text-xl font-extrabold text-bimbi-ink">🔥 Penawaran Hits</h2>
+                <h2 className="text-xl font-extrabold text-bimbi-ink">Penawaran Hits</h2>
                 <Link href="/#katalog" className="text-sm font-bold text-bimbi-pink hover:underline">
                   Lihat semua
                 </Link>
@@ -109,7 +109,6 @@ export default async function HomePage({
 
             {products.length === 0 ? (
               <div className="text-center py-12">
-                <span className="text-5xl">🧸</span>
                 <p className="text-slate-500 mt-3 text-sm font-semibold">
                   Belum ada mainan di kategori ini. Coba lihat kategori lain, yuk!
                 </p>

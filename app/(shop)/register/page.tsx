@@ -46,7 +46,6 @@ export default function RegisterPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <div className="text-center mb-8">
-        <span className="text-5xl">🎉</span>
         <h1 className="font-display text-3xl mt-2 text-bimbi-pink-dark">Gabung Bimbi Toys</h1>
         <p className="text-bimbi-ink/60 mt-1">Daftar gratis, langsung bisa belanja!</p>
       </div>

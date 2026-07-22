@@ -46,7 +46,7 @@ export default async function Footer() {
         </ul>
 
         <div className="w-full border-t border-slate-200 pt-5 text-xs text-slate-400">
-          © {new Date().getFullYear()} Bimbi Toys. Main terus, belajar terus! ·
+           {new Date().getFullYear()} Bimbi Toys. Main terus, belajar terus! ·
           Pembayaran aman via QRIS — GoPay, OVO, Dana, ShopeePay, m-Banking.
         </div>
       </div>

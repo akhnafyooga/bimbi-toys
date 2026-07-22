@@ -104,7 +104,7 @@ export default function ProductForm({ categories, product }: { categories: Categ
       return;
     }
 
-    setBanner({ type: "success", message: "✅ Produk berhasil disimpan" });
+    setBanner({ type: "success", message: " Produk berhasil disimpan" });
     setTimeout(() => router.push("/admin/produk"), 700);
   }
 
@@ -214,7 +214,7 @@ export default function ProductForm({ categories, product }: { categories: Categ
           {categories.length === 0 && <option value="">Belum ada kategori</option>}
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.emoji} {c.name}
+              {c.name}
             </option>
           ))}
         </select>
@@ -227,7 +227,7 @@ export default function ProductForm({ categories, product }: { categories: Categ
           onChange={(e) => setFeatured(e.target.checked)}
           className="w-4 h-4 accent-bimbi-sky cursor-pointer"
         />
-        <span className="text-sm font-semibold text-slate-700">⭐ Tampilkan sebagai produk unggulan</span>
+        <span className="text-sm font-semibold text-slate-700"> Tampilkan sebagai produk unggulan</span>
       </label>
 
       <div className="flex items-center gap-3 pt-2">

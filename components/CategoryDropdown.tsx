@@ -23,7 +23,7 @@ export default function CategoryDropdown({
       <option value="">Semua Kategori</option>
       {categories.map((c) => (
         <option key={c.id} value={c.slug}>
-          {c.emoji ? `${c.emoji} ` : ""}{c.name}
+          {c.name}
         </option>
       ))}
     </select>

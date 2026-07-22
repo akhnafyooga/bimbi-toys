@@ -15,7 +15,7 @@ export default function AdvanceOrderStatusButton({
     <ConfirmButton
       confirmMessage={`${label}?`}
       pendingLabel="Menyimpan..."
-      successMessage="✅ Status pesanan berhasil diperbarui"
+      successMessage=" Status pesanan berhasil diperbarui"
       className="bg-bimbi-pink hover:bg-bimbi-pink-dark text-white font-bold text-sm px-5 py-2.5 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
       onConfirm={async () => {
         const res = await fetch(`/api/admin/orders/${orderId}`, {

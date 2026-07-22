@@ -34,7 +34,7 @@ export default function ConfirmButton({
     setPending(false);
 
     if (result.ok) {
-      setFeedback({ type: "success", message: successMessage ?? "✅ Berhasil dihapus." });
+      setFeedback({ type: "success", message: successMessage ?? " Berhasil dihapus." });
       setTimeout(() => router.refresh(), 700);
     } else {
       setFeedback({ type: "error", message: result.error ?? "Terjadi kesalahan. Coba lagi." });

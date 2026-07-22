@@ -27,7 +27,7 @@ export default async function AdminStoresPage() {
       {stores.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-xl shadow-card">
           <EmptyState
-            icon="🏬"
+            icon=""
             message='Belum ada toko. Klik "Tambah Toko Baru" untuk mulai.'
             actionHref="/admin/stok-toko/baru"
             actionLabel="+ Tambah Toko Baru"
@@ -39,11 +39,11 @@ export default async function AdminStoresPage() {
             <div key={s.id} className="bg-white border border-slate-200 rounded-xl shadow-card p-5">
               <p className="font-display font-bold text-slate-800">{s.name}</p>
               <p className="text-sm text-slate-500 mt-1">{s.address}</p>
-              <p className="text-sm text-slate-400 mt-1">🏙️ {s.city}{s.phone ? ` · ☎️ ${s.phone}` : ""}</p>
+              <p className="text-sm text-slate-400 mt-1"> {s.city}{s.phone ? ` · ${s.phone}` : ""}</p>
               <p className="text-xs text-slate-400 mt-2">{s._count.stock} produk dengan data stok</p>
               <div className="mt-4 flex items-center gap-4 text-sm font-semibold">
                 <Link href={`/admin/stok-toko/${s.id}/stok`} className="text-bimbi-mint hover:underline">
-                  📦 Kelola Stok
+                   Kelola Stok
                 </Link>
                 <Link href={`/admin/stok-toko/${s.id}`} className="text-bimbi-sky hover:underline">
                   Edit

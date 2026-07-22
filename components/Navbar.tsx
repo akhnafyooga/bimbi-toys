@@ -30,14 +30,14 @@ export default async function Navbar() {
     <header className="w-full z-50 flex flex-col bg-white">
       {/* ROW 1 — solid blue brand bar: logo, store pill, search, account/cart */}
       <div className="w-full bg-bimbi-pink text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2 ">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 md:py-5 flex flex-wrap items-center gap-x-4 gap-y-2">
           {/* Logo slot (user artwork goes in public/brand/) */}
           <Link
             href="/"
             className="shrink-0 chip-spring rounded-md px-2 py-1 flex items-center drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
             title="Bimbi Toys"
           >
-            <BrandLogo variant="mark" height={36} />
+            <BrandLogo variant="mark" height={44} />
           </Link>
 
           {/* Store pickup pill */}
@@ -77,12 +77,12 @@ export default async function Navbar() {
               type="text"
               name="q"
               placeholder="Cari semua di Bimbi Toys online dan di toko"
-              className="flex-1 px-4 py-2.5 text-sm text-bimbi-ink outline-none placeholder:text-slate-400 bg-transparent"
+              className="flex-1 px-4 py-2.5 md:py-3 text-sm text-bimbi-ink outline-none placeholder:text-slate-400 bg-transparent"
             />
             <button
               type="submit"
               aria-label="Cari"
-              className="m-1 h-8 w-8 shrink-0 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center transition-colors btn-press"
+              className="m-1 h-8 w-8 md:h-9 md:w-9 shrink-0 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center transition-colors btn-press"
             >
               <AppIcon name="search" size={18} />
             </button>
@@ -127,7 +127,7 @@ export default async function Navbar() {
               </div>
             ) : (
               <Link href="/login" className="flex items-center gap-2 hover:underline chip-spring">
-                <span className="text-lg">👤</span>
+                <span className="font-bold xl:hidden">Masuk</span>
                 <span className="hidden xl:flex flex-col leading-tight text-left">
                   <span className="text-[11px] font-normal text-white/80">Masuk</span>
                   <span>Akun</span>
@@ -153,8 +153,8 @@ export default async function Navbar() {
         </div>
       </div>
 
-      {/* ROW 2 — white category strip (sliding, with arrows) */}
-      <div className="w-full bg-white border-b border-slate-200 shadow-sm">
+      {/* ROW 2 — light grey category strip (sliding, with arrows) */}
+      <div className="w-full bg-bimbi-cream border-b border-slate-200 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center">
           <CategoryNav categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }))} />
           <div className="hidden lg:flex items-center shrink-0">

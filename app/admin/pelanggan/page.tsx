@@ -62,7 +62,7 @@ export default async function AdminCustomersPage({
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
         {customers.length === 0 ? (
-          <EmptyState icon={q ? "🔍" : "👥"} message={q ? "Tidak ada pelanggan yang cocok dengan pencarian kamu." : "Belum ada pelanggan yang mendaftar."} />
+          <EmptyState icon={q ? "" : ""} message={q ? "Tidak ada pelanggan yang cocok dengan pencarian kamu." : "Belum ada pelanggan yang mendaftar."} />
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400">

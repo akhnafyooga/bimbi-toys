@@ -27,7 +27,7 @@ export default async function StoreStockPage({ params }: { params: Promise<{ id:
       </div>
       {items.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-xl shadow-card">
-          <EmptyState icon="🧸" message="Belum ada produk untuk diatur stoknya. Tambahkan produk dulu di menu Produk." />
+          <EmptyState icon="" message="Belum ada produk untuk diatur stoknya. Tambahkan produk dulu di menu Produk." />
         </div>
       ) : (
         <StoreStockEditor storeId={store.id} items={items} />

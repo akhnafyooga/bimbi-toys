@@ -55,7 +55,7 @@ export default function CategoryForm({ category }: { category?: CategoryData }) 
       return;
     }
 
-    setBanner({ type: "success", message: "✅ Kategori berhasil disimpan" });
+    setBanner({ type: "success", message: " Kategori berhasil disimpan" });
     setTimeout(() => router.push("/admin/kategori"), 700);
   }
 
@@ -86,7 +86,7 @@ export default function CategoryForm({ category }: { category?: CategoryData }) 
           type="text"
           value={emoji}
           onChange={(e) => setEmoji(e.target.value)}
-          placeholder="🤖"
+          placeholder=""
           maxLength={4}
           className={`${inputClass} w-24 text-center text-lg`}
         />

@@ -106,7 +106,7 @@ export default function ImageUploader({
             e.target.value = "";
           }}
         />
-        <div className="text-3xl">📷</div>
+        <div className="text-3xl"></div>
         <p className="mt-2 text-sm font-semibold text-slate-600">
           Seret &amp; lepas foto di sini, atau klik untuk pilih foto
         </p>
@@ -134,7 +134,7 @@ export default function ImageUploader({
                     className="bg-white/90 text-slate-700 text-xs rounded px-1.5 py-1 cursor-pointer"
                     title="Pindah ke kiri"
                   >
-                    ◀
+                    
                   </button>
                 )}
                 <button
@@ -152,7 +152,7 @@ export default function ImageUploader({
                     className="bg-white/90 text-slate-700 text-xs rounded px-1.5 py-1 cursor-pointer"
                     title="Pindah ke kanan"
                   >
-                    ▶
+                    
                   </button>
                 )}
               </div>
@@ -165,7 +165,7 @@ export default function ImageUploader({
             >
               {u.error ? (
                 <>
-                  <span className="text-xs text-bimbi-pink-dark font-semibold">⚠️ {u.error}</span>
+                  <span className="text-xs text-bimbi-pink-dark font-semibold"> {u.error}</span>
                   <button
                     type="button"
                     onClick={() => setUploading((prev) => prev.filter((x) => x.id !== u.id))}

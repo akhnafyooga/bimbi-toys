@@ -13,17 +13,17 @@ type Step = {
 const STEPS: Step[] = [
   {
     selector: "#tour-search",
-    title: "1. Cari mainanmu 🔍",
+    title: "1. Cari mainanmu ",
     text: "Cari barang keinginanmu di sini! Ketik namanya, atau pilih kategorinya dulu biar hasilnya lebih pas.",
   },
   {
     selector: '[data-tour="products"] > *:first-child',
-    title: "2. Lihat & pilih barang 🧸",
+    title: "2. Lihat & pilih barang ",
     text: "Klik barang untuk melihat informasi lebih lanjut dan memasukkannya ke keranjang.",
   },
   {
     selector: "#tour-cart",
-    title: "3. Selesaikan belanjamu 🛒",
+    title: "3. Selesaikan belanjamu ",
     text: "Kalau semua sudah masuk keranjang, klik keranjang di sini untuk menyelesaikan pembelianmu.",
   },
 ];
@@ -157,7 +157,7 @@ export default function OnboardingTour() {
               onClick={() => (isLast ? finish() : setStep((s) => s + 1))}
               className="rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark text-white text-sm font-bold px-5 py-2 transition-colors cursor-pointer"
             >
-              {isLast ? "Selesai 🎉" : "Lanjut →"}
+              {isLast ? "Selesai " : "Lanjut →"}
             </button>
           </div>
         </div>

@@ -102,7 +102,7 @@ export default async function AdminOrdersPage({
       <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
         {orders.length === 0 ? (
           <EmptyState
-            icon={isFiltered ? "🔍" : "📦"}
+            icon={isFiltered ? "" : ""}
             message={
               isFiltered
                 ? "Tidak ada pesanan yang cocok dengan pencarian kamu."
@@ -129,7 +129,12 @@ export default async function AdminOrdersPage({
                         {o.orderNumber}
                       </Link>
                       {o.fulfillment === "SELF_COURIER" && (
-                        <span className="ml-1.5" title="Pembeli pesan kurir sendiri">🛵</span>
+                        <span
+                          className="ml-1.5 rounded-sm bg-bimbi-sun px-1.5 py-0.5 text-[10px] font-bold text-bimbi-pink align-middle"
+                          title="Pembeli pesan kurirnya sendiri"
+                        >
+                          Pesan Antar
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-slate-600">

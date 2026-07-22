@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 type Props = {
-  icon: string;
+  icon?: string;
   message: string;
   actionHref?: string;
   actionLabel?: string;
@@ -10,7 +10,7 @@ type Props = {
 export default function EmptyState({ icon, message, actionHref, actionLabel }: Props) {
   return (
     <div className="text-center py-14 px-4">
-      <div className="text-5xl">{icon}</div>
+      {icon ? <div className="text-5xl">{icon}</div> : null}
       <p className="mt-3 text-slate-500 text-sm max-w-sm mx-auto">{message}</p>
       {actionHref && actionLabel && (
         <Link
