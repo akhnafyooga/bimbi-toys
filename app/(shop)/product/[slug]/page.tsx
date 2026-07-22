@@ -6,6 +6,7 @@ import { formatIDR } from "@/lib/format";
 import { normalizePhone } from "@/lib/phone";
 import ProductActions from "@/components/ProductActions";
 import AppIcon from "@/components/AppIcon";
+import { googleMapsUrl } from "@/lib/maps";
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -128,7 +129,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <ul className="space-y-1 text-sm">
               {product.stockByStore.map((s) => (
                 <li key={s.id} className="flex justify-between">
-                  <span className="text-slate-600">{s.store.name} — {s.store.city}</span>
+                  <a
+                    href={googleMapsUrl(s.store)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-slate-600 hover:text-bimbi-pink hover:underline"
+                    title="Buka di Google Maps"
+                  >
+                    {s.store.name} — {s.store.city}
+                  </a>
                   <span className={s.quantity > 0 ? "text-bimbi-mint font-bold" : "text-slate-300"}>
                     {s.quantity > 0 ? `${s.quantity} stok` : "Kosong"}
                   </span>

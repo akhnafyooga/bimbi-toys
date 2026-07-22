@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { googleMapsUrl } from "@/lib/maps";
 
 export default async function StoresPage() {
   const stores = await prisma.storeLocation.findMany({ orderBy: { city: "asc" } });
@@ -18,7 +19,7 @@ export default async function StoresPage() {
             <p className="text-sm text-bimbi-ink/50 mt-1"> {s.city}</p>
             {s.phone && <p className="text-sm text-bimbi-ink/50"> {s.phone}</p>}
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`}
+              href={googleMapsUrl(s)}
               target="_blank"
               rel="noreferrer"
               className="inline-block mt-3 text-sm font-bold text-bimbi-pink-dark hover:underline"

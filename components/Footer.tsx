@@ -2,12 +2,13 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import BrandLogo from "@/components/BrandLogo";
 import AppIcon from "@/components/AppIcon";
+import { googleMapsUrl } from "@/lib/maps";
 
 export default async function Footer() {
   // Single source of truth: the same StoreLocation rows the admin panel edits.
   const stores = await prisma.storeLocation.findMany({
     orderBy: { city: "asc" },
-    select: { id: true, name: true, city: true },
+    select: { id: true, name: true, city: true, lat: true, lng: true },
   });
 
   return (
@@ -39,8 +40,16 @@ export default async function Footer() {
         {/* Store list row — from the database */}
         <ul className="flex flex-wrap justify-center gap-x-6 gap-y-1 text-xs text-slate-500">
           {stores.map((s) => (
-            <li key={s.id} className="inline-flex items-center gap-1">
-              <AppIcon name="location" size={13} /> {s.name} — {s.city}
+            <li key={s.id}>
+              <a
+                href={googleMapsUrl(s)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 hover:text-bimbi-pink hover:underline"
+                title="Buka di Google Maps"
+              >
+                <AppIcon name="location" size={13} /> {s.name} — {s.city}
+              </a>
             </li>
           ))}
         </ul>

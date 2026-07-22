@@ -4,6 +4,7 @@ import ProductCard from "@/components/ProductCard";
 import OnboardingTour from "@/components/OnboardingTour";
 import CategoryDropdown from "@/components/CategoryDropdown";
 import Reveal from "@/components/Reveal";
+import { pickDailyBalanced, jakartaDayKey } from "@/lib/dailyPicks";
 
 export default async function HomePage({
   searchParams,
@@ -12,19 +13,21 @@ export default async function HomePage({
 }) {
   const { category } = await searchParams;
 
-  const [categories, products, featured] = await Promise.all([
+  const [categories, products, allForPicks] = await Promise.all([
     prisma.category.findMany({ orderBy: { name: "asc" } }),
     prisma.product.findMany({
       where: category ? { category: { slug: category } } : undefined,
       include: { images: { orderBy: { position: "asc" }, take: 1 } },
       orderBy: { createdAt: "desc" },
     }),
+    // Pool for the daily "Penawaran Hits" pick — every product, one image each.
     prisma.product.findMany({
-      where: { featured: true },
       include: { images: { orderBy: { position: "asc" }, take: 1 } },
-      take: 6,
     }),
   ]);
+
+  // 10 products, spread evenly across categories, reshuffled once per day.
+  const dailyPicks = pickDailyBalanced(allForPicks, 10, jakartaDayKey());
 
   return (
     <div className="bg-white min-h-screen">
@@ -60,8 +63,8 @@ export default async function HomePage({
           </div>
         </div>
 
-        {/* 2. Deals strip — replaces the old sidebar promo widgets */}
-        {featured.length > 0 && (
+        {/* 2. Deals strip — 10 daily picks, balanced across categories */}
+        {dailyPicks.length > 0 && (
           <Reveal>
             <section>
               <div className="flex items-baseline justify-between mb-3">
@@ -71,7 +74,7 @@ export default async function HomePage({
                 </Link>
               </div>
               <div className="flex gap-4 overflow-x-auto scrollbar-none pb-2 -mx-1 px-1">
-                {featured.map((p) => (
+                {dailyPicks.map((p) => (
                   <div key={p.id} className="w-44 sm:w-52 shrink-0">
                     <ProductCard
                       slug={p.slug}
