@@ -157,14 +157,6 @@ export default async function Navbar() {
       <div className="w-full bg-bimbi-cream border-b border-slate-200 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center">
           <CategoryNav categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }))} />
-          <div className="hidden lg:flex items-center shrink-0">
-            <Link
-              href="/#katalog"
-              className="px-4 py-3 font-bold text-xs uppercase tracking-wider text-wm-red hover:underline transition-colors"
-            >
-              Penawaran Hari Ini
-            </Link>
-          </div>
         </div>
       </div>
     </header>

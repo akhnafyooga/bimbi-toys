@@ -6,6 +6,7 @@ import { LOW_STOCK_THRESHOLD, PRODUCTS_PER_PAGE } from "@/lib/constants";
 import Pagination from "@/components/admin/Pagination";
 import EmptyState from "@/components/admin/EmptyState";
 import ProductDeleteButton from "@/components/admin/ProductDeleteButton";
+import FillImagesButton from "@/components/admin/FillImagesButton";
 
 export default async function AdminProductsPage({
   searchParams,
@@ -53,12 +54,15 @@ export default async function AdminProductsPage({
           <h1 className="font-display text-2xl font-bold text-slate-800">Produk</h1>
           <p className="text-slate-500 text-sm mt-1">{total} produk terdaftar.</p>
         </div>
-        <Link
-          href="/admin/produk/baru"
-          className="bg-bimbi-mint hover:bg-emerald-600 text-white font-bold text-sm px-4 py-2.5 rounded-md transition-colors shrink-0"
-        >
-          + Tambah Produk Baru
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <FillImagesButton />
+          <Link
+            href="/admin/produk/baru"
+            className="bg-bimbi-mint hover:bg-emerald-600 text-white font-bold text-sm px-4 py-2.5 rounded-md transition-colors shrink-0"
+          >
+            + Tambah Produk Baru
+          </Link>
+        </div>
       </div>
 
       <form className="flex flex-wrap gap-3 bg-white border border-slate-200 rounded-xl shadow-card p-4">

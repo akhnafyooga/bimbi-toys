@@ -1,17 +1,17 @@
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/lib/constants";
 
-// Swappable product-photo storage.
+// Swappable product-photo storage. Backend priority:
+//   1. Cloudflare R2  (if R2_* env vars set) — production; served via r2.dev / CDN
+//   2. Cloudinary     (if CLOUDINARY_* set)
+//   3. Local disk     (dev only; NOT persisted on serverless hosts like Vercel)
 //
-// Default (dev, and fine for a single-server deploy): saves to /public/uploads/products
-// and returns a local URL. This does NOT persist on serverless hosts (Vercel wipes
-// local disk on every deploy), so production needs Cloudinary.
-//
-// To switch to Cloudinary: set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and
-// CLOUDINARY_API_SECRET in your environment — this module then automatically
-// uploads there instead. No other code changes needed. See DEPLOYMENT.md.
+// R2 is S3-compatible, so we talk to it with the AWS S3 client. Uploaded objects
+// get an immutable, year-long Cache-Control and a random key, so their public
+// URLs are safe to cache at the edge forever.
 
 export type UploadedImage = { url: string };
 
@@ -26,31 +26,118 @@ export function assertValidImageFile(file: File) {
   }
 }
 
-export async function uploadProductImage(file: File): Promise<UploadedImage> {
-  assertValidImageFile(file);
-
-  if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-    return uploadToCloudinary(file);
-  }
-  return uploadToLocalDisk(file);
+function extFromContentType(contentType: string) {
+  return contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
 }
 
-async function uploadToLocalDisk(file: File): Promise<UploadedImage> {
+// ---- Public entry points -------------------------------------------------
+
+// Manual admin upload path (a user-selected File).
+export async function uploadProductImage(file: File): Promise<UploadedImage> {
+  assertValidImageFile(file);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  return uploadImageBytes(buffer, file.type);
+}
+
+// Raw-bytes path, used by the auto-fetch pipeline (lib/productImages.ts), which
+// downloads a remote image and hands us the buffer + content-type.
+export async function uploadImageBytes(buffer: Buffer, contentType: string): Promise<UploadedImage> {
+  if (!ALLOWED_IMAGE_TYPES.includes(contentType)) {
+    throw new UploadValidationError("Format gambar harus JPG, PNG, atau WEBP.");
+  }
+  if (buffer.length > MAX_IMAGE_SIZE_BYTES) {
+    throw new UploadValidationError("Ukuran gambar maksimal 5MB.");
+  }
+  if (isR2Configured()) return uploadToR2(buffer, contentType);
+  if (isCloudinaryConfigured()) return uploadToCloudinary(buffer, contentType);
+  return uploadToLocalDisk(buffer, contentType);
+}
+
+// ---- Cloudflare R2 -------------------------------------------------------
+
+let r2Client: S3Client | null = null;
+
+export function isR2Configured() {
+  // Images are served through our own /api/img proxy, so no public bucket URL is
+  // needed — just the S3 credentials + bucket.
+  return Boolean(
+    process.env.R2_ACCOUNT_ID &&
+      process.env.R2_ACCESS_KEY_ID &&
+      process.env.R2_SECRET_ACCESS_KEY &&
+      process.env.R2_BUCKET
+  );
+}
+
+function getR2Client() {
+  if (!r2Client) {
+    r2Client = new S3Client({
+      region: "auto",
+      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+      },
+    });
+  }
+  return r2Client;
+}
+
+async function uploadToR2(buffer: Buffer, contentType: string): Promise<UploadedImage> {
+  const key = `products/${crypto.randomUUID()}.${extFromContentType(contentType)}`;
+  await getR2Client().send(
+    new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET!,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+      CacheControl: "public, max-age=31536000, immutable",
+    })
+  );
+  // Serve through our own /api/img proxy rather than the raw r2.dev public URL:
+  // r2.dev is filtered by some Indonesian ISPs, but the S3 endpoint we read from
+  // (r2.cloudflarestorage.com) is not. Same-origin URLs also need no remotePatterns.
+  return { url: `/api/img/${key}` };
+}
+
+// Fetch an object's bytes back from R2 (used by the /api/img proxy route).
+export async function getR2Object(key: string): Promise<{ body: ArrayBuffer; contentType: string } | null> {
+  if (!isR2Configured()) return null;
+  try {
+    const obj = await getR2Client().send(
+      new GetObjectCommand({ Bucket: process.env.R2_BUCKET!, Key: key })
+    );
+    if (!obj.Body) return null;
+    const bytes = await obj.Body.transformToByteArray();
+    // Copy into a plain ArrayBuffer so it's an unambiguous Response BodyInit.
+    const body = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+    return { body, contentType: obj.ContentType ?? "application/octet-stream" };
+  } catch {
+    return null;
+  }
+}
+
+// ---- Local disk (dev only) ----------------------------------------------
+
+async function uploadToLocalDisk(buffer: Buffer, contentType: string): Promise<UploadedImage> {
   const uploadDir = path.join(process.cwd(), "public", "uploads", "products");
   await mkdir(uploadDir, { recursive: true });
-
-  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-  const filename = `${crypto.randomUUID()}.${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const filename = `${crypto.randomUUID()}.${extFromContentType(contentType)}`;
   await writeFile(path.join(uploadDir, filename), buffer);
-
   return { url: `/uploads/products/${filename}` };
+}
+
+// ---- Cloudinary ----------------------------------------------------------
+
+function isCloudinaryConfigured() {
+  return Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET
+  );
 }
 
 // Uses Cloudinary's signed upload REST API directly (no SDK dependency needed).
 // Not yet exercised against a live account — verify this path once real
 // Cloudinary credentials are configured (see DEPLOYMENT.md "Production image storage").
-async function uploadToCloudinary(file: File): Promise<UploadedImage> {
+async function uploadToCloudinary(buffer: Buffer, contentType: string): Promise<UploadedImage> {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME!;
   const apiKey = process.env.CLOUDINARY_API_KEY!;
   const apiSecret = process.env.CLOUDINARY_API_SECRET!;
@@ -63,7 +150,7 @@ async function uploadToCloudinary(file: File): Promise<UploadedImage> {
     .digest("hex");
 
   const form = new FormData();
-  form.append("file", file);
+  form.append("file", new Blob([new Uint8Array(buffer)], { type: contentType }));
   form.append("api_key", apiKey);
   form.append("timestamp", String(timestamp));
   form.append("folder", folder);

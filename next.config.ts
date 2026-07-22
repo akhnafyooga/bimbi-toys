@@ -4,10 +4,10 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       // Stage 1 seed data uses picsum.photos as image placeholders.
-      // Stage 3: add your CDN / S3 / Cloudinary domain here once you plug in real product photos.
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "fastly.picsum.photos" },
-      // Production image storage once switched on — see lib/upload.ts and DEPLOYMENT.md
+      // Cloudinary, if used. R2 images are same-origin (served via /api/img), so
+      // they need no entry here.
       { protocol: "https", hostname: "res.cloudinary.com" },
     ],
   },
