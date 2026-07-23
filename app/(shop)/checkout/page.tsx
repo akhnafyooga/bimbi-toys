@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { normalizePhone } from "@/lib/phone";
 import CheckoutClient from "@/components/CheckoutClient";
 
 export default async function CheckoutPage() {
@@ -21,13 +22,23 @@ export default async function CheckoutPage() {
 
   const subtotal = cartItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 
+  // Map each store's raw phone into the normalized wa.me form the checkout needs
+  // to build the WhatsApp order chat. Stores without a usable number get "".
+  const storeContacts = stores.map((s) => ({
+    id: s.id,
+    name: s.name,
+    city: s.city,
+    address: s.address,
+    whatsapp: normalizePhone(s.phone ?? "") ?? "",
+  }));
+
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
       <h1 className="font-display text-3xl text-bimbi-pink-dark mb-6">Checkout!</h1>
       <CheckoutClient
         cartItems={cartItems}
         subtotal={subtotal}
-        stores={stores}
+        stores={storeContacts}
         userPhone={user?.phone ?? null}
       />
     </div>

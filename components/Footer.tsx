@@ -2,13 +2,12 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import BrandLogo from "@/components/BrandLogo";
 import AppIcon from "@/components/AppIcon";
-import { googleMapsUrl } from "@/lib/maps";
 
 export default async function Footer() {
   // Single source of truth: the same StoreLocation rows the admin panel edits.
   const stores = await prisma.storeLocation.findMany({
     orderBy: { city: "asc" },
-    select: { id: true, name: true, city: true, lat: true, lng: true },
+    select: { id: true, name: true, city: true },
   });
 
   return (
@@ -21,7 +20,7 @@ export default async function Footer() {
 
         <p className="text-sm text-slate-500 max-w-md">
           Toko mainan, hadiah, dan perlengkapan terlengkap. Ambil langsung di toko
-          terdekat atau pesan antar — bayar gampang pakai QRIS.
+          terdekat atau pesan antar — bayar gampang pakai QRIS. 
         </p>
 
         {/* Category links row */}
@@ -37,25 +36,17 @@ export default async function Footer() {
           </li>
         </ul>
 
-        {/* Store list row — from the database */}
+        {/* Store list row — from the database */}g
         <ul className="flex flex-wrap justify-center gap-x-6 gap-y-1 text-xs text-slate-500">
           {stores.map((s) => (
-            <li key={s.id}>
-              <a
-                href={googleMapsUrl(s)}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 hover:text-bimbi-pink hover:underline"
-                title="Buka di Google Maps"
-              >
-                <AppIcon name="location" size={13} /> {s.name} — {s.city}
-              </a>
+            <li key={s.id} className="inline-flex items-center gap-1">
+              <AppIcon name="location" size={13} /> {s.name} — {s.city}
             </li>
           ))}
         </ul>
 
         <div className="w-full border-t border-slate-200 pt-5 text-xs text-slate-400">
-           {new Date().getFullYear()} Bimbi Toys. Main terus, belajar terus! ·
+          © {new Date().getFullYear()} Bimbi Toys. Main terus, belajar terus! ·
           Pembayaran aman via QRIS — GoPay, OVO, Dana, ShopeePay, m-Banking.
         </div>
       </div>
