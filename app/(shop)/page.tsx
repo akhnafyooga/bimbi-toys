@@ -78,7 +78,7 @@ export default async function HomePage({
         {/* readability wash so the headline stays legible over any photo */}
         <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-10 md:py-16">
-          <div className="space-y-3 max-w-lg text-left sm:ml-6 md:ml-16 lg:ml-24">
+          <div className="space-y-3 max-w-lg text-left sm:ml-6 md:ml-8 lg:ml-16">
             <span className="text-xs font-extrabold uppercase tracking-widest text-bimbi-pink">
               Tentang Bimbi Toys
             </span>
