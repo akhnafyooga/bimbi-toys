@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import NavbarGate from "@/components/NavbarGate";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
+import BackToTop from "@/components/BackToTop";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Navbar />
           </NavbarGate>
           <main className="flex-1">{children}</main>
+          <BackToTop />
           <Footer />
         </Providers>
       </body>

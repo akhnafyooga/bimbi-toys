@@ -110,9 +110,9 @@ export default function ProductActions({
           <button
             onClick={openStores}
             className="flex-1 flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-2.5 font-bold text-[#128C7E] hover:border-[#25D366] transition-colors chip-spring"
-            title="Hubungi toko terdekat via WhatsApp"
+            title="Chat toko terdekat untuk memesan via WhatsApp"
           >
-            WhatsApp
+            Chat untuk memesan
           </button>
           <button
             onClick={toggleWishlist}

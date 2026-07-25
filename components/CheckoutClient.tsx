@@ -241,7 +241,7 @@ export default function CheckoutClient({
           }
           className="mt-5 w-full flex items-center justify-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1FB356] px-6 py-3 font-extrabold text-white transition-colors chip-spring disabled:opacity-50"
         >
-          {placing ? "Menyiapkan pesanan..." : "Pesan via WhatsApp"}
+          {placing ? "Menyiapkan pesanan..." : "Chat untuk memesan"}
         </button>
 
         <p className="mt-3 text-center text-xs text-bimbi-ink/50">

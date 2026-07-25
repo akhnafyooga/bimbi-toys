@@ -20,7 +20,7 @@ export default async function Footer() {
 
         <p className="text-sm text-slate-500 max-w-md">
           Toko mainan, hadiah, dan perlengkapan terlengkap. Ambil langsung di toko
-          terdekat atau pesan antar — bayar gampang pakai QRIS. 
+          terdekat atau pesan antar — bayar gampang pakai QRIS.
         </p>
 
         {/* Category links row */}
@@ -36,7 +36,7 @@ export default async function Footer() {
           </li>
         </ul>
 
-        {/* Store list row — from the database */}g
+        {/* Store list row — from the database */}
         <ul className="flex flex-wrap justify-center gap-x-6 gap-y-1 text-xs text-slate-500">
           {stores.map((s) => (
             <li key={s.id} className="inline-flex items-center gap-1">

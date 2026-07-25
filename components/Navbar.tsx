@@ -28,8 +28,8 @@ export default async function Navbar() {
 
   return (
     <header className="w-full z-50 flex flex-col bg-white">
-      {/* ROW 1 — solid blue brand bar: centered logo, account left, cart right, search below */}
-      <div className="w-full bg-bimbi-pink text-white">
+      {/* ROW 1 — white brand bar (matches the logo background): centered logo, account left, cart right, search below */}
+      <div className="w-full bg-white text-bimbi-ink border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 md:py-4">
           {/* Top line: account (left) · logo (center) · wishlist + cart (right) */}
           <div className="flex items-center gap-2">
@@ -38,7 +38,7 @@ export default async function Navbar() {
               {session?.user ? (
                 <div className="flex items-center gap-2">
                   <span className="hidden xl:flex flex-col leading-tight text-left">
-                    <span className="text-[11px] font-normal text-white/80">
+                    <span className="text-[11px] font-normal text-slate-500">
                       Hai, {session.user.name?.split(" ")[0]}!
                     </span>
                     <span>Akunmu</span>
@@ -50,7 +50,7 @@ export default async function Navbar() {
                     }}
                     className="inline"
                   >
-                    <button className="font-bold text-wm-yellow hover:underline cursor-pointer">
+                    <button className="font-bold text-bimbi-pink hover:underline cursor-pointer">
                       Keluar
                     </button>
                   </form>
@@ -59,7 +59,7 @@ export default async function Navbar() {
                 <Link href="/login" className="flex items-center gap-2 hover:underline chip-spring">
                   <span className="font-bold sm:hidden">Masuk</span>
                   <span className="hidden sm:flex flex-col leading-tight text-left">
-                    <span className="text-[11px] font-normal text-white/80">Masuk</span>
+                    <span className="text-[11px] font-normal text-slate-500">Masuk</span>
                     <span>Akun</span>
                   </span>
                 </Link>
@@ -68,12 +68,12 @@ export default async function Navbar() {
               {defaultStore && (
                 <Link
                   href="/stores"
-                  className="hidden lg:flex items-center gap-2 rounded-full bg-bimbi-pink-dark/60 hover:bg-bimbi-pink-dark px-4 py-2 text-sm font-bold transition-colors chip-spring"
+                  className="hidden lg:flex items-center gap-2 rounded-full bg-bimbi-cream hover:bg-slate-200 px-4 py-2 text-sm font-bold transition-colors chip-spring"
                 >
                   <AppIcon name="location" size={22} />
                   <span className="flex flex-col leading-tight text-left">
                     <span>Ambil di toko</span>
-                    <span className="text-[11px] font-normal text-white/80">
+                    <span className="text-[11px] font-normal text-slate-500">
                       {defaultStore.name} · {defaultStore.city}
                     </span>
                   </span>
@@ -81,10 +81,10 @@ export default async function Navbar() {
               )}
             </div>
 
-            {/* Centered logo — white chip so its blue bands don't blend into the blue bar */}
+            {/* Centered logo — sits directly on the white bar */}
             <Link
               href="/"
-              className="shrink-0 chip-spring rounded-lg bg-white px-2.5 py-1 flex items-center shadow-sm"
+              className="shrink-0 chip-spring rounded-lg px-2.5 py-1 flex items-center"
               title="Bimbi Toys"
             >
               <BrandLogo variant="mark" height={36} heightClass="h-7 sm:h-8" />
@@ -99,7 +99,7 @@ export default async function Navbar() {
               >
                 <AppIcon name="wishlist" size={22} />
                 <span className="hidden xl:flex flex-col leading-tight text-left">
-                  <span className="text-[11px] font-normal text-white/80">Disimpan</span>
+                  <span className="text-[11px] font-normal text-slate-500">Disimpan</span>
                   <span>Wishlist</span>
                 </span>
                 <span className="xl:hidden">
@@ -128,7 +128,7 @@ export default async function Navbar() {
           <form
             id="tour-search"
             action="/search"
-            className="mt-3 w-full flex items-center rounded-full bg-white overflow-hidden"
+            className="mt-3 w-full flex items-center rounded-full bg-slate-100 border border-slate-200 overflow-hidden"
           >
             <select
               name="category"
@@ -159,7 +159,7 @@ export default async function Navbar() {
       </div>
 
       {/* ROW 2 — light grey category strip (sliding, with arrows) */}
-      <div className="w-full bg-bimbi-cream border-b border-slate-200 shadow-sm">
+      <div className="w-full bg-bimbi-cream">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center">
           <CategoryNav categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }))} />
         </div>

@@ -4,23 +4,51 @@ import ProductCard from "@/components/ProductCard";
 import OnboardingTour from "@/components/OnboardingTour";
 import CategoryDropdown from "@/components/CategoryDropdown";
 import Reveal from "@/components/Reveal";
+import CatalogControls from "@/components/CatalogControls";
 import { pickDailyBalanced } from "@/lib/dailyPicks";
+import type { Prisma } from "@prisma/client";
+
+const PAGE = 24; // catalog page size for "Muat lebih banyak"
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    sort?: string;
+    min?: string;
+    max?: string;
+    show?: string;
+  }>;
 }) {
-  const { category } = await searchParams;
+  const { category, sort, min, max, show } = await searchParams;
+  const showN = Math.min(Math.max(PAGE, Number(show) || PAGE), 2000);
 
-  const [categories, products, allForPicks] = await Promise.all([
+  // Price filter (harga) + sort, both driven by the URL via CatalogControls.
+  const priceFilter: Prisma.ProductWhereInput =
+    min || max
+      ? { price: { ...(min ? { gte: Number(min) } : {}), ...(max ? { lte: Number(max) } : {}) } }
+      : {};
+  const where: Prisma.ProductWhereInput = {
+    AND: [category ? { category: { slug: category } } : {}, priceFilter],
+  };
+  const orderBy: Prisma.ProductOrderByWithRelationInput =
+    sort === "termurah"
+      ? { price: "asc" }
+      : sort === "termahal"
+        ? { price: "desc" }
+        : { createdAt: "desc" };
+
+  const [categories, total, products, allForPicks] = await Promise.all([
     prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.product.count({ where }),
     prisma.product.findMany({
-      where: category ? { category: { slug: category } } : undefined,
+      where,
+      orderBy,
+      take: showN,
       include: { images: { orderBy: { position: "asc" }, take: 1 } },
-      orderBy: { createdAt: "desc" },
     }),
-    // Pool for the daily "Penawaran Hits" pick — every product, one image each.
+    // Pool for the "Penawaran Hits" pick — every product, one image each.
     prisma.product.findMany({
       include: { images: { orderBy: { position: "asc" }, take: 1 } },
     }),
@@ -30,19 +58,27 @@ export default async function HomePage({
   // (random seed) so "Penawaran Hits" changes on each refresh / new visit.
   const hitPicks = pickDailyBalanced(allForPicks, 10, crypto.randomUUID());
 
+  // "Muat lebih banyak" grows `show` while preserving category/sort/price.
+  const moreQuery = new URLSearchParams();
+  if (category) moreQuery.set("category", category);
+  if (sort) moreQuery.set("sort", sort);
+  if (min) moreQuery.set("min", String(min));
+  if (max) moreQuery.set("max", String(max));
+  moreQuery.set("show", String(showN + PAGE));
+  const moreHref = `/?${moreQuery.toString()}`;
+
   return (
     <div className="bg-white min-h-screen">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-10 pb-6 flex flex-col gap-8">
 
-        {/* 1. Hero Banner — background image slot: public/brand/hero.jpg
-            (light-blue fallback shows until the file exists) */}
-        <div
-          className="relative overflow-hidden rounded-lg bg-bimbi-sun min-h-[240px] md:min-h-[300px] flex flex-col sm:flex-row items-center justify-between p-6 sm:p-8 md:p-10 gap-6 bg-cover bg-center"
-          style={{ backgroundImage: "url(/brand/hero.jpg)" }}
-        >
-          {/* readability wash so the headline stays legible over any photo */}
-          <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent" />
-          <div className="flex-1 space-y-3 max-w-lg text-left z-10">
+      {/* 1. Hero Banner — FULL WIDTH (edge to edge). bg image: public/brand/hero.jpg */}
+      <div
+        className="relative overflow-hidden bg-bimbi-sun min-h-[240px] md:min-h-[320px] bg-cover bg-center"
+        style={{ backgroundImage: "url(/brand/hero.jpg)" }}
+      >
+        {/* readability wash so the headline stays legible over any photo */}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-10 md:py-16">
+          <div className="space-y-3 max-w-lg text-left sm:ml-6 md:ml-16 lg:ml-24">
             <span className="text-xs font-extrabold uppercase tracking-widest text-bimbi-pink">
               Tentang Bimbi Toys
             </span>
@@ -63,6 +99,9 @@ export default async function HomePage({
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 pb-6 flex flex-col gap-8">
 
         {/* 2. Deals strip — 10 daily picks, balanced across categories */}
         {hitPicks.length > 0 && (
@@ -100,7 +139,7 @@ export default async function HomePage({
                   {category
                     ? categories.find((c) => c.slug === category)?.name
                     : "Semua Koleksi"}{" "}
-                  <span className="text-slate-400 font-semibold text-base">({products.length})</span>
+                  <span className="text-slate-400 font-semibold text-base">({total})</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">Harga saat dibeli online.</p>
               </div>
@@ -111,6 +150,11 @@ export default async function HomePage({
               />
             </div>
 
+            {/* Sort + price filter */}
+            <div className="mb-5">
+              <CatalogControls category={category} sort={sort} min={min} max={max} />
+            </div>
+
             {products.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-slate-500 mt-3 text-sm font-semibold">
@@ -118,18 +162,35 @@ export default async function HomePage({
                 </p>
               </div>
             ) : (
-              <div data-tour="products" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 animate-pop-in">
-                {products.map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    slug={p.slug}
-                    name={p.name}
-                    price={p.price}
-                    compareAtPrice={p.compareAtPrice}
-                    imageUrl={p.images[0]?.url ?? ""}
-                  />
-                ))}
-              </div>
+              <>
+                <div data-tour="products" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 animate-pop-in">
+                  {products.map((p) => (
+                    <ProductCard
+                      key={p.id}
+                      slug={p.slug}
+                      name={p.name}
+                      price={p.price}
+                      compareAtPrice={p.compareAtPrice}
+                      imageUrl={p.images[0]?.url ?? ""}
+                    />
+                  ))}
+                </div>
+
+                {showN < total && (
+                  <div className="flex flex-col items-center gap-1 mt-8">
+                    <Link
+                      href={moreHref}
+                      scroll={false}
+                      className="font-bold text-bimbi-pink hover:underline chip-spring"
+                    >
+                      Muat lebih banyak ↓
+                    </Link>
+                    <span className="text-xs text-slate-400">
+                      Menampilkan {products.length} dari {total} produk
+                    </span>
+                  </div>
+                )}
+              </>
             )}
           </section>
         </Reveal>
