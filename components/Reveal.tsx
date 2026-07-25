@@ -25,13 +25,16 @@ export default function Reveal({
     const fallback = setTimeout(() => el.classList.add("revealed"), 2000);
     const observer = new IntersectionObserver(
       ([entry]) => {
-        clearTimeout(fallback);
         if (entry.isIntersecting) {
+          clearTimeout(fallback);
           el.classList.add("revealed");
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      // threshold 0 = reveal the moment ANY pixel enters view. A fractional
+      // threshold never fires for very tall sections (e.g. a 90k px product
+      // grid can't show 10% of itself in one viewport), leaving them hidden.
+      { threshold: 0 }
     );
     observer.observe(el);
     return () => {

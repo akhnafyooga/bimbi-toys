@@ -4,7 +4,7 @@ import ProductCard from "@/components/ProductCard";
 import OnboardingTour from "@/components/OnboardingTour";
 import CategoryDropdown from "@/components/CategoryDropdown";
 import Reveal from "@/components/Reveal";
-import { pickDailyBalanced, jakartaDayKey } from "@/lib/dailyPicks";
+import { pickDailyBalanced } from "@/lib/dailyPicks";
 
 export default async function HomePage({
   searchParams,
@@ -26,8 +26,9 @@ export default async function HomePage({
     }),
   ]);
 
-  // 10 products, spread evenly across categories, reshuffled once per day.
-  const dailyPicks = pickDailyBalanced(allForPicks, 10, jakartaDayKey());
+  // 10 products, spread evenly across categories, reshuffled on EVERY request
+  // (random seed) so "Penawaran Hits" changes on each refresh / new visit.
+  const hitPicks = pickDailyBalanced(allForPicks, 10, crypto.randomUUID());
 
   return (
     <div className="bg-white min-h-screen">
@@ -64,7 +65,7 @@ export default async function HomePage({
         </div>
 
         {/* 2. Deals strip — 10 daily picks, balanced across categories */}
-        {dailyPicks.length > 0 && (
+        {hitPicks.length > 0 && (
           <Reveal>
             <section>
               <div className="flex items-baseline justify-between mb-3">
@@ -74,7 +75,7 @@ export default async function HomePage({
                 </Link>
               </div>
               <div className="flex gap-4 overflow-x-auto scrollbar-none pb-2 -mx-1 px-1">
-                {dailyPicks.map((p) => (
+                {hitPicks.map((p) => (
                   <div key={p.id} className="w-44 sm:w-52 shrink-0">
                     <ProductCard
                       slug={p.slug}
@@ -98,7 +99,7 @@ export default async function HomePage({
                 <h3 className="text-xl font-extrabold text-bimbi-ink">
                   {category
                     ? categories.find((c) => c.slug === category)?.name
-                    : "Semua Koleksi Mainan"}{" "}
+                    : "Semua Koleksi"}{" "}
                   <span className="text-slate-400 font-semibold text-base">({products.length})</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">Harga saat dibeli online.</p>
@@ -113,7 +114,7 @@ export default async function HomePage({
             {products.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-slate-500 mt-3 text-sm font-semibold">
-                  Belum ada mainan di kategori ini. Coba lihat kategori lain, yuk!
+                  Belum ada barang di kategori ini. Coba lihat kategori lain, yuk!
                 </p>
               </div>
             ) : (

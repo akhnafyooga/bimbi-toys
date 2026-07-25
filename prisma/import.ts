@@ -64,9 +64,11 @@ function parseCsv(text: string): Record<string, string>[] {
 }
 
 async function main() {
-  const file = process.argv[2];
+  // First non-flag argument is the CSV path; --dry-run validates without any DB writes.
+  const dryRun = process.argv.includes("--dry-run");
+  const file = process.argv.slice(2).find((a) => !a.startsWith("--"));
   if (!file) {
-    console.error("Pemakaian: npm run db:import -- path/ke/produk.csv");
+    console.error("Pemakaian: npm run db:import -- path/ke/produk.csv [--dry-run]");
     process.exit(1);
   }
 
@@ -74,6 +76,37 @@ async function main() {
   if (rows.length === 0) {
     console.error("File CSV kosong atau tidak ada baris data.");
     process.exit(1);
+  }
+
+  // Dry run: parse + validate the file only, never touch the database. Safe to
+  // run against any DATABASE_URL — reports what a real import would create/skip.
+  if (dryRun) {
+    let ok = 0, bad = 0, dupInFile = 0;
+    const seen = new Set<string>();
+    const cats = new Set<string>();
+    for (const [i, r] of rows.entries()) {
+      const line = i + 2;
+      const name = r.name?.trim();
+      const description = r.description?.trim();
+      const price = Number(r.price);
+      const category = r.category?.trim();
+      if (!name || !description || !category || !Number.isFinite(price) || price <= 0) {
+        bad++;
+        if (bad <= 12) console.warn(`  ⚠ Baris ${line}: dilewati — name/description/category/price wajib & price > 0.`);
+        continue;
+      }
+      const slug = slugify(name);
+      if (seen.has(slug)) dupInFile++;
+      else seen.add(slug);
+      cats.add(category);
+      ok++;
+    }
+    console.log(`\n🔎 DRY RUN — ${rows.length} baris diperiksa (tanpa menulis ke database):`);
+    console.log(`   valid (akan dibuat)     : ${ok}`);
+    console.log(`   tidak valid (dilewati)  : ${bad}`);
+    console.log(`   slug ganda dalam file   : ${dupInFile}`);
+    console.log(`   kategori unik           : ${cats.size} -> ${[...cats].sort().join(", ")}`);
+    return;
   }
 
   // Cache categories by lowercased name so we only create each one once.
