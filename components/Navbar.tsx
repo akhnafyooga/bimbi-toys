@@ -36,13 +36,20 @@ export default async function Navbar() {
             {/* Left cluster — account / login (+ store pill on large screens) */}
             <div className="flex-1 flex items-center gap-3 min-w-0 text-sm font-semibold">
               {session?.user ? (
-                <div className="flex items-center gap-2">
-                  <span className="hidden xl:flex flex-col leading-tight text-left">
-                    <span className="text-[11px] font-normal text-slate-500">
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/orders"
+                    className="flex flex-col leading-tight text-left hover:underline chip-spring"
+                    title="Pesanan Saya"
+                  >
+                    <span className="text-[11px] font-normal text-slate-500 hidden xl:block">
                       Hai, {session.user.name?.split(" ")[0]}!
                     </span>
-                    <span>Akunmu</span>
-                  </span>
+                    <span className="font-bold">
+                      <span className="sm:hidden">Pesanan</span>
+                      <span className="hidden sm:inline">Pesanan Saya</span>
+                    </span>
+                  </Link>
                   <form
                     action={async () => {
                       "use server";
