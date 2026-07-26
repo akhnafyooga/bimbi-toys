@@ -10,14 +10,12 @@ export default function ProductActions({
   productName,
   isLoggedIn,
   initialWishlisted,
-  stock,
   stores,
 }: {
   productId: string;
   productName: string;
   isLoggedIn: boolean;
   initialWishlisted: boolean;
-  stock: number;
   stores: StoreContact[];
 }) {
   const router = useRouter();
@@ -89,22 +87,21 @@ export default function ProductActions({
           </button>
           <span className="px-4 font-bold">{qty}</span>
           <button
-            onClick={() => setQty((q) => Math.min(stock, q + 1))}
+            onClick={() => setQty((q) => Math.min(99, q + 1))}
             className="btn-press px-3 py-2 font-bold hover:bg-bimbi-cream"
           >
             +
           </button>
         </div>
-        <span className="text-sm text-bimbi-ink/60">{stock} stok tersedia</span>
       </div>
 
       <div className="mt-4 flex flex-col gap-2">
         <button
           onClick={addToCart}
-          disabled={loading !== null || stock === 0}
+          disabled={loading !== null}
           className="w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-6 py-3 font-extrabold text-white transition-colors chip-spring disabled:opacity-50"
         >
-          {stock === 0 ? "Stok Habis" : loading === "cart" ? "Menambah..." : "Masuk Keranjang"}
+          {loading === "cart" ? "Menambah..." : "Masuk Keranjang"}
         </button>
         <div className="flex gap-2">
           <button

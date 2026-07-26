@@ -79,7 +79,7 @@ export default function CartList({ items }: { items: Item[] }) {
                   <span className="px-3 text-sm font-bold">{item.quantity}</span>
                   <button
                     disabled={pending === item.productId}
-                    onClick={() => updateQty(item.productId, Math.min(item.product.stock, item.quantity + 1))}
+                    onClick={() => updateQty(item.productId, Math.min(99, item.quantity + 1))}
                     className="px-2.5 py-1 font-bold hover:bg-bimbi-cream"
                   >
                     +

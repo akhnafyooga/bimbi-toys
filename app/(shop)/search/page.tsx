@@ -19,11 +19,13 @@ function tokenWhere(tokens: string[]): Prisma.ProductWhereInput {
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; show?: string }>;
 }) {
-  const { q, category } = await searchParams;
+  const { q, category, show } = await searchParams;
   const query = (q ?? "").trim();
   const tokens = tokenize(query);
+  const PAGE = 24;
+  const showN = Math.min(Math.max(PAGE, Number(show) || PAGE), 2000);
 
   const selectedCategory = category
     ? await prisma.category.findUnique({ where: { slug: category } })
@@ -68,6 +70,15 @@ export default async function SearchPage({
     }
   }
 
+  // Paginate the ranked results so a big match set doesn't render all at once.
+  const total = products.length;
+  const visible = products.slice(0, showN);
+  const moreQuery = new URLSearchParams();
+  if (query) moreQuery.set("q", query);
+  if (category) moreQuery.set("category", category);
+  moreQuery.set("show", String(showN + PAGE));
+  const moreHref = `/search?${moreQuery.toString()}`;
+
   const grid = (list: typeof products) => (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
       {list.map((p) => (
@@ -91,7 +102,23 @@ export default async function SearchPage({
       </h1>
 
       {products.length > 0 ? (
-        grid(products)
+        <>
+          {grid(visible)}
+          {showN < total && (
+            <div className="flex flex-col items-center gap-1 mt-8">
+              <Link
+                href={moreHref}
+                scroll={false}
+                className="font-bold text-bimbi-pink hover:underline chip-spring"
+              >
+                Muat lebih banyak ↓
+              </Link>
+              <span className="text-xs text-slate-400">
+                Menampilkan {visible.length} dari {total} hasil
+              </span>
+            </div>
+          )}
+        </>
       ) : (
         <div className="space-y-6">
           <p className="text-bimbi-ink/70">

@@ -116,7 +116,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               productName={product.name}
               isLoggedIn={isLoggedIn}
               initialWishlisted={wishlisted}
-              stock={product.stock}
               stores={storeContacts}
             />
           </div>
@@ -128,7 +127,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </p>
             <ul className="space-y-1 text-sm">
               {product.stockByStore.map((s) => (
-                <li key={s.id} className="flex justify-between">
+                <li key={s.id}>
                   <a
                     href={googleMapsUrl(s.store)}
                     target="_blank"
@@ -138,9 +137,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   >
                     {s.store.name} — {s.store.city}
                   </a>
-                  <span className={s.quantity > 0 ? "text-bimbi-mint font-bold" : "text-slate-300"}>
-                    {s.quantity > 0 ? `${s.quantity} stok` : "Kosong"}
-                  </span>
                 </li>
               ))}
             </ul>
