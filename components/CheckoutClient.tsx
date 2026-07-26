@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { formatIDR } from "@/lib/format";
 import { normalizePhone } from "@/lib/phone";
 import { isContactReady, waLink } from "@/lib/storeContacts";
@@ -28,6 +29,7 @@ export default function CheckoutClient({
   const [storeId, setStoreId] = useState(stores[0]?.id ?? "");
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<{ orderNumber: string; waHref: string } | null>(null);
 
   const normalizedPhone = normalizePhone(contactPhone);
   const total = subtotal;
@@ -94,8 +96,42 @@ export default function CheckoutClient({
       return;
     }
 
-    // Same-tab navigation to wa.me avoids popup blockers after the async call.
-    window.location.href = waLink(selectedStore.whatsapp, buildMessage(data.orderNumber, selectedStore));
+    // Order is recorded + cart cleared. Show a confirmation with a reliable
+    // WhatsApp button (auto-redirect could silently fail on some devices).
+    const waHref = waLink(selectedStore.whatsapp, buildMessage(data.orderNumber, selectedStore));
+    setPlacing(false);
+    setDone({ orderNumber: data.orderNumber, waHref });
+  }
+
+  // Confirmation screen after the order is created.
+  if (done) {
+    return (
+      <div className="mx-auto max-w-md text-center rounded-3xl bg-white toy-shelf p-8">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-bimbi-mint/20 text-3xl">
+          🎉
+        </div>
+        <p className="font-display text-2xl text-bimbi-pink-dark mb-1">Pesanan dibuat!</p>
+        <p className="text-sm text-bimbi-ink/60">No. Pesanan</p>
+        <p className="font-bold text-bimbi-ink mb-5">{done.orderNumber}</p>
+
+        <a
+          href={done.waHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full rounded-full bg-[#25D366] hover:bg-[#1FB356] px-6 py-3 font-extrabold text-white transition-colors chip-spring"
+        >
+          Buka WhatsApp untuk konfirmasi
+        </a>
+        <p className="text-xs text-bimbi-ink/50 mt-3">
+          Kirim chat ke toko untuk konfirmasi stok &amp; pembayaran. Kalau WhatsApp
+          nggak otomatis kebuka, klik tombol hijau di atas ya.
+        </p>
+
+        <Link href="/orders" className="inline-block mt-5 font-bold text-bimbi-pink hover:underline">
+          Lihat Pesanan Saya →
+        </Link>
+      </div>
+    );
   }
 
   return (

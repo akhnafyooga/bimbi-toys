@@ -50,6 +50,12 @@ export default function CartList({ items }: { items: Item[] }) {
         <Link href="/" className="inline-block mt-4 rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white">
           Belanja Sekarang
         </Link>
+        <p className="text-sm text-bimbi-ink/70 mt-6">
+          Udah pesan?{" "}
+          <Link href="/orders" className="font-bold text-bimbi-pink hover:underline">
+            Lihat pesanan kamu di sini!
+          </Link>
+        </p>
       </div>
     );
   }
