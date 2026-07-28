@@ -1,29 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import type { OrderStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatIDR } from "@/lib/format";
-import { ORDER_STATUS_BADGE_CLASS, orderStatusLabel } from "@/lib/orderStatus";
+import { normalizePhone } from "@/lib/phone";
+import { isContactReady, waLink } from "@/lib/storeContacts";
+import { buildOrderMessage } from "@/lib/orderMessage";
+import { ORDER_STATUS_BADGE_CLASS, orderStatusLabel, orderStepIndex } from "@/lib/orderStatus";
+import OrderProgress from "@/components/OrderProgress";
 
-// Buyer-facing "Pesanan Saya": every order the signed-in user has placed, with a
-// simple progress bar so they can see where each one is in the flow.
-
-const STEPS = ["Dipesan", "Dikonfirmasi", "Dikemas", "Siap", "Selesai"];
-
-// Map an order status onto a 0–4 step (or -1 for cancelled/expired).
-function stepOf(status: OrderStatus): number {
-  switch (status) {
-    case "PENDING_PAYMENT": return 0;
-    case "PAID": return 1;
-    case "PACKED": return 2;
-    case "SHIPPED":
-    case "READY_FOR_PICKUP": return 3;
-    case "COMPLETED": return 4;
-    default: return -1; // CANCELLED / EXPIRED
-  }
-}
-
+// Buyer-facing "Pesanan Saya": every order the signed-in user has placed, with
+// its progress and a permanent WhatsApp link back to the store.
 export default async function OrdersPage() {
   const session = await auth();
   if (!session?.user) redirect("/login?callbackUrl=/orders");
@@ -34,7 +21,7 @@ export default async function OrdersPage() {
     orderBy: { createdAt: "desc" },
     include: {
       store: true,
-      items: { include: { product: { include: { images: { orderBy: { position: "asc" }, take: 1 } } } } },
+      items: { include: { product: true } },
     },
   });
 
@@ -52,8 +39,27 @@ export default async function OrdersPage() {
       ) : (
         <div className="space-y-4">
           {orders.map((o) => {
-            const step = stepOf(o.status);
+            const step = orderStepIndex(o.status);
             const ended = step === -1;
+            const wa = normalizePhone(o.store?.phone ?? "") ?? "";
+            const chatHref = isContactReady(wa)
+              ? waLink(
+                  wa,
+                  buildOrderMessage({
+                    orderNumber: o.orderNumber,
+                    items: o.items.map((it) => ({
+                      name: it.product.name,
+                      quantity: it.quantity,
+                      lineTotal: it.price * it.quantity,
+                    })),
+                    total: o.total,
+                    fulfillment: o.fulfillment,
+                    store: o.store ? { name: o.store.name, city: o.store.city } : null,
+                    followUp: true,
+                  })
+                )
+              : null;
+
             return (
               <div key={o.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 {/* header */}
@@ -90,22 +96,7 @@ export default async function OrdersPage() {
                   </p>
                 ) : (
                   <div className="mb-4">
-                    <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                      <div
-                        className="h-full bg-bimbi-mint transition-all"
-                        style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }}
-                      />
-                    </div>
-                    <div className="mt-1 flex justify-between">
-                      {STEPS.map((label, i) => (
-                        <span
-                          key={label}
-                          className={`text-[10px] ${i === step ? "font-bold text-bimbi-ink" : "text-slate-400"}`}
-                        >
-                          {label}
-                        </span>
-                      ))}
-                    </div>
+                    <OrderProgress step={step} />
                   </div>
                 )}
 
@@ -119,11 +110,23 @@ export default async function OrdersPage() {
                 </div>
 
                 {/* footer */}
-                <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
                   <span className="font-display text-lg text-bimbi-pink-dark">{formatIDR(o.total)}</span>
-                  <Link href={`/orders/${o.id}`} className="text-sm font-bold text-bimbi-pink hover:underline">
-                    Lihat detail →
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    {chatHref && !ended && (
+                      <a
+                        href={chatHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-full bg-[#25D366] hover:bg-[#1FB356] px-4 py-2 text-sm font-bold text-white transition-colors chip-spring"
+                      >
+                        Chat toko
+                      </a>
+                    )}
+                    <Link href={`/orders/${o.id}`} className="text-sm font-bold text-bimbi-pink hover:underline">
+                      Lihat detail →
+                    </Link>
+                  </div>
                 </div>
               </div>
             );

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatIDR } from "@/lib/format";
 import { normalizePhone } from "@/lib/phone";
 import { isContactReady, waLink } from "@/lib/storeContacts";
+import { buildOrderMessage } from "@/lib/orderMessage";
 
 type Store = { id: string; name: string; city: string; address: string; whatsapp: string };
 type CartItem = {
@@ -36,28 +37,20 @@ export default function CheckoutClient({
   const selectedStore = stores.find((s) => s.id === storeId) ?? null;
   const storeReady = selectedStore ? isContactReady(selectedStore.whatsapp) : false;
 
-  // Compose the order chat the buyer sends to the store's WhatsApp.
+  // Compose the order chat the buyer sends to the store's WhatsApp. Shared with
+  // the order pages so a follow-up chat carries the exact same details.
   function buildMessage(orderNumber: string, store: Store): string {
-    const lines = cartItems.map(
-      (i) => `• ${i.product.name} x${i.quantity} — ${formatIDR(i.product.price * i.quantity)}`
-    );
-    const cara =
-      fulfillment === "PICKUP"
-        ? `Ambil di Toko — ${store.name} (${store.city})`
-        : `Pesan antar, kurir saya sendiri — ambil di ${store.name} (${store.city})`;
-    return [
-      "Halo Bimbi Toys! 🧸",
-      "Saya mau pesan barang berikut (via website):",
-      "",
-      `No. Pesanan: ${orderNumber}`,
-      "",
-      ...lines,
-      "",
-      `Total barang: ${formatIDR(total)}`,
-      `Cara terima: ${cara}`,
-      "",
-      "Mohon dikonfirmasi ketersediaan stok dan cara pembayarannya ya. Terima kasih! 🙏",
-    ].join("\n");
+    return buildOrderMessage({
+      orderNumber,
+      items: cartItems.map((i) => ({
+        name: i.product.name,
+        quantity: i.quantity,
+        lineTotal: i.product.price * i.quantity,
+      })),
+      total,
+      fulfillment,
+      store: { name: store.name, city: store.city },
+    });
   }
 
   async function sendWhatsApp() {

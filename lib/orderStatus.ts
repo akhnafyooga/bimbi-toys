@@ -1,13 +1,38 @@
 import type { FulfillmentType, OrderStatus } from "@prisma/client";
 
-// Matches the labels already used on the customer-facing order page
-// (components/OrderStatus.tsx) so staff and customers see the same wording.
+// Bimbi Toys runs a WhatsApp-confirmed flow, so a buyer only needs three steps:
+//
+//   Dipesan  -> filled automatically when they chat the store at checkout
+//   Siap     -> staff press "Tandai Siap" in the admin panel
+//   Selesai  -> staff press "Tandai Selesai" once the order is handed over
+//
+// The database enum still carries older payment/shipping states, so rather than
+// migrating live data we MAP those statuses onto the three steps above.
+export const ORDER_STEPS = ["Dipesan", "Siap", "Selesai"] as const;
+
+// Which step (0–2) a status sits at. -1 means the order ended early.
+export function orderStepIndex(status: OrderStatus): number {
+  switch (status) {
+    case "PENDING_PAYMENT":
+    case "PAID":
+    case "PACKED":
+      return 0;
+    case "READY_FOR_PICKUP":
+    case "SHIPPED":
+      return 1;
+    case "COMPLETED":
+      return 2;
+    default:
+      return -1; // CANCELLED / EXPIRED
+  }
+}
+
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
-  PENDING_PAYMENT: "Menunggu Pembayaran",
-  PAID: "Sudah Dibayar",
-  PACKED: "Sedang Dikemas",
-  SHIPPED: "Dalam Pengiriman",
-  READY_FOR_PICKUP: "Siap Diambil di Toko",
+  PENDING_PAYMENT: "Dipesan",
+  PAID: "Dipesan",
+  PACKED: "Dipesan",
+  SHIPPED: "Siap",
+  READY_FOR_PICKUP: "Siap",
   COMPLETED: "Selesai",
   CANCELLED: "Dibatalkan",
   EXPIRED: "Kedaluwarsa",
@@ -15,46 +40,48 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
 
 export const ORDER_STATUS_BADGE_CLASS: Record<OrderStatus, string> = {
   PENDING_PAYMENT: "bg-amber-100 text-amber-700",
-  PAID: "bg-sky-100 text-sky-700",
-  PACKED: "bg-indigo-100 text-indigo-700",
-  SHIPPED: "bg-indigo-100 text-indigo-700",
-  READY_FOR_PICKUP: "bg-indigo-100 text-indigo-700",
+  PAID: "bg-amber-100 text-amber-700",
+  PACKED: "bg-amber-100 text-amber-700",
+  SHIPPED: "bg-sky-100 text-sky-700",
+  READY_FOR_PICKUP: "bg-sky-100 text-sky-700",
   COMPLETED: "bg-emerald-100 text-emerald-700",
   CANCELLED: "bg-slate-200 text-slate-600",
   EXPIRED: "bg-slate-200 text-slate-600",
 };
 
-// Statuses where staff still need to do something to move the order along.
-export const ACTIONABLE_STATUSES: OrderStatus[] = ["PAID", "PACKED"];
+// Orders still waiting on staff to move them along.
+export const ACTIONABLE_STATUSES: OrderStatus[] = [
+  "PENDING_PAYMENT",
+  "PAID",
+  "PACKED",
+  "READY_FOR_PICKUP",
+  "SHIPPED",
+];
 
-// Status labels that differ for buyer-arranged courier orders. Use this
-// wherever the order's fulfillment type is known.
+// Status label with the fulfillment nuance spelled out where it matters.
 export function orderStatusLabel(status: OrderStatus, fulfillment: FulfillmentType): string {
-  if (fulfillment === "SELF_COURIER" && status === "READY_FOR_PICKUP") {
-    return "Siap Diambil Kurir";
+  if (status === "READY_FOR_PICKUP" || status === "SHIPPED") {
+    return fulfillment === "SELF_COURIER" ? "Siap Diambil Kurir" : "Siap Diambil di Toko";
   }
   return ORDER_STATUS_LABEL[status];
 }
 
 // What staff can advance an order to next, and the button label to show.
-// Payment status itself (PENDING_PAYMENT -> PAID) is never in this map —
-// that's set only by the Midtrans webhook, never by a staff click.
+// A WhatsApp order starts at PENDING_PAYMENT ("Dipesan") and staff move it
+// forward by hand — there is no payment webhook in this flow, so the old
+// "only Midtrans may leave PENDING_PAYMENT" rule would strand every order.
 export function getNextStatus(
   status: OrderStatus,
   fulfillment: FulfillmentType
 ): { next: OrderStatus; label: string } | null {
-  if (status === "PAID") {
-    return { next: "PACKED", label: "Tandai Sudah Dikemas" };
+  if (status === "PENDING_PAYMENT" || status === "PAID" || status === "PACKED") {
+    return {
+      next: "READY_FOR_PICKUP",
+      label: fulfillment === "SELF_COURIER" ? "Tandai Siap Diambil Kurir" : "Tandai Siap Diambil",
+    };
   }
-  if (status === "PACKED") {
-    if (fulfillment === "SHIPPING") return { next: "SHIPPED", label: "Tandai Sudah Dikirim" };
-    if (fulfillment === "SELF_COURIER") return { next: "READY_FOR_PICKUP", label: "Siap Diambil Kurir" };
-    return { next: "READY_FOR_PICKUP", label: "Tandai Siap Diambil" };
-  }
-  if (status === "SHIPPED" || status === "READY_FOR_PICKUP") {
-    return fulfillment === "SELF_COURIER"
-      ? { next: "COMPLETED", label: "Sudah Diambil Kurir" }
-      : { next: "COMPLETED", label: "Tandai Selesai" };
+  if (status === "READY_FOR_PICKUP" || status === "SHIPPED") {
+    return { next: "COMPLETED", label: "Tandai Selesai" };
   }
   return null;
 }
