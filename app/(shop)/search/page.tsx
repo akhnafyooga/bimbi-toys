@@ -109,7 +109,7 @@ export default async function SearchPage({
         <>
           {grid(visible)}
           {showN < total && (
-            <div className="flex flex-col items-center gap-1 mt-8">
+            <div className="flex justify-center mt-8">
               <Link
                 href={moreHref}
                 scroll={false}
@@ -117,9 +117,6 @@ export default async function SearchPage({
               >
                 Muat lebih banyak ↓
               </Link>
-              <span className="text-xs text-slate-400">
-                Menampilkan {visible.length} dari {total} hasil
-              </span>
             </div>
           )}
         </>

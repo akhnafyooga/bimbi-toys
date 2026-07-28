@@ -182,7 +182,7 @@ export default async function HomePage({
                 </div>
 
                 {showN < total && (
-                  <div className="flex flex-col items-center gap-1 mt-8">
+                  <div className="flex justify-center mt-8">
                     <Link
                       href={moreHref}
                       scroll={false}
@@ -190,9 +190,6 @@ export default async function HomePage({
                     >
                       Muat lebih banyak ↓
                     </Link>
-                    <span className="text-xs text-slate-400">
-                      Menampilkan {products.length} dari {total} produk
-                    </span>
                   </div>
                 )}
               </>
