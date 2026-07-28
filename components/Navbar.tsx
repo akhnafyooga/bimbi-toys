@@ -121,6 +121,7 @@ export default async function Navbar() {
 
               <Link
                 id="tour-cart"
+                data-tour="cart"
                 href="/cart"
                 className="relative flex flex-col items-center leading-tight hover:underline chip-spring"
                 title="Keranjang"
@@ -164,7 +165,7 @@ export default async function Navbar() {
                 <span>Wishlist</span>
               </Link>
 
-              <Link href="/cart" className={TILE}>
+              <Link href="/cart" data-tour="cart" className={TILE}>
                 <span className="relative">
                   <AppIcon name="cart" size={22} />
                   <CartBadge count={cartCount} variant="bubble" />

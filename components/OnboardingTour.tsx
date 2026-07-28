@@ -22,11 +22,21 @@ const STEPS: Step[] = [
     text: "Klik barang untuk melihat informasi lebih lanjut dan memasukkannya ke keranjang.",
   },
   {
-    selector: "#tour-cart",
+    // Mobile and desktop each render their own cart control, so match on the
+    // shared attribute and let findVisible() pick whichever one is on screen.
+    selector: '[data-tour="cart"]',
     title: "3. Selesaikan belanjamu ",
     text: "Kalau semua sudah masuk keranjang, klik keranjang di sini untuk menyelesaikan pembelianmu.",
   },
 ];
+
+// A responsive layout keeps both variants in the DOM and hides one with CSS.
+// querySelector would happily return the hidden one, whose bounding box is all
+// zeroes — putting the spotlight in the top-left corner. Pick a rendered one.
+function findVisible(selector: string): Element | null {
+  const all = Array.from(document.querySelectorAll(selector));
+  return all.find((el) => el.getBoundingClientRect().width > 0) ?? null;
+}
 
 type Rect = { top: number; left: number; width: number; height: number };
 
@@ -58,7 +68,7 @@ export default function OnboardingTour() {
   useEffect(() => {
     if (!active) return;
 
-    const el = document.querySelector(STEPS[step].selector);
+    const el = findVisible(STEPS[step].selector);
     if (!el) {
       // Target missing (e.g. empty catalog) — skip ahead, or end the tour.
       // Deferred so we don't call setState synchronously inside the effect.
