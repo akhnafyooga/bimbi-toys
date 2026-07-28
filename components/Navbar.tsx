@@ -6,6 +6,11 @@ import CategoryNav from "@/components/CategoryNav";
 import CartBadge from "@/components/CartBadge";
 import BrandLogo from "@/components/BrandLogo";
 import AppIcon from "@/components/AppIcon";
+import MobileNavPanel from "@/components/MobileNavPanel";
+
+// Shared look for one mobile nav tile: icon on top, label underneath.
+const TILE =
+  "flex flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white py-2.5 px-1 text-[11px] font-bold text-bimbi-ink hover:border-bimbi-pink/50 transition-colors chip-spring";
 
 export default async function Navbar() {
   const session = await auth();
@@ -28,12 +33,18 @@ export default async function Navbar() {
 
   return (
     <header className="w-full z-50 flex flex-col bg-white">
-      {/* ROW 1 — white brand bar (matches the logo background): centered logo, account left, cart right, search below */}
       <div className="w-full bg-white text-bimbi-ink border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 md:py-4">
-          {/* Top line: account (left) · logo (center) · wishlist + cart (right) */}
-          <div className="flex items-center gap-2">
-            {/* Left cluster — account / login (+ store pill on large screens) */}
+
+          {/* ===== MOBILE — row 1: logo on its own line ===== */}
+          <div className="md:hidden flex justify-center pt-0.5 pb-1">
+            <Link href="/" className="chip-spring flex items-center" title="Bimbi Toys">
+              <BrandLogo variant="mark" height={36} heightClass="h-8" />
+            </Link>
+          </div>
+
+          {/* ===== DESKTOP — account left · logo center · wishlist+cart right ===== */}
+          <div className="hidden md:flex items-center gap-2">
             <div className="flex-1 flex items-center gap-3 min-w-0 text-sm font-semibold">
               {session?.user ? (
                 <div className="flex items-center gap-3">
@@ -45,10 +56,7 @@ export default async function Navbar() {
                     <span className="text-[11px] font-normal text-slate-500 hidden xl:block">
                       Hai, {session.user.name?.split(" ")[0]}!
                     </span>
-                    <span className="font-bold">
-                      <span className="sm:hidden">Pesanan</span>
-                      <span className="hidden sm:inline">Pesanan Saya</span>
-                    </span>
+                    <span className="font-bold">Pesanan Saya</span>
                   </Link>
                   <form
                     action={async () => {
@@ -64,7 +72,6 @@ export default async function Navbar() {
                 </div>
               ) : (
                 <Link href="/login" className="flex items-center gap-2 hover:underline chip-spring">
-                  <span className="font-bold sm:hidden">Masuk</span>
                   <span className="hidden sm:flex flex-col leading-tight text-left">
                     <span className="text-[11px] font-normal text-slate-500">Masuk</span>
                     <span>Akun</span>
@@ -88,7 +95,6 @@ export default async function Navbar() {
               )}
             </div>
 
-            {/* Centered logo — sits directly on the white bar */}
             <Link
               href="/"
               className="shrink-0 chip-spring rounded-lg px-2.5 py-1 flex items-center"
@@ -97,7 +103,6 @@ export default async function Navbar() {
               <BrandLogo variant="mark" height={36} heightClass="h-7 sm:h-8" />
             </Link>
 
-            {/* Right cluster — wishlist + cart */}
             <div className="flex-1 flex items-center justify-end gap-4 sm:gap-5 text-sm font-semibold">
               <Link
                 href="/wishlist"
@@ -131,11 +136,63 @@ export default async function Navbar() {
             </div>
           </div>
 
-          {/* Search — big white pill, full width on its own row */}
+          {/* ===== MOBILE — row 2: separated icon buttons, collapsible ===== */}
+          <MobileNavPanel>
+            {session?.user && (
+              <p className="px-1 pb-1.5 text-[11px] font-semibold text-slate-500">
+                Hai, {session.user.name?.split(" ")[0]}!
+              </p>
+            )}
+            <div className={`grid gap-2 ${session?.user ? "grid-cols-4" : "grid-cols-3"}`}>
+              {session?.user ? (
+                <Link href="/orders" className={TILE}>
+                  <AppIcon name="pesanan" size={22} />
+                  <span>Pesanan</span>
+                </Link>
+              ) : (
+                <Link href="/login" className={TILE}>
+                  <AppIcon name="akun" size={22} />
+                  <span>Masuk</span>
+                </Link>
+              )}
+
+              <Link href="/wishlist" className={TILE}>
+                <span className="relative">
+                  <AppIcon name="wishlist" size={22} />
+                  <CartBadge count={wishlistCount} variant="bubble" />
+                </span>
+                <span>Wishlist</span>
+              </Link>
+
+              <Link href="/cart" className={TILE}>
+                <span className="relative">
+                  <AppIcon name="cart" size={22} />
+                  <CartBadge count={cartCount} variant="bubble" />
+                </span>
+                <span>{cartCount > 0 ? formatIDR(cartTotal) : "Keranjang"}</span>
+              </Link>
+
+              {session?.user && (
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/" });
+                  }}
+                >
+                  <button type="submit" className={`${TILE} w-full cursor-pointer text-bimbi-pink`}>
+                    <AppIcon name="akun" size={22} />
+                    <span>Keluar</span>
+                  </button>
+                </form>
+              )}
+            </div>
+          </MobileNavPanel>
+
+          {/* Search — shared, full width */}
           <form
             id="tour-search"
             action="/search"
-            className="mt-3 w-full flex items-center rounded-full bg-slate-100 border border-slate-200 overflow-hidden"
+            className="mt-2 md:mt-3 w-full flex items-center rounded-full bg-slate-100 border border-slate-200 overflow-hidden"
           >
             <select
               name="category"
@@ -165,7 +222,7 @@ export default async function Navbar() {
         </div>
       </div>
 
-      {/* ROW 2 — light grey category strip (sliding, with arrows) */}
+      {/* ROW 3 — light grey category strip (sliding, with arrows) */}
       <div className="w-full bg-bimbi-cream">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center">
           <CategoryNav categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }))} />

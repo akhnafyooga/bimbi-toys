@@ -9,6 +9,10 @@ const FALLBACK: Record<string, string> = {
   location: "",
   search: "",
   wishlist: "",
+  // Placeholder emoji until the artwork lands at
+  // public/brand/icons/akun.png and public/brand/icons/pesanan.png
+  akun: "👤",
+  pesanan: "🧾",
 };
 
 export default function AppIcon({
@@ -16,7 +20,7 @@ export default function AppIcon({
   size = 20,
   className = "",
 }: {
-  name: "cart" | "location" | "search" | "wishlist";
+  name: "cart" | "location" | "search" | "wishlist" | "akun" | "pesanan";
   size?: number;
   className?: string;
 }) {

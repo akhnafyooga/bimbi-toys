@@ -1,0 +1,22 @@
+# Netlify deployment config for Bimbi Toys.
+#
+# Vercel keeps working exactly as before — Vercel ignores this file, and Netlify
+# ignores Vercel's settings. Nothing here changes the current live site.
+#
+# Full migration checklist: docs/DEPLOY-NETLIFY.md
+
+[build]
+  # `npm run build` already runs `prisma generate` before `next build`,
+  # which Netlify needs since node_modules is rebuilt on every deploy.
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Next.js 16 requires Node 20+. Pinned to 22 (LTS) rather than the newest
+  # release so builds stay reproducible.
+  NODE_VERSION = "22"
+
+# Official Next.js runtime: App Router, Server Components, Route Handlers,
+# next/image and middleware are handled by this adapter.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
