@@ -6,6 +6,7 @@ import { formatIDR } from "@/lib/format";
 import { normalizePhone } from "@/lib/phone";
 import { isContactReady, waLink } from "@/lib/storeContacts";
 import { buildOrderMessage } from "@/lib/orderMessage";
+import { applyDiscount } from "@/lib/discount";
 
 type Store = { id: string; name: string; city: string; address: string; whatsapp: string };
 type CartItem = {
@@ -19,11 +20,13 @@ export default function CheckoutClient({
   subtotal,
   stores,
   userPhone,
+  discountPercent = 0,
 }: {
   cartItems: CartItem[];
   subtotal: number;
   stores: Store[];
   userPhone: string | null;
+  discountPercent?: number;
 }) {
   const [fulfillment, setFulfillment] = useState<"PICKUP" | "SELF_COURIER">("PICKUP");
   const [contactPhone, setContactPhone] = useState(userPhone ?? "");
@@ -33,7 +36,11 @@ export default function CheckoutClient({
   const [done, setDone] = useState<{ orderNumber: string; waHref: string } | null>(null);
 
   const normalizedPhone = normalizePhone(contactPhone);
-  const total = subtotal;
+  // "Harga spesial kenalan": applied per unit so it matches the catalog.
+  const special = discountPercent > 0;
+  const unit = (price: number) => applyDiscount(price, discountPercent);
+  const total = cartItems.reduce((sum, i) => sum + unit(i.product.price) * i.quantity, 0);
+  const saved = subtotal - total;
   const selectedStore = stores.find((s) => s.id === storeId) ?? null;
   const storeReady = selectedStore ? isContactReady(selectedStore.whatsapp) : false;
 
@@ -45,7 +52,7 @@ export default function CheckoutClient({
       items: cartItems.map((i) => ({
         name: i.product.name,
         quantity: i.quantity,
-        lineTotal: i.product.price * i.quantity,
+        lineTotal: unit(i.product.price) * i.quantity,
       })),
       total,
       fulfillment,
@@ -239,7 +246,7 @@ export default function CheckoutClient({
           {cartItems.map((i) => (
             <div key={i.id} className="flex justify-between text-sm">
               <span className="text-bimbi-ink/70">{i.product.name} x{i.quantity}</span>
-              <span className="font-semibold">{formatIDR(i.product.price * i.quantity)}</span>
+              <span className="font-semibold">{formatIDR(unit(i.product.price) * i.quantity)}</span>
             </div>
           ))}
         </div>
@@ -248,6 +255,12 @@ export default function CheckoutClient({
             <span>Subtotal</span>
             <span>{formatIDR(subtotal)}</span>
           </div>
+          {special && (
+            <div className="flex justify-between text-sm text-bimbi-pink font-bold">
+              <span>Harga spesial ({discountPercent}%)</span>
+              <span>−{formatIDR(saved)}</span>
+            </div>
+          )}
           {fulfillment === "SELF_COURIER" && (
             <div className="flex justify-between text-sm">
               <span>Ongkir</span>

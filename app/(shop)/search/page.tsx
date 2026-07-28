@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getUserDiscount } from "@/lib/discount";
 import ProductCard from "@/components/ProductCard";
 import { tokenize, relevance, buildVocab, suggestQuery } from "@/lib/search";
 
@@ -26,6 +27,8 @@ export default async function SearchPage({
   const tokens = tokenize(query);
   const PAGE = 24;
   const showN = Math.min(Math.max(PAGE, Number(show) || PAGE), 2000);
+  // "Harga spesial kenalan" — 0 for guests and normal customers.
+  const discountPercent = await getUserDiscount();
 
   const selectedCategory = category
     ? await prisma.category.findUnique({ where: { slug: category } })
@@ -89,6 +92,7 @@ export default async function SearchPage({
           price={p.price}
           compareAtPrice={p.compareAtPrice}
           imageUrl={p.images[0]?.url ?? ""}
+          discountPercent={discountPercent}
         />
       ))}
     </div>

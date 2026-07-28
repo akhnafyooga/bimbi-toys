@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizePhone } from "@/lib/phone";
+import { applyDiscount } from "@/lib/discount";
 
 // WhatsApp checkout: records the order as a pending request, then the client
 // opens a wa.me chat so the store can confirm stock + payment by hand. No
@@ -44,7 +45,15 @@ export async function POST(req: Request) {
     }
   }
 
-  const subtotal = cartItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  // "Harga spesial kenalan" is resolved server-side — never trust a client total.
+  const buyer = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { discountPercent: true, phone: true },
+  });
+  const discountPercent = buyer?.discountPercent ?? 0;
+  const unitPrice = (price: number) => applyDiscount(price, discountPercent);
+
+  const subtotal = cartItems.reduce((sum, i) => sum + unitPrice(i.product.price) * i.quantity, 0);
   // Ongkir tidak dihitung di sini — diselesaikan lewat chat / bayar ke kurir.
   const total = subtotal;
 
@@ -66,7 +75,7 @@ export async function POST(req: Request) {
         create: cartItems.map((i) => ({
           productId: i.productId,
           quantity: i.quantity,
-          price: i.product.price,
+          price: unitPrice(i.product.price),
         })),
       },
     },
@@ -74,8 +83,7 @@ export async function POST(req: Request) {
 
   // Remember the buyer's WA number on their profile so it pre-fills next time.
   if (contactPhone) {
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { phone: true } });
-    if (!user?.phone) {
+    if (!buyer?.phone) {
       await prisma.user.update({ where: { id: userId }, data: { phone: contactPhone } });
     }
   }

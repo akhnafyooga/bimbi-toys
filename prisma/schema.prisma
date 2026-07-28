@@ -24,6 +24,9 @@ model User {
   passwordHash  String
   phone         String?
   role          Role      @default(CUSTOMER)
+  // "Harga spesial kenalan": percent off every item for this user (0 = none).
+  // Set with `npm run user:special email@contoh.com`.
+  discountPercent Int     @default(0)
   createdAt     DateTime  @default(now())
 
   wishlist      WishlistItem[]

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { formatIDR } from "@/lib/format";
+import { getUserDiscount, applyDiscount } from "@/lib/discount";
 import { normalizePhone } from "@/lib/phone";
 import ProductActions from "@/components/ProductActions";
 import AppIcon from "@/components/AppIcon";
@@ -46,6 +47,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ? Math.round((1 - product.price / product.compareAtPrice) * 100)
     : 0;
   const savings = product.compareAtPrice ? product.compareAtPrice - product.price : 0;
+
+  // "Harga spesial kenalan" replaces the normal price for flagged users.
+  const discountPercent = await getUserDiscount();
+  const special = discountPercent > 0;
+  const finalPrice = applyDiscount(product.price, discountPercent);
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 grid lg:grid-cols-12 gap-8">
@@ -100,13 +106,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <div className="lg:col-span-3">
         <div className="rounded-lg border border-slate-200 shadow-card p-4 lg:sticky lg:top-4">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-3xl font-extrabold text-bimbi-ink">{formatIDR(product.price)}</span>
-            {product.compareAtPrice && (
-              <span className="text-sm text-slate-400 line-through">{formatIDR(product.compareAtPrice)}</span>
+            <span className={`text-3xl font-extrabold ${special ? "text-bimbi-pink" : "text-bimbi-ink"}`}>
+              {formatIDR(finalPrice)}
+            </span>
+            {special ? (
+              <span className="text-sm text-slate-400 line-through">{formatIDR(product.price)}</span>
+            ) : (
+              product.compareAtPrice && (
+                <span className="text-sm text-slate-400 line-through">{formatIDR(product.compareAtPrice)}</span>
+              )
             )}
           </div>
-          {savings > 0 && (
-            <p className="text-sm font-bold text-bimbi-mint mt-0.5">Hemat {formatIDR(savings)}</p>
+          {special ? (
+            <p className="text-sm font-bold text-bimbi-pink mt-0.5">
+              Harga spesial untukmu — potongan {discountPercent}%
+            </p>
+          ) : (
+            savings > 0 && (
+              <p className="text-sm font-bold text-bimbi-mint mt-0.5">Hemat {formatIDR(savings)}</p>
+            )
           )}
           <p className="text-xs text-slate-400 mt-1">Harga saat dibeli online.</p>
 

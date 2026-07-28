@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getUserDiscount } from "@/lib/discount";
 import ProductCard from "@/components/ProductCard";
 import OnboardingTour from "@/components/OnboardingTour";
 import CategoryDropdown from "@/components/CategoryDropdown";
@@ -39,7 +40,7 @@ export default async function HomePage({
         ? { price: "desc" }
         : { createdAt: "desc" };
 
-  const [categories, total, products, allForPicks] = await Promise.all([
+  const [categories, total, products, allForPicks, discountPercent] = await Promise.all([
     prisma.category.findMany({ orderBy: { name: "asc" } }),
     prisma.product.count({ where }),
     prisma.product.findMany({
@@ -52,6 +53,8 @@ export default async function HomePage({
     prisma.product.findMany({
       include: { images: { orderBy: { position: "asc" }, take: 1 } },
     }),
+    // "Harga spesial kenalan" — 0 for guests and normal customers.
+    getUserDiscount(),
   ]);
 
   // 10 products, spread evenly across categories, reshuffled on EVERY request
@@ -122,6 +125,7 @@ export default async function HomePage({
                       price={p.price}
                       compareAtPrice={p.compareAtPrice}
                       imageUrl={p.images[0]?.url ?? ""}
+                      discountPercent={discountPercent}
                     />
                   </div>
                 ))}
@@ -172,6 +176,7 @@ export default async function HomePage({
                       price={p.price}
                       compareAtPrice={p.compareAtPrice}
                       imageUrl={p.images[0]?.url ?? ""}
+                      discountPercent={discountPercent}
                     />
                   ))}
                 </div>

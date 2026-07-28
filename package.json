@@ -12,6 +12,7 @@
     "db:import": "tsx prisma/import.ts",
     "db:studio": "prisma studio",
     "admin:promote": "tsx scripts/promote-admin.ts",
+    "user:special": "tsx scripts/promote-special.ts",
     "tunnel": "node --env-file=.env scripts/tunnel.mjs",
     "setup": "npm install && prisma generate && prisma db push && npm run db:seed"
   },

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizePhone } from "@/lib/phone";
 import CheckoutClient from "@/components/CheckoutClient";
+import { getUserDiscount } from "@/lib/discount";
 
 export default async function CheckoutPage() {
   const session = await auth();
@@ -40,6 +41,7 @@ export default async function CheckoutPage() {
         subtotal={subtotal}
         stores={storeContacts}
         userPhone={user?.phone ?? null}
+        discountPercent={await getUserDiscount()}
       />
     </div>
   );

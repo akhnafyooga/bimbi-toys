@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatIDR } from "@/lib/format";
+import { applyDiscount } from "@/lib/discount";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 
 type Item = {
@@ -14,7 +15,13 @@ type Item = {
   product: { name: string; slug: string; price: number; stock: number; images: { url: string }[] };
 };
 
-export default function CartList({ items }: { items: Item[] }) {
+export default function CartList({
+  items,
+  discountPercent = 0,
+}: {
+  items: Item[];
+  discountPercent?: number;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
 
@@ -40,7 +47,14 @@ export default function CartList({ items }: { items: Item[] }) {
     router.refresh();
   }
 
-  const total = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  const subtotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  // "Harga spesial kenalan" is applied per unit, matching what the cards show.
+  const special = discountPercent > 0;
+  const total = items.reduce(
+    (sum, i) => sum + applyDiscount(i.product.price, discountPercent) * i.quantity,
+    0
+  );
+  const savedTotal = subtotal - total;
 
   if (items.length === 0) {
     return (
@@ -72,7 +86,14 @@ export default function CartList({ items }: { items: Item[] }) {
               <Link href={`/product/${item.product.slug}`} className="font-display text-lg hover:text-bimbi-pink-dark">
                 {item.product.name}
               </Link>
-              <p className="font-bold text-bimbi-pink-dark mt-1">{formatIDR(item.product.price)}</p>
+              <p className="font-bold text-bimbi-pink-dark mt-1">
+                    {formatIDR(applyDiscount(item.product.price, discountPercent))}
+                    {special && (
+                      <span className="ml-1.5 text-xs font-semibold text-slate-400 line-through">
+                        {formatIDR(item.product.price)}
+                      </span>
+                    )}
+                  </p>
               <div className="flex items-center gap-3 mt-2">
                 <div className="flex items-center rounded-full border-2 border-bimbi-ink/10 overflow-hidden">
                   <button
@@ -108,8 +129,20 @@ export default function CartList({ items }: { items: Item[] }) {
         <p className="font-display text-xl mb-4">Ringkasan Belanja</p>
         <div className="flex justify-between text-sm mb-2">
           <span>Subtotal</span>
-          <span className="font-bold">{formatIDR(total)}</span>
+          <span className={special ? "" : "font-bold"}>{formatIDR(subtotal)}</span>
         </div>
+        {special && (
+          <>
+            <div className="flex justify-between text-sm mb-2 text-bimbi-pink">
+              <span>Harga spesial ({discountPercent}%)</span>
+              <span className="font-bold">−{formatIDR(savedTotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm mb-2 border-t border-bimbi-ink/10 pt-2">
+              <span className="font-bold">Total</span>
+              <span className="font-bold">{formatIDR(total)}</span>
+            </div>
+          </>
+        )}
         <p className="text-xs text-bimbi-ink/50 mb-4">Ongkir dihitung di halaman checkout</p>
         <Link
           href="/checkout"
