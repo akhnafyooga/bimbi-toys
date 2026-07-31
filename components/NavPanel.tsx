@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 
-// Mobile-only: the second header row (account / orders / wishlist / cart).
+// The second header row (account / orders / wishlist / cart), on every screen size.
 // Collapsible so the page can be read without the nav taking up space.
 // Children are rendered on the server and passed through, so the sign-out
 // server action inside keeps working.
-export default function MobileNavPanel({ children }: { children: React.ReactNode }) {
+export default function NavPanel({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
 
   return (
-    <div className="md:hidden">
+    <div>
       {open && <div className="px-2 pb-2">{children}</div>}
 
       <button

@@ -143,12 +143,14 @@ export default function CartList({
             </div>
           </>
         )}
-        <p className="text-xs text-bimbi-ink/50 mb-4">Ongkir dihitung di halaman checkout</p>
+        <p className="text-xs text-bimbi-ink/50 mb-4">
+          Stok &amp; pembayaran dikonfirmasi lewat chat WhatsApp toko.
+        </p>
         <Link
           href="/checkout"
           className="block text-center w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-6 py-3 font-extrabold text-white transition-colors chip-spring"
         >
-          Checkout Sekarang
+          Lanjut Pesan via WhatsApp
         </Link>
       </div>
     </div>

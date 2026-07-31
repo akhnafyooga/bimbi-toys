@@ -6,9 +6,9 @@ import CategoryNav from "@/components/CategoryNav";
 import CartBadge from "@/components/CartBadge";
 import BrandLogo from "@/components/BrandLogo";
 import AppIcon from "@/components/AppIcon";
-import MobileNavPanel from "@/components/MobileNavPanel";
+import NavPanel from "@/components/NavPanel";
 
-// Shared look for one mobile nav tile: icon on top, label underneath.
+// Shared look for one nav tile: icon on top, label underneath.
 const TILE =
   "flex flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white py-2.5 px-1 text-[11px] font-bold text-bimbi-ink hover:border-bimbi-pink/50 transition-colors chip-spring";
 
@@ -16,7 +16,7 @@ export default async function Navbar() {
   const session = await auth();
   const userId = session?.user ? (session.user as { id: string }).id : null;
 
-  const [cartCount, wishlistCount, categories, cartItems, defaultStore] = await Promise.all([
+  const [cartCount, wishlistCount, categories, cartItems] = await Promise.all([
     userId ? prisma.cartItem.count({ where: { userId } }) : 0,
     userId ? prisma.wishlistItem.count({ where: { userId } }) : 0,
     prisma.category.findMany({ orderBy: { name: "asc" } }),
@@ -26,7 +26,6 @@ export default async function Navbar() {
         include: { product: true },
       })
       : [],
-    prisma.storeLocation.findFirst({ orderBy: { city: "asc" } }),
   ]);
 
   const cartTotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
@@ -36,158 +35,66 @@ export default async function Navbar() {
       <div className="w-full bg-white text-bimbi-ink border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 md:py-4">
 
-          {/* ===== MOBILE — row 1: logo on its own line ===== */}
-          <div className="md:hidden flex justify-center pt-0.5 pb-1">
+          {/* ===== ROW 1 — logo on its own line, all screen sizes ===== */}
+          <div className="flex justify-center pt-0.5 pb-1">
             <Link href="/" className="chip-spring flex items-center" title="Bimbi Toys">
-              <BrandLogo variant="mark" height={36} heightClass="h-8" />
+              <BrandLogo variant="mark" height={36} heightClass="h-8 md:h-10" />
             </Link>
           </div>
 
-          {/* ===== DESKTOP — account left · logo center · wishlist+cart right ===== */}
-          <div className="hidden md:flex items-center gap-2">
-            <div className="flex-1 flex items-center gap-3 min-w-0 text-sm font-semibold">
-              {session?.user ? (
-                <div className="flex items-center gap-3">
-                  <Link
-                    href="/orders"
-                    className="flex flex-col leading-tight text-left hover:underline chip-spring"
-                    title="Pesanan Saya"
-                  >
-                    <span className="text-[11px] font-normal text-slate-500 hidden xl:block">
-                      Hai, {session.user.name?.split(" ")[0]}!
-                    </span>
-                    <span className="font-bold">Pesanan Saya</span>
+          {/* ===== ROW 2 — separated icon buttons, collapsible, all screen sizes ===== */}
+          <NavPanel>
+            <div className="mx-auto w-full max-w-2xl">
+              {session?.user && (
+                <p className="px-1 pb-1.5 text-[11px] font-semibold text-slate-500">
+                  Hai, {session.user.name?.split(" ")[0]}!
+                </p>
+              )}
+              <div className={`grid gap-2 ${session?.user ? "grid-cols-4" : "grid-cols-3"}`}>
+                {session?.user ? (
+                  <Link href="/orders" className={TILE}>
+                    <AppIcon name="pesanan" size={22} />
+                    <span>Pesanan</span>
                   </Link>
+                ) : (
+                  <Link href="/login" className={TILE}>
+                    <AppIcon name="akun" size={22} />
+                    <span>Masuk</span>
+                  </Link>
+                )}
+
+                <Link href="/wishlist" className={TILE}>
+                  <span className="relative">
+                    <AppIcon name="wishlist" size={22} />
+                    <CartBadge count={wishlistCount} variant="bubble" />
+                  </span>
+                  <span>Wishlist</span>
+                </Link>
+
+                <Link id="tour-cart" href="/cart" data-tour="cart" className={TILE}>
+                  <span className="relative">
+                    <AppIcon name="cart" size={22} />
+                    <CartBadge count={cartCount} variant="bubble" />
+                  </span>
+                  <span>{cartCount > 0 ? formatIDR(cartTotal) : "Keranjang"}</span>
+                </Link>
+
+                {session?.user && (
                   <form
                     action={async () => {
                       "use server";
                       await signOut({ redirectTo: "/" });
                     }}
-                    className="inline"
                   >
-                    <button className="font-bold text-bimbi-pink hover:underline cursor-pointer">
-                      Keluar
+                    <button type="submit" className={`${TILE} w-full cursor-pointer text-bimbi-pink`}>
+                      <AppIcon name="akun" size={22} />
+                      <span>Keluar</span>
                     </button>
                   </form>
-                </div>
-              ) : (
-                <Link href="/login" className="flex items-center gap-2 hover:underline chip-spring">
-                  <span className="hidden sm:flex flex-col leading-tight text-left">
-                    <span className="text-[11px] font-normal text-slate-500">Masuk</span>
-                    <span>Akun</span>
-                  </span>
-                </Link>
-              )}
-
-              {defaultStore && (
-                <Link
-                  href="/stores"
-                  className="hidden lg:flex items-center gap-2 rounded-full bg-bimbi-cream hover:bg-slate-200 px-4 py-2 text-sm font-bold transition-colors chip-spring"
-                >
-                  <AppIcon name="location" size={22} />
-                  <span className="flex flex-col leading-tight text-left">
-                    <span>Ambil di toko</span>
-                    <span className="text-[11px] font-normal text-slate-500">
-                      {defaultStore.name} · {defaultStore.city}
-                    </span>
-                  </span>
-                </Link>
-              )}
+                )}
+              </div>
             </div>
-
-            <Link
-              href="/"
-              className="shrink-0 chip-spring rounded-lg px-2.5 py-1 flex items-center"
-              title="Bimbi Toys"
-            >
-              <BrandLogo variant="mark" height={36} heightClass="h-7 sm:h-8" />
-            </Link>
-
-            <div className="flex-1 flex items-center justify-end gap-4 sm:gap-5 text-sm font-semibold">
-              <Link
-                href="/wishlist"
-                className="relative flex items-center gap-2 hover:underline chip-spring"
-                title="Wishlist"
-              >
-                <AppIcon name="wishlist" size={22} />
-                <span className="hidden xl:flex flex-col leading-tight text-left">
-                  <span className="text-[11px] font-normal text-slate-500">Disimpan</span>
-                  <span>Wishlist</span>
-                </span>
-                <span className="xl:hidden">
-                  <CartBadge count={wishlistCount} variant="bubble" />
-                </span>
-              </Link>
-
-              <Link
-                id="tour-cart"
-                data-tour="cart"
-                href="/cart"
-                className="relative flex flex-col items-center leading-tight hover:underline chip-spring"
-                title="Keranjang"
-              >
-                <span className="relative">
-                  <AppIcon name="cart" size={26} />
-                  <CartBadge count={cartCount} variant="bubble" />
-                </span>
-                <span className="text-[11px] font-bold mt-0.5">
-                  {cartCount > 0 ? formatIDR(cartTotal) : "Rp 0"}
-                </span>
-              </Link>
-            </div>
-          </div>
-
-          {/* ===== MOBILE — row 2: separated icon buttons, collapsible ===== */}
-          <MobileNavPanel>
-            {session?.user && (
-              <p className="px-1 pb-1.5 text-[11px] font-semibold text-slate-500">
-                Hai, {session.user.name?.split(" ")[0]}!
-              </p>
-            )}
-            <div className={`grid gap-2 ${session?.user ? "grid-cols-4" : "grid-cols-3"}`}>
-              {session?.user ? (
-                <Link href="/orders" className={TILE}>
-                  <AppIcon name="pesanan" size={22} />
-                  <span>Pesanan</span>
-                </Link>
-              ) : (
-                <Link href="/login" className={TILE}>
-                  <AppIcon name="akun" size={22} />
-                  <span>Masuk</span>
-                </Link>
-              )}
-
-              <Link href="/wishlist" className={TILE}>
-                <span className="relative">
-                  <AppIcon name="wishlist" size={22} />
-                  <CartBadge count={wishlistCount} variant="bubble" />
-                </span>
-                <span>Wishlist</span>
-              </Link>
-
-              <Link href="/cart" data-tour="cart" className={TILE}>
-                <span className="relative">
-                  <AppIcon name="cart" size={22} />
-                  <CartBadge count={cartCount} variant="bubble" />
-                </span>
-                <span>{cartCount > 0 ? formatIDR(cartTotal) : "Keranjang"}</span>
-              </Link>
-
-              {session?.user && (
-                <form
-                  action={async () => {
-                    "use server";
-                    await signOut({ redirectTo: "/" });
-                  }}
-                >
-                  <button type="submit" className={`${TILE} w-full cursor-pointer text-bimbi-pink`}>
-                    <AppIcon name="akun" size={22} />
-                    <span>Keluar</span>
-                  </button>
-                </form>
-              )}
-            </div>
-          </MobileNavPanel>
+          </NavPanel>
 
           {/* Search — shared, full width */}
           <form
