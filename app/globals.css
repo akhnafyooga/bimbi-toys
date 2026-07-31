@@ -245,21 +245,20 @@ h4,
 
 /* ToyEmojiField.tsx — toy emoji hidden in the page background that pop in
    as the scroll position reaches them, then fade back out. */
+/* No will-change and no animated filter here on purpose: both were promoting
+   every single emoji to its own GPU layer, which is what made the deployed
+   site drag. Plain opacity+transform stays on the compositor fast path. */
 .toy-pop {
   opacity: 0;
   transform: scale(0.4) rotate(var(--toy-tilt, 0deg));
-  filter: blur(1px);
   transition:
-    opacity 0.45s ease,
-    transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 0.45s ease;
-  will-change: transform, opacity;
+    opacity 0.4s ease,
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .toy-popped {
-  opacity: 0.5;
+  opacity: 0.45;
   transform: scale(1) rotate(var(--toy-tilt, 0deg));
-  filter: none;
 }
 
 /* Toy Story cloud wallpaper (public/clouds.jpg) behind the header and footer.
@@ -369,7 +368,6 @@ h4,
 
   .toy-pop {
     transition: none;
-    filter: none;
     transform: rotate(var(--toy-tilt, 0deg));
   }
 }
