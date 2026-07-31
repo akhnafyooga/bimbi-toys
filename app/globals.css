@@ -245,20 +245,30 @@ h4,
 
 /* ToyEmojiField.tsx — toy emoji hidden in the page background that pop in
    as the scroll position reaches them, then fade back out. */
-/* No will-change and no animated filter here on purpose: both were promoting
-   every single emoji to its own GPU layer, which is what made the deployed
-   site drag. Plain opacity+transform stays on the compositor fast path. */
-.toy-pop {
-  opacity: 0;
-  transform: scale(0.4) rotate(var(--toy-tilt, 0deg));
-  transition:
-    opacity 0.4s ease,
-    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* Static decoration — no transition, no will-change, no filter. Those were
+   promoting every single emoji to its own GPU layer, which is what made the
+   deployed site drag.
+   --toy-size is unitless so one variable can be scaled per breakpoint: a
+   desktop-sized emoji would swamp a phone layout. */
+.toy-emoji {
+  opacity: 0.45;
+  line-height: 1;
+  /* left/top mark the emoji's centre, so a large glyph near the page edge
+     can only ever hang over by half its width instead of its whole width */
+  transform: translate(-50%, -50%) rotate(var(--toy-tilt, 0deg));
+  font-size: calc(var(--toy-size, 60) * 0.42px);
 }
 
-.toy-popped {
-  opacity: 0.45;
-  transform: scale(1) rotate(var(--toy-tilt, 0deg));
+@media (min-width: 640px) {
+  .toy-emoji {
+    font-size: calc(var(--toy-size, 60) * 0.7px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .toy-emoji {
+    font-size: calc(var(--toy-size, 60) * 1px);
+  }
 }
 
 /* Toy Story cloud wallpaper (public/clouds.jpg) behind the header and footer.
@@ -364,10 +374,5 @@ h4,
   .chip-spring,
   .btn-press {
     transition: none;
-  }
-
-  .toy-pop {
-    transition: none;
-    transform: rotate(var(--toy-tilt, 0deg));
   }
 }

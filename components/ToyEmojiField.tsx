@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Decorative toy emoji scattered down the page, floating *over* the content.
-// They sit invisible until the scroll position brings them into the middle
-// band of the viewport, then they pop in — and fade back out once they leave.
+// Decorative toy emoji scattered down the page, floating over the content.
+// Always visible — no scroll animation.
 //
 // They deliberately ride above the page rather than behind it: product cards
 // and section backgrounds are fully opaque, so a layer underneath them is
@@ -23,26 +22,25 @@ function rand(seed: number) {
   return x - Math.floor(x);
 }
 
-// Kept below the ~40%-of-viewport trigger band, so scrolling rarely lands in
-// a gap with nothing popped.
-const ROW_GAP = 240; // target px between one emoji and the next, going down
-const MAX_TOYS = 36; // ceiling: past this it costs paint time and reads as clutter
+const ROW_GAP = 320; // target px between one emoji and the next, going down
+const MAX_TOYS = 28; // ceiling: past this it costs paint time and reads as clutter
 
 function buildItems(count: number) {
   return Array.from({ length: count }, (_, i) => {
     // Alternate sides so the emoji hug the outer edges of the page instead of
     // sitting on top of product titles and prices in the middle.
     const jitter = rand(i + 1);
-    const left = i % 2 === 0 ? 1 + jitter * 20 : 79 + jitter * 20;
+    const left = i % 2 === 0 ? 7 + jitter * 16 : 77 + jitter * 16;
     return {
       emoji: TOYS[i % TOYS.length],
       left,
       // Percentage of page height: the field stays evenly spread whether the
       // page is one screen tall or a 13,000px catalogue.
       top: ((i + 0.5) / count) * 100 + (rand(i + 100) - 0.5) * (60 / count),
-      size: 26 + rand(i + 200) * 26,
+      // Unitless — globals.css multiplies it down on smaller screens, where a
+      // desktop-sized emoji would swamp the layout.
+      size: Math.round(52 + rand(i + 200) * 44),
       tilt: -20 + rand(i + 300) * 40,
-      delay: rand(i + 400) * 120,
     };
   });
 }
@@ -64,7 +62,7 @@ export default function ToyEmojiField() {
     let timer: ReturnType<typeof setTimeout>;
     const measure = () => {
       const h = root.offsetHeight;
-      setCount(Math.max(6, Math.min(MAX_TOYS, Math.round(h / ROW_GAP))));
+      setCount(Math.max(5, Math.min(MAX_TOYS, Math.round(h / ROW_GAP))));
     };
     const schedule = () => {
       clearTimeout(timer);
@@ -82,54 +80,6 @@ export default function ToyEmojiField() {
     };
   }, []);
 
-  useEffect(() => {
-    const root = ref.current;
-    if (!root || count === 0) return;
-
-    const nodes = [...root.querySelectorAll<HTMLElement>(".toy-pop")];
-    let last = 0;
-
-    // An emoji is "at" the scroll position when it sits in the middle 40% of
-    // the viewport — that band is what makes it pop as you reach it rather
-    // than as soon as it appears at the bottom edge.
-    const sync = () => {
-      const top = window.innerHeight * 0.3;
-      const bottom = window.innerHeight * 0.7;
-      // Read every rect first, then write every class, so the loop can't
-      // thrash layout by interleaving measures and mutations.
-      const hits = nodes.map((n) => {
-        const r = n.getBoundingClientRect();
-        const y = r.top + r.height / 2;
-        return y > top && y < bottom;
-      });
-      nodes.forEach((n, i) => n.classList.toggle("toy-popped", hits[i]));
-    };
-
-    // Time-based throttle rather than requestAnimationFrame: this still runs
-    // at most ~10x/second while scrolling, and keeps working in backgrounded
-    // tabs where rAF is suspended.
-    // The trailing call matters: without it, a scroll that ends inside the
-    // throttle window leaves the last position unprocessed.
-    let trailing: ReturnType<typeof setTimeout>;
-    const onScroll = () => {
-      clearTimeout(trailing);
-      trailing = setTimeout(sync, 120);
-      const now = Date.now();
-      if (now - last < 100) return;
-      last = now;
-      sync();
-    };
-
-    sync();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    return () => {
-      clearTimeout(trailing);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [count]);
-
   return (
     <div
       ref={ref}
@@ -139,13 +89,11 @@ export default function ToyEmojiField() {
       {buildItems(count).map((item, i) => (
         <span
           key={i}
-          className="toy-pop absolute"
+          className="toy-emoji absolute"
           style={{
             left: `${item.left}%`,
             top: `${item.top}%`,
-            fontSize: `${item.size}px`,
-            lineHeight: 1,
-            transitionDelay: `${item.delay}ms`,
+            ["--toy-size" as string]: item.size,
             ["--toy-tilt" as string]: `${item.tilt}deg`,
           }}
         >
