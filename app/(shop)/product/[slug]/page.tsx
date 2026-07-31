@@ -71,7 +71,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         )}
         <div className="relative flex-1 aspect-square rounded-lg overflow-hidden bg-slate-50 border border-slate-100">
           {product.images[0]?.url ? (
-            <Image src={product.images[0].url} alt={product.name} fill className="object-contain bg-white" priority />
+            <>
+              <Image src={product.images[0].url} alt={product.name} fill className="object-contain bg-white" priority />
+              {/* Catalogue photos are sourced from the web, not shot in-store —
+                  say so on the image itself so nobody expects an exact match. */}
+              <p className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-1.5 text-center text-[11px] font-semibold leading-snug text-white">
+                Foto hanya ilustrasi dari internet — warna &amp; detail bisa berbeda dengan barang asli
+              </p>
+            </>
           ) : (
             <div className="flex h-full items-center justify-center text-7xl text-slate-200"></div>
           )}

@@ -243,31 +243,36 @@ h4,
   transform: none;
 }
 
-/* ToyEmojiField.tsx — toy emoji hidden in the page background that pop in
-   as the scroll position reaches them, then fade back out. */
-/* Static decoration — no transition, no will-change, no filter. Those were
-   promoting every single emoji to its own GPU layer, which is what made the
-   deployed site drag.
-   --toy-size is unitless so one variable can be scaled per breakpoint: a
-   desktop-sized emoji would swamp a phone layout. */
-.toy-emoji {
-  opacity: 0.45;
-  line-height: 1;
-  /* left/top mark the emoji's centre, so a large glyph near the page edge
-     can only ever hang over by half its width instead of its whole width */
-  transform: translate(-50%, -50%) rotate(var(--toy-tilt, 0deg));
-  font-size: calc(var(--toy-size, 60) * 0.42px);
+/* Rocket/star wallpaper behind the home page (public/space.jpg).
+   The source is a 736x1308 phone wallpaper, cropped to 695x1294 so that no
+   rocket or star is sliced by an edge — every border of the tile is flat blue,
+   which is what lets it repeat without a visible seam. Drawn at 480px, i.e.
+   scaled DOWN from 695, so it stays sharp instead of being blown up.
+   The base is #d8e4f1 — the exact colour the header and footer composite to
+   (clouds.jpg averages rgb(114,159,204), under their 72% white scrim), so the
+   page reads as one continuous sky. The artwork rides on a pseudo-element at
+   low opacity: at full strength its navy field would fight that blue. */
+.space-bg {
+  position: relative;
+  isolation: isolate;
+  background-color: #d8e4f1;
 }
 
-@media (min-width: 640px) {
-  .toy-emoji {
-    font-size: calc(var(--toy-size, 60) * 0.7px);
-  }
+.space-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: url("/space.jpg");
+  background-repeat: repeat;
+  background-size: 480px auto;
+  background-position: center top;
+  opacity: 0.14;
 }
 
 @media (min-width: 1024px) {
-  .toy-emoji {
-    font-size: calc(var(--toy-size, 60) * 1px);
+  .space-bg::before {
+    background-size: 560px auto;
   }
 }
 

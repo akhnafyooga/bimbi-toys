@@ -10,8 +10,11 @@ export default async function Footer() {
     select: { id: true, name: true, city: true },
   });
 
+  // Breathing room above the footer is PADDING, not margin: as a margin it sat
+  // outside the element, showing the white body between the page background
+  // and the clouds.
   return (
-    <footer className="clouds-bg clouds-bg-bottom mt-20 border-t border-slate-200 text-bimbi-ink">
+    <footer className="clouds-bg clouds-bg-bottom pt-20 border-t border-slate-200 text-bimbi-ink">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-10 flex flex-col items-center gap-6 text-center">
         {/* Logo slot (user artwork: public/brand/logo-full.png) */}
         <Link href="/" className="text-slate-500">

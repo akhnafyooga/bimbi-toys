@@ -71,7 +71,7 @@ export default async function HomePage({
   const moreHref = `/?${moreQuery.toString()}`;
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="space-bg min-h-screen">
 
       {/* 1. Hero Banner — FULL WIDTH (edge to edge). bg image: public/brand/hero.jpg */}
       <div
@@ -104,7 +104,12 @@ export default async function HomePage({
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 pb-6 flex flex-col gap-8">
+      {/* White band + fade under the hero: the patterned sky would otherwise
+          start hard against the photo, which read as an abrupt switch. */}
+      <div aria-hidden className="h-10 md:h-16 bg-white" />
+      <div aria-hidden className="h-16 md:h-24 -mt-px bg-gradient-to-b from-white to-transparent" />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 -mt-16 md:-mt-24 pb-6 flex flex-col gap-8">
 
         {/* 2. Deals strip — 10 daily picks, balanced across categories */}
         {hitPicks.length > 0 && (
@@ -112,7 +117,7 @@ export default async function HomePage({
             <section>
               <div className="flex items-baseline justify-between mb-3">
                 <h2 className="text-xl font-extrabold text-bimbi-ink">Penawaran Hits</h2>
-                <Link href="/#katalog" className="text-sm font-bold text-bimbi-pink hover:underline">
+                <Link href="/#katalog" className="text-sm font-bold text-bimbi-pink-dark hover:underline">
                   Lihat semua
                 </Link>
               </div>
@@ -137,15 +142,15 @@ export default async function HomePage({
         {/* 3. Catalog — full-width Walmart grid */}
         <Reveal>
           <section id="katalog" className="scroll-mt-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-200 pb-4 mb-5 gap-3">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-300 pb-4 mb-5 gap-3">
               <div>
                 <h3 className="text-xl font-extrabold text-bimbi-ink">
                   {category
                     ? categories.find((c) => c.slug === category)?.name
                     : "Semua Koleksi"}{" "}
-                  <span className="text-slate-400 font-semibold text-base">({total})</span>
+                  <span className="text-slate-500 font-semibold text-base">({total})</span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">Harga saat dibeli online.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Harga saat dibeli online.</p>
               </div>
 
               <CategoryDropdown
@@ -161,7 +166,7 @@ export default async function HomePage({
 
             {products.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-slate-500 mt-3 text-sm font-semibold">
+                <p className="text-slate-600 mt-3 text-sm font-semibold">
                   Belum ada barang di kategori ini. Coba lihat kategori lain, yuk!
                 </p>
               </div>
@@ -186,7 +191,7 @@ export default async function HomePage({
                     <Link
                       href={moreHref}
                       scroll={false}
-                      className="font-bold text-bimbi-pink hover:underline chip-spring"
+                      className="font-bold text-bimbi-pink-dark hover:underline chip-spring"
                     >
                       Muat lebih banyak ↓
                     </Link>
