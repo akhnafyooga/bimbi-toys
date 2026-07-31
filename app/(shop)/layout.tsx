@@ -6,6 +6,7 @@ import NavbarGate from "@/components/NavbarGate";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
 import BackToTop from "@/components/BackToTop";
+import ToyEmojiField from "@/components/ToyEmojiField";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -27,7 +28,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <NavbarGate>
             <Navbar />
           </NavbarGate>
-          <main className="flex-1">{children}</main>
+          {/* relative + isolate so the emoji layer can sit behind the page
+              content without escaping into the header or footer */}
+          <main className="relative isolate flex-1">
+            <ToyEmojiField />
+            <div className="relative z-10">{children}</div>
+          </main>
           <BackToTop />
           <Footer />
         </Providers>

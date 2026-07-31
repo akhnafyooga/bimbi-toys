@@ -18,7 +18,7 @@ export default function NavPanel({ children }: { children: React.ReactNode }) {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label={open ? "Sembunyikan menu" : "Tampilkan menu"}
-        className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold text-slate-500 hover:text-bimbi-pink transition-colors"
+        className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold text-slate-700 hover:text-bimbi-pink transition-colors"
       >
         {open ? "Sembunyikan menu" : "Menu"}
         <svg

@@ -31,8 +31,8 @@ export default async function Navbar() {
   const cartTotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   return (
-    <header className="w-full z-50 flex flex-col bg-white">
-      <div className="w-full bg-white text-bimbi-ink border-b border-slate-200">
+    <header className="w-full z-50 flex flex-col">
+      <div className="clouds-bg w-full text-bimbi-ink border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 md:py-4">
 
           {/* ===== ROW 1 — logo on its own line, all screen sizes ===== */}
@@ -46,7 +46,7 @@ export default async function Navbar() {
           <NavPanel>
             <div className="mx-auto w-full max-w-2xl">
               {session?.user && (
-                <p className="px-1 pb-1.5 text-[11px] font-semibold text-slate-500">
+                <p className="px-1 pb-1.5 text-[11px] font-semibold text-slate-700">
                   Hai, {session.user.name?.split(" ")[0]}!
                 </p>
               )}
