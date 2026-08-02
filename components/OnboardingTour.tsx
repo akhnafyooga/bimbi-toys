@@ -33,9 +33,17 @@ const STEPS: Step[] = [
 // A responsive layout keeps both variants in the DOM and hides one with CSS.
 // querySelector would happily return the hidden one, whose bounding box is all
 // zeroes — putting the spotlight in the top-left corner. Pick a rendered one.
+// Height matters as much as width now: the sticky header collapses rows with
+// grid-template-rows: 0fr, which zeroes an element's HEIGHT while leaving its
+// width intact — a width-only check would happily spotlight an invisible strip.
 function findVisible(selector: string): Element | null {
   const all = Array.from(document.querySelectorAll(selector));
-  return all.find((el) => el.getBoundingClientRect().width > 0) ?? null;
+  return (
+    all.find((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    }) ?? null
+  );
 }
 
 type Rect = { top: number; left: number; width: number; height: number };
@@ -79,7 +87,14 @@ export default function OnboardingTour() {
       return () => clearTimeout(t);
     }
 
-    el.scrollIntoView({ block: "center" });
+    // Targets inside the sticky header must not be centred: scrolling down to
+    // "centre" them makes the header collapse and shrink the very element being
+    // pointed at. Go to the top instead, where the header is fully expanded.
+    if (el.closest("header[data-sticky-header]")) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      el.scrollIntoView({ block: "center" });
+    }
 
     const measure = () => {
       const r = el.getBoundingClientRect();

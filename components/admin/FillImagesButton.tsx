@@ -16,6 +16,8 @@ export default function FillImagesButton() {
     setRunning(true);
     setStatus("Mencari gambar…");
     let totalFilled = 0;
+    let totalSkipped = 0;
+    let consecutiveErrors = 0;
 
     try {
       // One product per request keeps each serverless call well under Vercel
@@ -35,16 +37,30 @@ export default function FillImagesButton() {
         }
 
         totalFilled += data.filled ?? 0;
+        totalSkipped += data.noResult ?? 0;
+
         if (data.remaining === 0 || data.processed === 0) {
-          setStatus(`Selesai — ${totalFilled} gambar terisi.`);
+          setStatus(
+            `Selesai — ${totalFilled} gambar terisi` +
+            (totalSkipped ? `, ${totalSkipped} tidak ketemu gambarnya.` : ".")
+          );
           return;
         }
-        // A batch that filled nothing means the remaining products can't be
-        // auto-filled — stop rather than reprocess the same ones (wastes credits).
-        if ((data.filled ?? 0) === 0) {
-          setStatus(`Berhenti — ${totalFilled} terisi; ${data.remaining} produk tak dapat gambar otomatis.`);
-          return;
+
+        // A product with no usable result is now recorded server-side and will
+        // not be searched again, so we simply move on. Stopping here (the old
+        // behaviour) meant one unmatchable product halted the whole run.
+        if ((data.failed ?? 0) > 0) {
+          // A thrown search is different: likely network or rate limit, and it
+          // stays pending. Several in a row means stop rather than hammer it.
+          if (++consecutiveErrors >= 5) {
+            setStatus(`Berhenti — ${totalFilled} terisi. Koneksi/API bermasalah, coba lagi nanti.`);
+            return;
+          }
+        } else {
+          consecutiveErrors = 0;
         }
+
         setStatus(`Terisi ${totalFilled}… sisa ${data.remaining} produk.`);
       }
       setStatus(`Berhenti sementara — ${totalFilled} terisi. Klik lagi untuk melanjutkan.`);

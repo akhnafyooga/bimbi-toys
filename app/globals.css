@@ -243,6 +243,85 @@ h4,
   transform: none;
 }
 
+/* Loading screen (components/Loader.tsx): four dots in the logo's colours that
+   travel top-to-bottom in turn, driven purely by staggered animation-delay. */
+@keyframes loader-travel {
+  0%,
+  100% {
+    transform: translateY(-70%);
+    opacity: 0.55;
+  }
+
+  50% {
+    transform: translateY(70%);
+    opacity: 1;
+  }
+}
+
+.loader-dot {
+  border-radius: 9999px;
+  animation: loader-travel 1.1s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  /* Keep the dots as a static row rather than freezing them mid-travel. */
+  .loader-dot {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Sticky header: once the page scrolls, the logo row and the button tiles fold
+   away and only the search bar (plus the category strip) stay pinned. Animating
+   grid-template-rows rather than height lets the content keep its natural size
+   instead of needing a hardcoded pixel value. */
+.header-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.28s ease, opacity 0.2s ease;
+}
+
+.header-collapse > * {
+  min-height: 0;
+  /* required for the 1fr -> 0fr collapse to actually clip */
+  overflow: hidden;
+}
+
+header[data-scrolled="true"] .header-collapse {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The tiles stay reachable while scrolled, but shrink so the pinned header
+   does not eat the viewport. Padding and label size only — nothing is hidden. */
+header[data-scrolled="true"] .nav-tiles a,
+header[data-scrolled="true"] .nav-tiles button {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+  font-size: 10px;
+  gap: 0.1rem;
+}
+
+header[data-scrolled="true"] .nav-tiles p {
+  display: none;
+  /* the "Hai, name!" greeting */
+}
+
+.nav-tiles a,
+.nav-tiles button,
+.nav-tiles p {
+  transition: padding 0.2s ease, font-size 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-collapse {
+    transition: none;
+  }
+}
+
 /* Rocket/star wallpaper behind the home page (public/space.jpg).
    The source is a 736x1308 phone wallpaper, cropped to 695x1294 so that no
    rocket or star is sliced by an edge — every border of the tile is flat blue,

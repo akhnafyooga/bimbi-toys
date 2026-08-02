@@ -32,10 +32,10 @@ export default function ProductCard({
   return (
     <Link
       href={`/product/${slug}`}
-      className="group block rounded-lg bg-white border border-transparent hover:border-slate-200 p-3 shadow-none hover:shadow-card card-lively flex flex-col justify-between"
+      className="group block rounded-sm bg-white border border-slate-200 hover:border-bimbi-pink/40 p-3 shadow-card shadow-card-hover card-lively flex flex-col justify-between"
     >
       <div>
-        <div className="relative aspect-square overflow-hidden rounded-md bg-slate-50 flex items-center justify-center">
+        <div className="relative aspect-square overflow-hidden rounded-xs bg-slate-50 flex items-center justify-center">
           {imageUrl ? (
             <Image
               src={imageUrl}

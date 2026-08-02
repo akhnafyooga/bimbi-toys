@@ -58,15 +58,22 @@ export type BackfillSummary = {
   filled: number;
   noResult: number;
   failed: number;
+  /** Products never searched yet — this is what drives the client loop. */
   remaining: number;
+  /** Products still without an image, including ones already searched in vain. */
+  remainingNoImage: number;
 };
 
 // Process up to `limit` products that currently have no images. Kept small and
 // sequential so a single request stays within serverless time limits; the caller
 // loops until `remaining` reaches 0.
 export async function backfillMissingImages(limit: number): Promise<BackfillSummary> {
+  // Only products we have never searched for. Excluding imageSearchedAt is what
+  // keeps a product that Serper cannot match from costing a credit on every run.
+  const pending = { images: { none: {} }, imageSearchedAt: null } as const;
+
   const products = await prisma.product.findMany({
-    where: { images: { none: {} } },
+    where: pending,
     select: { id: true, name: true },
     orderBy: { createdAt: "desc" },
     take: limit,
@@ -78,10 +85,20 @@ export async function backfillMissingImages(limit: number): Promise<BackfillSumm
   for (const p of products) {
     const result = await fillImageForProduct(p);
     if (result === "filled") filled++;
-    else if (result === "no-result") noResult++;
-    else failed++;
+    else if (result === "no-result") {
+      noResult++;
+      // The credit was spent and there is nothing to find — never ask again.
+      await prisma.product.update({ where: { id: p.id }, data: { imageSearchedAt: new Date() } });
+    } else {
+      // A thrown search (network, rate limit, outage) usually costs no credit
+      // and may succeed later, so this one stays pending on purpose.
+      failed++;
+    }
   }
 
-  const remaining = await prisma.product.count({ where: { images: { none: {} } } });
-  return { processed: products.length, filled, noResult, failed, remaining };
+  const [remaining, remainingNoImage] = await Promise.all([
+    prisma.product.count({ where: pending }),
+    prisma.product.count({ where: { images: { none: {} } } }),
+  ]);
+  return { processed: products.length, filled, noResult, failed, remaining, remainingNoImage };
 }

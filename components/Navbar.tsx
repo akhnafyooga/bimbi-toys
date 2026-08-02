@@ -7,6 +7,7 @@ import CartBadge from "@/components/CartBadge";
 import BrandLogo from "@/components/BrandLogo";
 import AppIcon from "@/components/AppIcon";
 import NavPanel from "@/components/NavPanel";
+import HeaderScrollState from "@/components/HeaderScrollState";
 
 // Shared look for one nav tile: icon on top, label underneath.
 const TILE =
@@ -31,9 +32,18 @@ export default async function Navbar() {
   const cartTotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   return (
-    <header className="w-full z-50 flex flex-col">
+    <header
+      data-sticky-header
+      className="sticky top-0 w-full z-50 flex flex-col shadow-sm"
+    >
+      <HeaderScrollState />
       <div className="clouds-bg w-full text-bimbi-ink border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 md:py-4">
+
+          {/* Only the logo folds away on scroll. The tile row below stays put so
+              Pesanan / Wishlist / Keranjang remain reachable from anywhere. */}
+          <div className="header-collapse">
+          <div>
 
           {/* ===== ROW 1 — logo on its own line, all screen sizes ===== */}
           <div className="flex justify-center pt-0.5 pb-1">
@@ -42,7 +52,11 @@ export default async function Navbar() {
             </Link>
           </div>
 
+          </div>
+          </div>
+
           {/* ===== ROW 2 — separated icon buttons, collapsible, all screen sizes ===== */}
+          <div className="nav-tiles">
           <NavPanel>
             <div className="mx-auto w-full max-w-2xl">
               {session?.user && (
@@ -95,12 +109,14 @@ export default async function Navbar() {
               </div>
             </div>
           </NavPanel>
+          </div>
 
-          {/* Search — shared, full width */}
+          {/* Search — shared, full width. Stays visible when the block above
+              collapses, so it is reachable from anywhere on the page. */}
           <form
             id="tour-search"
             action="/search"
-            className="mt-2 md:mt-3 w-full flex items-center rounded-full bg-slate-100 border border-slate-200 overflow-hidden"
+            className="mt-2 md:mt-3 header-search w-full flex items-center rounded-full bg-slate-100 border border-slate-200 overflow-hidden"
           >
             <select
               name="category"

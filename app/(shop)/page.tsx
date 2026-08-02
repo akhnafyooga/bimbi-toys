@@ -141,7 +141,10 @@ export default async function HomePage({
 
         {/* 3. Catalog — full-width Walmart grid */}
         <Reveal>
-          <section id="katalog" className="scroll-mt-6">
+          <section
+            id="katalog"
+            className="scroll-mt-6 rounded-xl bg-white shadow-card p-4 sm:p-6"
+          >
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-300 pb-4 mb-5 gap-3">
               <div>
                 <h3 className="text-xl font-extrabold text-bimbi-ink">
@@ -172,7 +175,7 @@ export default async function HomePage({
               </div>
             ) : (
               <>
-                <div data-tour="products" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 animate-pop-in">
+                <div data-tour="products" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 animate-pop-in">
                   {products.map((p) => (
                     <ProductCard
                       key={p.id}

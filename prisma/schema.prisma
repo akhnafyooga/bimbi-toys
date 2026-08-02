@@ -55,8 +55,16 @@ model Product {
   images        ProductImage[]
   categoryId    String
   category      Category  @relation(fields: [categoryId], references: [id])
+  // The POS `Kode` from the client's inventory export. Nullable because older
+  // rows predate it. This is the stable key for re-imports and the planned
+  // SQLite sync — matching on name is fragile once names get edited.
+  sku           String?   @unique
   featured      Boolean   @default(false)
   createdAt     DateTime  @default(now())
+  // Set once the auto-fill has searched for this product and found nothing
+  // usable. Without it a product that Serper can't match is re-searched on
+  // every run, paying the credit again each time for the same failure.
+  imageSearchedAt DateTime?
 
   wishlistedBy  WishlistItem[]
   cartItems     CartItem[]

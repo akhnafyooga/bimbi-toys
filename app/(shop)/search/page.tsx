@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserDiscount } from "@/lib/discount";
 import ProductCard from "@/components/ProductCard";
@@ -82,6 +82,49 @@ export default async function SearchPage({
   moreQuery.set("show", String(showN + PAGE));
   const moreHref = `/search?${moreQuery.toString()}`;
 
+  // "Direkomendasikan untukmu" — always rendered, because a search that returns
+  // nothing (or three items) otherwise leaves a mostly empty page. Picks lean
+  // towards the categories the results landed in, then fill from anywhere.
+  // ORDER BY RANDOM() reshuffles per request instead of per build.
+  const shown = [...visible, ...suggestedProducts];
+  const shownIds = new Set(shown.map((p) => p.id));
+  const focusCatIds = [...new Set(shown.map((p) => p.categoryId))];
+
+  // Over-fetch, then drop anything already on screen — cheaper and simpler than
+  // binding an exclusion list into the SQL.
+  const [simRows, otherRows] = await Promise.all([
+    focusCatIds.length
+      ? prisma.$queryRaw<{ id: string }[]>`
+          SELECT id FROM "Product"
+          WHERE "categoryId" IN (${Prisma.join(focusCatIds)})
+          ORDER BY RANDOM() LIMIT 40`
+      : Promise.resolve([]),
+    focusCatIds.length
+      ? prisma.$queryRaw<{ id: string }[]>`
+          SELECT id FROM "Product"
+          WHERE "categoryId" NOT IN (${Prisma.join(focusCatIds)})
+          ORDER BY RANDOM() LIMIT 20`
+      : prisma.$queryRaw<{ id: string }[]>`
+          SELECT id FROM "Product" ORDER BY RANDOM() LIMIT 20`,
+  ]);
+
+  const simPicks = simRows.map((r) => r.id).filter((id) => !shownIds.has(id)).slice(0, 8);
+  // With no results there is no category to anchor to, so the whole row comes
+  // from the random pool — otherwise a failed search shows only 4 cards, which
+  // is the sparse page this panel exists to fix.
+  const otherPicks = otherRows
+    .map((r) => r.id)
+    .filter((id) => !shownIds.has(id))
+    .slice(0, simPicks.length ? 4 : 12);
+  const pickIds = [...simPicks, ...otherPicks];
+  const recRows = pickIds.length
+    ? await prisma.product.findMany({ where: { id: { in: pickIds } }, include: INCLUDE_IMAGE })
+    : [];
+  // findMany ignores the id order, so restore it — that is what keeps the
+  // same-category picks ahead of the unrelated ones.
+  const recById = new Map(recRows.map((r) => [r.id, r]));
+  const recommended = pickIds.map((id) => recById.get(id)).filter((r) => r !== undefined);
+
   const grid = (list: typeof products) => (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
       {list.map((p) => (
@@ -158,6 +201,15 @@ export default async function SearchPage({
             </p>
           )}
         </div>
+      )}
+
+      {recommended.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-xl font-extrabold text-bimbi-ink mb-4">
+            Direkomendasikan untukmu
+          </h2>
+          {grid(recommended)}
+        </section>
       )}
     </div>
   );

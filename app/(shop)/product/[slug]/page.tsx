@@ -6,6 +6,7 @@ import { formatIDR } from "@/lib/format";
 import { getUserDiscount, applyDiscount } from "@/lib/discount";
 import { normalizePhone } from "@/lib/phone";
 import ProductActions from "@/components/ProductActions";
+import ProductCard from "@/components/ProductCard";
 import AppIcon from "@/components/AppIcon";
 import { googleMapsUrl } from "@/lib/maps";
 
@@ -50,10 +51,38 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   // "Harga spesial kenalan" replaces the normal price for flagged users.
   const discountPercent = await getUserDiscount();
+
+  // "Direkomendasikan untukmu": same-category picks first, then a few from
+  // elsewhere so the row is not a dead end when a category is thin.
+  // ORDER BY RANDOM() in the database reshuffles on every request and avoids
+  // pulling a 500-product category into memory just to shuffle it here.
+  const [similarIds, otherIds] = await Promise.all([
+    prisma.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "Product"
+      WHERE "categoryId" = ${product.categoryId} AND id <> ${product.id}
+      ORDER BY RANDOM() LIMIT 8`,
+    prisma.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "Product"
+      WHERE "categoryId" <> ${product.categoryId}
+      ORDER BY RANDOM() LIMIT 4`,
+  ]);
+
+  const recIds = [...similarIds.map((r) => r.id), ...otherIds.map((r) => r.id)];
+  const recRows = recIds.length
+    ? await prisma.product.findMany({
+        where: { id: { in: recIds } },
+        include: { images: { orderBy: { position: "asc" }, take: 1 } },
+      })
+    : [];
+  // findMany ignores the order of the id list, so restore it — that ordering is
+  // what puts the related products ahead of the unrelated ones.
+  const byId = new Map(recRows.map((r) => [r.id, r]));
+  const recommended = recIds.map((id) => byId.get(id)).filter((r) => r !== undefined);
   const special = discountPercent > 0;
   const finalPrice = applyDiscount(product.price, discountPercent);
 
   return (
+    <>
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 grid lg:grid-cols-12 gap-8">
       {/* Gallery: thumbnail rail + main image */}
       <div className="lg:col-span-6 flex gap-3">
@@ -74,9 +103,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <>
               <Image src={product.images[0].url} alt={product.name} fill className="object-contain bg-white" priority />
               {/* Catalogue photos are sourced from the web, not shot in-store —
-                  say so on the image itself so nobody expects an exact match. */}
-              <p className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-1.5 text-center text-[11px] font-semibold leading-snug text-white">
-                Foto hanya ilustrasi dari internet — warna &amp; detail bisa berbeda dengan barang asli
+                  stated on the image itself so the provenance is never implied.
+                  The yellow tint is low-opacity, so backdrop-brightness darkens
+                  whatever photo sits behind it; without that, white text on a
+                  pale product shot would be unreadable. */}
+              <p className="absolute inset-x-3 bottom-3 flex items-center justify-center gap-1.5 rounded-lg border border-wm-yellow/50 bg-wm-yellow/25 px-3 py-2 text-center text-[11px] font-semibold leading-snug text-white shadow-lg backdrop-blur-[2px] backdrop-brightness-[0.35]">
+                <span className="font-extrabold tracking-wide text-wm-yellow">NB:</span>
+                Foto produk diambil dari internet
               </p>
             </>
           ) : (
@@ -169,5 +202,27 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
     </div>
+
+    {recommended.length > 0 && (
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-14">
+        <h2 className="text-xl font-extrabold text-bimbi-ink mb-4">
+          Direkomendasikan untukmu
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+          {recommended.map((p) => (
+            <ProductCard
+              key={p.id}
+              slug={p.slug}
+              name={p.name}
+              price={p.price}
+              compareAtPrice={p.compareAtPrice}
+              imageUrl={p.images[0]?.url ?? ""}
+              discountPercent={discountPercent}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+    </>
   );
 }
