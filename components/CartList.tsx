@@ -78,36 +78,36 @@ export default function CartList({
     <div className="grid lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-4">
         {items.map((item) => (
-          <div key={item.id} className="flex gap-4 rounded-2xl bg-white toy-shelf p-4">
-            <div className="relative h-24 w-24 rounded-xl overflow-hidden shrink-0">
+          <div key={item.id} className="flex gap-3 md:gap-4 rounded-2xl bg-white toy-shelf p-3 md:p-4">
+            <div className="relative h-16 w-16 md:h-24 md:w-24 rounded-xl overflow-hidden shrink-0">
               <ImagePlaceholder className="h-full w-full" />
             </div>
-            <div className="flex-1">
-              <Link href={`/product/${item.product.slug}`} className="font-display text-lg hover:text-bimbi-pink-dark">
+            <div className="flex-1 min-w-0">
+              <Link href={`/product/${item.product.slug}`} className="font-display text-sm md:text-lg hover:text-bimbi-pink-dark block truncate">
                 {item.product.displayName ?? item.product.name}
               </Link>
-              <p className="font-bold text-bimbi-pink-dark mt-1">
+              <p className="font-bold text-sm md:text-base text-bimbi-pink-dark mt-0.5 md:mt-1">
                     {formatIDR(applyDiscount(item.product.price, discountPercent))}
                     {special && (
-                      <span className="ml-1.5 text-xs font-semibold text-slate-400 line-through">
+                      <span className="ml-1.5 text-[10px] md:text-xs font-semibold text-slate-400 line-through">
                         {formatIDR(item.product.price)}
                       </span>
                     )}
                   </p>
-              <div className="flex items-center gap-3 mt-2">
+              <div className="flex items-center gap-2 md:gap-3 mt-1.5 md:mt-2">
                 <div className="flex items-center rounded-full border-2 border-bimbi-ink/10 overflow-hidden">
                   <button
                     disabled={pending === item.productId}
                     onClick={() => updateQty(item.productId, Math.max(1, item.quantity - 1))}
-                    className="px-2.5 py-1 font-bold hover:bg-bimbi-cream"
+                    className="px-2 py-0.5 md:px-2.5 md:py-1 font-bold hover:bg-bimbi-cream text-xs md:text-sm"
                   >
                     −
                   </button>
-                  <span className="px-3 text-sm font-bold">{item.quantity}</span>
+                  <span className="px-2 md:px-3 text-xs md:text-sm font-bold">{item.quantity}</span>
                   <button
                     disabled={pending === item.productId}
                     onClick={() => updateQty(item.productId, Math.min(99, item.quantity + 1))}
-                    className="px-2.5 py-1 font-bold hover:bg-bimbi-cream"
+                    className="px-2 py-0.5 md:px-2.5 md:py-1 font-bold hover:bg-bimbi-cream text-xs md:text-sm"
                   >
                     +
                   </button>
@@ -115,7 +115,7 @@ export default function CartList({
                 <button
                   disabled={pending === item.productId}
                   onClick={() => remove(item.productId)}
-                  className="text-sm font-bold text-red-400 hover:text-red-500"
+                  className="text-xs md:text-sm font-bold text-red-400 hover:text-red-500"
                 >
                   Hapus
                 </button>
