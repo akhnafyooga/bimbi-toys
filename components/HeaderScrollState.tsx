@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 // Single source of truth for "has the page scrolled". Marks the header so CSS
 // can fold the logo away, and broadcasts the same decision so NavPanel can
@@ -22,9 +23,18 @@ const SHOW_ABOVE = 40;
 const SETTLE_MS = 420;
 
 export default function HeaderScrollState() {
+  const pathname = usePathname();
   useEffect(() => {
     const header = document.querySelector<HTMLElement>("header[data-sticky-header]");
     if (!header) return;
+
+    if (pathname !== "/") {
+      header.dataset.scrolled = "true";
+      window.dispatchEvent(
+        new CustomEvent(HEADER_SCROLL_EVENT, { detail: true })
+      );
+      return;
+    }
 
     let scrolled = false;
     let lockedUntil = 0;
@@ -50,7 +60,8 @@ export default function HeaderScrollState() {
       window.removeEventListener("scroll", sync);
       window.removeEventListener("resize", sync);
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }
+
