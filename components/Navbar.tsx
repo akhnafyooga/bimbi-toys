@@ -141,7 +141,7 @@ export default async function Navbar() {
               type="text"
               name="q"
               placeholder="Cari semua di Bimbi Toys online dan di toko"
-              className="flex-1 px-4 py-2.5 md:py-3 text-sm text-bimbi-ink outline-none placeholder:text-slate-400 bg-transparent"
+              className="flex-1 min-w-0 px-4 py-2.5 md:py-3 text-sm text-bimbi-ink outline-none placeholder:text-slate-400 bg-transparent"
             />
             <button
               type="submit"
@@ -187,7 +187,7 @@ export default async function Navbar() {
           Folds away on scroll like the logo, leaving a thin white rule under
           the search bar. */}
       <div className="header-categories w-full bg-bimbi-cream">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center w-full min-w-0">
           <CategoryNav categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }))} />
         </div>
       </div>

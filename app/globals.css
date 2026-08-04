@@ -311,6 +311,8 @@ header[data-scrolled="true"] .header-search {
 
 .header-categories > * {
   min-height: 0;
+  min-width: 0;
+  width: 100%;
   overflow: hidden;
 }
 
