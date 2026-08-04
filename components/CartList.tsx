@@ -75,14 +75,14 @@ export default function CartList({
   }
 
   return (
-    <div className="grid lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 space-y-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+      <div className="lg:col-span-2 space-y-4 min-w-0">
         {items.map((item) => (
-          <div key={item.id} className="flex gap-3 md:gap-4 rounded-2xl bg-white toy-shelf p-3 md:p-4 items-center">
+          <div key={item.id}className="flex w-full min-w-0 gap-3 md:gap-4 rounded-2xl bg-white toy-shelf p-3 md:p-4 items-center">
             <div className="relative h-16 w-16 md:h-24 md:w-24 rounded-xl overflow-hidden shrink-0">
               <ImagePlaceholder className="h-full w-full" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 overflow-hidden">
               <Link href={`/product/${item.product.slug}`} className="font-display text-sm md:text-lg hover:text-bimbi-pink-dark block truncate">
                 {item.product.displayName ?? item.product.name}
               </Link>
@@ -94,7 +94,7 @@ export default function CartList({
                       </span>
                     )}
                   </p>
-              <div className="flex items-center justify-between gap-2 mt-1.5 md:mt-2">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center rounded-full border-2 border-bimbi-ink/10 overflow-hidden">
                   <button
                     disabled={pending === item.productId}
@@ -125,7 +125,7 @@ export default function CartList({
         ))}
       </div>
 
-      <div className="rounded-2xl bg-white toy-shelf p-3 md:p-6 h-fit">
+      <div className="w-full rounded-2xl bg-white toy-shelf p-3 md:p-6 h-fit">
         <p className="font-display text-base md:text-xl mb-3 md:mb-4">Ringkasan Belanja</p>
         <div className="flex justify-between text-xs md:text-sm mb-1.5 md:mb-2">
           <span>Subtotal</span>
