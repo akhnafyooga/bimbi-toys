@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // The second header row (account / orders / wishlist / cart), on every screen size.
 // Collapsible so the page can be read without the nav taking up space.
@@ -8,6 +8,25 @@ import { useState } from "react";
 // server action inside keeps working.
 export default function NavPanel({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
+
+  // Fold the tiles away as soon as the page scrolls, and bring them back at the
+  // top. Driving the component's own state (rather than hiding it with CSS)
+  // keeps the toggle button's label and aria-expanded honest.
+  useEffect(() => {
+    const THRESHOLD = 90;
+    let last: boolean | null = null;
+
+    const sync = () => {
+      const shouldOpen = window.scrollY <= THRESHOLD;
+      if (shouldOpen === last) return; // only act when crossing the threshold,
+      last = shouldOpen; //                 so a manual toggle isn't fought on
+      setOpen(shouldOpen); //               every scroll event
+    };
+
+    sync();
+    window.addEventListener("scroll", sync, { passive: true });
+    return () => window.removeEventListener("scroll", sync);
+  }, []);
 
   return (
     <div>

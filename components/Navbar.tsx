@@ -13,6 +13,10 @@ import HeaderScrollState from "@/components/HeaderScrollState";
 const TILE =
   "flex flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white py-2.5 px-1 text-[11px] font-bold text-bimbi-ink hover:border-bimbi-pink/50 transition-colors chip-spring";
 
+// Icon-only version of TILE, used in the pinned search row while scrolled.
+const COMPACT =
+  "flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-bimbi-ink hover:border-bimbi-pink/50 transition-colors chip-spring";
+
 export default async function Navbar() {
   const session = await auth();
   const userId = session?.user ? (session.user as { id: string }).id : null;
@@ -64,18 +68,20 @@ export default async function Navbar() {
                   Hai, {session.user.name?.split(" ")[0]}!
                 </p>
               )}
-              <div className={`grid gap-2 ${session?.user ? "grid-cols-4" : "grid-cols-3"}`}>
-                {session?.user ? (
-                  <Link href="/orders" className={TILE}>
-                    <AppIcon name="pesanan" size={22} />
-                    <span>Pesanan</span>
-                  </Link>
-                ) : (
+              <div className="grid gap-2 grid-cols-4">
+                {!session?.user && (
                   <Link href="/login" className={TILE}>
                     <AppIcon name="akun" size={22} />
                     <span>Masuk</span>
                   </Link>
                 )}
+
+                {/* Always shown: /orders sends guests to login and back, so
+                    hiding it just made the button look like it vanished. */}
+                <Link href="/orders" className={TILE}>
+                  <AppIcon name="pesanan" size={22} />
+                  <span>Pesanan</span>
+                </Link>
 
                 <Link href="/wishlist" className={TILE}>
                   <span className="relative">
@@ -111,12 +117,14 @@ export default async function Navbar() {
           </NavPanel>
           </div>
 
-          {/* Search — shared, full width. Stays visible when the block above
-              collapses, so it is reachable from anywhere on the page. */}
+          {/* Search row — always visible. Once the tile menu auto-hides on
+              scroll, the compact shortcuts below appear beside the search so
+              Pesanan / Wishlist / Keranjang never become unreachable. */}
+          <div className="mt-2 md:mt-3 header-search flex items-center gap-2">
           <form
             id="tour-search"
             action="/search"
-            className="mt-2 md:mt-3 header-search w-full flex items-center rounded-full bg-slate-100 border border-slate-200 overflow-hidden"
+            className="flex-1 min-w-0 flex items-center rounded-full bg-slate-100 border border-slate-200 overflow-hidden"
           >
             <select
               name="category"
@@ -143,6 +151,35 @@ export default async function Navbar() {
               <AppIcon name="search" size={18} />
             </button>
           </form>
+
+          {/* Shown only while scrolled (CSS keys off the header's data-scrolled),
+              so it never duplicates the tiles when the menu is open. */}
+          <div className="header-compact items-center gap-1 shrink-0">
+            {!session?.user && (
+              <Link href="/login" title="Masuk" aria-label="Masuk" className={COMPACT}>
+                <AppIcon name="akun" size={20} />
+              </Link>
+            )}
+            <Link href="/orders" title="Pesanan Saya" aria-label="Pesanan Saya" className={COMPACT}>
+              <AppIcon name="pesanan" size={20} />
+            </Link>
+            <Link href="/wishlist" title="Wishlist" aria-label="Wishlist" className={COMPACT}>
+              <span className="relative">
+                <AppIcon name="wishlist" size={20} />
+                <CartBadge count={wishlistCount} variant="bubble" />
+              </span>
+            </Link>
+            {/* Same data-tour hook as the tile: findVisible() picks whichever
+                of the two is actually rendered, so the tutorial highlights the
+                control the user can currently see. */}
+            <Link href="/cart" data-tour="cart" title="Keranjang" aria-label="Keranjang" className={COMPACT}>
+              <span className="relative">
+                <AppIcon name="cart" size={20} />
+                <CartBadge count={cartCount} variant="bubble" />
+              </span>
+            </Link>
+          </div>
+          </div>
         </div>
       </div>
 

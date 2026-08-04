@@ -295,25 +295,20 @@ header[data-scrolled="true"] .header-collapse {
   pointer-events: none;
 }
 
-/* The tiles stay reachable while scrolled, but shrink so the pinned header
-   does not eat the viewport. Padding and label size only — nothing is hidden. */
-header[data-scrolled="true"] .nav-tiles a,
-header[data-scrolled="true"] .nav-tiles button {
-  padding-top: 0.3rem;
-  padding-bottom: 0.3rem;
-  font-size: 10px;
-  gap: 0.1rem;
+/* The search keeps its gap from the logo normally, but sits flush once the
+   logo has folded away, so the pinned bar stays compact. */
+header[data-scrolled="true"] .header-search {
+  margin-top: 0;
 }
 
-header[data-scrolled="true"] .nav-tiles p {
+/* Compact shortcuts appear only once the tile menu has folded away, so the
+   same actions are never on screen twice. */
+.header-compact {
   display: none;
-  /* the "Hai, name!" greeting */
 }
 
-.nav-tiles a,
-.nav-tiles button,
-.nav-tiles p {
-  transition: padding 0.2s ease, font-size 0.2s ease;
+header[data-scrolled="true"] .header-compact {
+  display: flex;
 }
 
 @media (prefers-reduced-motion: reduce) {

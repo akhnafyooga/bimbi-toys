@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 
 const STORAGE_KEY = "bimbi-tour-done-v1";
 
@@ -52,6 +53,16 @@ export default function OnboardingTour() {
   const [active, setActive] = useState(false);
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
+  // Bumped to re-run the step effect after a target remounts.
+  const [retry, setRetry] = useState(0);
+  // Portals need the DOM, so nothing renders until after hydration. This is the
+  // documented client-detection pattern — setting state in an effect would trip
+  // react-hooks/set-state-in-effect.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // First visit only — show after a short beat so the page settles first.
   useEffect(() => {
@@ -78,12 +89,20 @@ export default function OnboardingTour() {
 
     const el = findVisible(STEPS[step].selector);
     if (!el) {
-      // Target missing (e.g. empty catalog) — skip ahead, or end the tour.
-      // Deferred so we don't call setState synchronously inside the effect.
+      // A missing target is not necessarily a missing feature: the header menu
+      // unmounts its tiles while the page is scrolled, so the cart step can
+      // vanish mid-tour. Go back to the top, where it remounts, and look again
+      // before writing the step off.
+      window.scrollTo({ top: 0, behavior: "smooth" });
       const t = setTimeout(() => {
-        if (step < STEPS.length - 1) setStep((s) => s + 1);
-        else finish();
-      }, 0);
+        if (findVisible(STEPS[step].selector)) {
+          setRetry((r) => r + 1); // found after the scroll — re-run this step
+        } else if (step < STEPS.length - 1) {
+          setStep((s) => s + 1);
+        } else {
+          finish();
+        }
+      }, 450);
       return () => clearTimeout(t);
     }
 
@@ -113,10 +132,16 @@ export default function OnboardingTour() {
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [active, step, finish]);
+  }, [active, step, retry, finish]);
 
+  if (!mounted) return null;
+
+  // Rendered into <body> rather than in place. The homepage wraps its content
+  // in .space-bg, which sets isolation:isolate for the wallpaper layer — that
+  // creates a stacking context, so a z-100 overlay inside it still paints
+  // BELOW the sticky header (z-50) and the spotlight looks covered.
   if (!active) {
-    return (
+    return createPortal(
       <button
         type="button"
         onClick={restart}
@@ -125,7 +150,8 @@ export default function OnboardingTour() {
         className="fixed bottom-5 right-5 z-40 h-11 w-11 rounded-full bg-bimbi-sky text-white text-lg font-bold shadow-lg hover:bg-blue-800 hover:scale-110 transition-all cursor-pointer"
       >
         ?
-      </button>
+      </button>,
+      document.body
     );
   }
 
@@ -144,7 +170,7 @@ export default function OnboardingTour() {
   const isLast = step === STEPS.length - 1;
   const current = STEPS[step];
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100]" role="dialog" aria-label="Panduan belanja">
       {/* spotlight: the box-shadow darkens everything around the target */}
       <div
@@ -187,6 +213,7 @@ export default function OnboardingTour() {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
