@@ -46,6 +46,9 @@ model Category {
 model Product {
   id            String    @id @default(cuid())
   name          String
+  // Buyer-facing name shown in the shop. `name` stays the warehouse original
+  // so the admin panel still matches the client's own POS records.
+  displayName   String?
   slug          String    @unique
   description   String
   price         Int       // in IDR, smallest unit (Rupiah, no decimals)

@@ -1,31 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { HEADER_SCROLL_EVENT } from "@/components/HeaderScrollState";
 
 // The second header row (account / orders / wishlist / cart), on every screen size.
 // Collapsible so the page can be read without the nav taking up space.
 // Children are rendered on the server and passed through, so the sign-out
 // server action inside keeps working.
 export default function NavPanel({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(true);
+  // Scroll state is READ from HeaderScrollState, never recomputed here.
+  // Deliberately not a second scroll listener: two listeners racing on the same
+  // threshold is what made the header flicker.
+  const scrolled = useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener(HEADER_SCROLL_EVENT, onChange);
+      return () => window.removeEventListener(HEADER_SCROLL_EVENT, onChange);
+    },
+    () =>
+      document.querySelector<HTMLElement>("header[data-sticky-header]")?.dataset.scrolled === "true",
+    () => false
+  );
 
-  // Fold the tiles away as soon as the page scrolls, and bring them back at the
-  // top. Driving the component's own state (rather than hiding it with CSS)
-  // keeps the toggle button's label and aria-expanded honest.
+  // An explicit tap wins until the next scroll flip, so the toggle still works
+  // while scrolled. Derived rather than synced — assigning state from an effect
+  // is what react-hooks/set-state-in-effect (rightly) rejects.
+  const [manual, setManual] = useState<boolean | null>(null);
+  const open = manual ?? !scrolled;
+
   useEffect(() => {
-    const THRESHOLD = 90;
-    let last: boolean | null = null;
-
-    const sync = () => {
-      const shouldOpen = window.scrollY <= THRESHOLD;
-      if (shouldOpen === last) return; // only act when crossing the threshold,
-      last = shouldOpen; //                 so a manual toggle isn't fought on
-      setOpen(shouldOpen); //               every scroll event
-    };
-
-    sync();
-    window.addEventListener("scroll", sync, { passive: true });
-    return () => window.removeEventListener("scroll", sync);
+    // Clearing inside a listener (not the effect body) keeps the rule happy.
+    const clear = () => setManual(null);
+    window.addEventListener(HEADER_SCROLL_EVENT, clear);
+    return () => window.removeEventListener(HEADER_SCROLL_EVENT, clear);
   }, []);
 
   return (
@@ -34,7 +40,7 @@ export default function NavPanel({ children }: { children: React.ReactNode }) {
 
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setManual(!open)}
         aria-expanded={open}
         aria-label={open ? "Sembunyikan menu" : "Tampilkan menu"}
         className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold text-slate-700 hover:text-bimbi-pink transition-colors"

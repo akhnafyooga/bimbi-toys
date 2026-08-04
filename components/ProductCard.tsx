@@ -84,7 +84,9 @@ export default function ProductCard({
           )
         )}
 
-        <h3 className="mt-1 text-sm text-slate-700 leading-snug line-clamp-2 min-h-[2.4rem] group-hover:underline">
+        {/* Smaller type + 3 lines: names are long descriptive phrases now, so
+            two lines at text-sm truncated most of them mid-word. */}
+        <h3 className="mt-1 text-xs text-slate-700 leading-snug line-clamp-3 min-h-[3rem] group-hover:underline">
           {name}
         </h3>
 

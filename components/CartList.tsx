@@ -12,7 +12,7 @@ type Item = {
   id: string;
   productId: string;
   quantity: number;
-  product: { name: string; slug: string; price: number; stock: number; images: { url: string }[] };
+  product: { name: string; displayName: string | null; slug: string; price: number; stock: number; images: { url: string }[] };
 };
 
 export default function CartList({
@@ -84,7 +84,7 @@ export default function CartList({
             </div>
             <div className="flex-1">
               <Link href={`/product/${item.product.slug}`} className="font-display text-lg hover:text-bimbi-pink-dark">
-                {item.product.name}
+                {item.product.displayName ?? item.product.name}
               </Link>
               <p className="font-bold text-bimbi-pink-dark mt-1">
                     {formatIDR(applyDiscount(item.product.price, discountPercent))}

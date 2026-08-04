@@ -183,8 +183,10 @@ export default async function Navbar() {
         </div>
       </div>
 
-      {/* ROW 3 — light grey category strip (sliding, with arrows) */}
-      <div className="w-full bg-bimbi-cream">
+      {/* ROW 3 — light grey category strip (sliding, with arrows).
+          Folds away on scroll like the logo, leaving a thin white rule under
+          the search bar. */}
+      <div className="header-categories w-full bg-bimbi-cream">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center">
           <CategoryNav categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }))} />
         </div>

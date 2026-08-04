@@ -126,7 +126,7 @@ export default async function HomePage({
                   <div key={p.id} className="w-44 sm:w-52 shrink-0">
                     <ProductCard
                       slug={p.slug}
-                      name={p.name}
+                      name={p.displayName ?? p.name}
                       price={p.price}
                       compareAtPrice={p.compareAtPrice}
                       imageUrl={p.images[0]?.url ?? ""}
@@ -180,7 +180,7 @@ export default async function HomePage({
                     <ProductCard
                       key={p.id}
                       slug={p.slug}
-                      name={p.name}
+                      name={p.displayName ?? p.name}
                       price={p.price}
                       compareAtPrice={p.compareAtPrice}
                       imageUrl={p.images[0]?.url ?? ""}

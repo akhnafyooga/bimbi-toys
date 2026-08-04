@@ -8,7 +8,7 @@ import ImagePlaceholder from "@/components/ImagePlaceholder";
 
 type Item = {
   id: string;
-  product: { slug: string; name: string; price: number; images: { url: string }[] };
+  product: { slug: string; name: string; displayName: string | null; price: number; images: { url: string }[] };
   productId: string;
 };
 
@@ -52,7 +52,7 @@ export default function WishlistGrid({ items }: { items: Item[] }) {
           <Link href={`/product/${item.product.slug}`} className="block relative aspect-square rounded-2xl overflow-hidden">
             <ImagePlaceholder className="h-full w-full" />
           </Link>
-          <p className="mt-3 font-display text-sm leading-snug line-clamp-2 min-h-[2.4rem]">{item.product.name}</p>
+          <p className="mt-3 font-display text-sm leading-snug line-clamp-2 min-h-[2.4rem]">{item.product.displayName ?? item.product.name}</p>
           <p className="font-bold text-bimbi-pink-dark mt-1">{formatIDR(item.product.price)}</p>
           <div className="flex gap-2 mt-3">
             <button

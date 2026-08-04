@@ -93,7 +93,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 key={img.id}
                 className="relative h-16 w-16 rounded-md overflow-hidden border border-slate-200 hover:border-bimbi-pink transition-colors"
               >
-                <Image src={img.url} alt={product.name} fill className="object-cover" />
+                <Image src={img.url} alt={product.displayName ?? product.name} fill className="object-cover" />
               </div>
             ))}
           </div>
@@ -101,7 +101,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div className="relative flex-1 aspect-square rounded-lg overflow-hidden bg-slate-50 border border-slate-100">
           {product.images[0]?.url ? (
             <>
-              <Image src={product.images[0].url} alt={product.name} fill className="object-contain bg-white" priority />
+              <Image src={product.images[0].url} alt={product.displayName ?? product.name} fill className="object-contain bg-white" priority />
               {/* Catalogue photos are sourced from the web, not shot in-store —
                   stated on the image itself so the provenance is never implied.
                   The yellow tint is low-opacity, so backdrop-brightness darkens
@@ -131,7 +131,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </span>
         </div>
 
-        <h1 className="mt-2 text-2xl font-extrabold text-bimbi-ink leading-snug">{product.name}</h1>
+        <h1 className="mt-2 text-2xl font-extrabold text-bimbi-ink leading-snug">{product.displayName ?? product.name}</h1>
 
         <div className="mt-1 flex items-center gap-1 text-amber-400 text-sm">
           <span>★★★★</span><span className="text-slate-200">★</span>
@@ -213,7 +213,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <ProductCard
               key={p.id}
               slug={p.slug}
-              name={p.name}
+              name={p.displayName ?? p.name}
               price={p.price}
               compareAtPrice={p.compareAtPrice}
               imageUrl={p.images[0]?.url ?? ""}

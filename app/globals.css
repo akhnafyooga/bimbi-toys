@@ -301,6 +301,39 @@ header[data-scrolled="true"] .header-search {
   margin-top: 0;
 }
 
+/* Category strip folds away on scroll too, leaving only a thin white rule
+   beneath the search bar. Same grid trick as .header-collapse. */
+.header-categories {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.28s ease;
+}
+
+.header-categories > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+header[data-scrolled="true"] .header-categories {
+  grid-template-rows: 0fr;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--color-slate-200, #e2e8f0);
+  /* the white strip that remains */
+  min-height: 6px;
+}
+
+/* Clipped by overflow, but the links keep their layout box — without this they
+   stay hit-testable and a stray click could fire an invisible category. */
+header[data-scrolled="true"] .header-categories > * {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-categories {
+    transition: none;
+  }
+}
+
 /* Compact shortcuts appear only once the tile menu has folded away, so the
    same actions are never on screen twice. */
 .header-compact {

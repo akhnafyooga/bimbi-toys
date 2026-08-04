@@ -12,6 +12,7 @@ function tokenWhere(tokens: string[]): Prisma.ProductWhereInput {
   return {
     OR: tokens.flatMap((t) => [
       { name: { contains: t, mode: "insensitive" as const } },
+      { displayName: { contains: t, mode: "insensitive" as const } },
       { description: { contains: t, mode: "insensitive" as const } },
     ]),
   };
@@ -47,8 +48,8 @@ export default async function SearchPage({
   if (query && products.length > 1) {
     products = [...products].sort(
       (a, b) =>
-        relevance(b.name, b.description, query, tokens) -
-        relevance(a.name, a.description, query, tokens)
+        relevance(b.displayName ?? b.name, b.description, query, tokens) -
+        relevance(a.displayName ?? a.name, a.description, query, tokens)
     );
   }
 
@@ -56,8 +57,8 @@ export default async function SearchPage({
   let suggestion: string | null = null;
   let suggestedProducts: typeof products = [];
   if (query && products.length === 0) {
-    const names = await prisma.product.findMany({ select: { name: true } });
-    suggestion = suggestQuery(query, buildVocab(names.map((n) => n.name)));
+    const names = await prisma.product.findMany({ select: { name: true, displayName: true } });
+    suggestion = suggestQuery(query, buildVocab(names.map((n) => n.displayName ?? n.name)));
     if (suggestion) {
       const sTokens = tokenize(suggestion);
       suggestedProducts = await prisma.product.findMany({
@@ -67,8 +68,8 @@ export default async function SearchPage({
       });
       suggestedProducts = [...suggestedProducts].sort(
         (a, b) =>
-          relevance(b.name, b.description, suggestion!, sTokens) -
-          relevance(a.name, a.description, suggestion!, sTokens)
+          relevance(b.displayName ?? b.name, b.description, suggestion!, sTokens) -
+          relevance(a.displayName ?? a.name, a.description, suggestion!, sTokens)
       );
     }
   }
@@ -131,7 +132,7 @@ export default async function SearchPage({
         <ProductCard
           key={p.id}
           slug={p.slug}
-          name={p.name}
+          name={p.displayName ?? p.name}
           price={p.price}
           compareAtPrice={p.compareAtPrice}
           imageUrl={p.images[0]?.url ?? ""}

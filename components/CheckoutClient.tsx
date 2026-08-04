@@ -12,7 +12,7 @@ type Store = { id: string; name: string; city: string; address: string; whatsapp
 type CartItem = {
   id: string;
   quantity: number;
-  product: { name: string; price: number; images: { url: string }[] };
+  product: { name: string; displayName: string | null; price: number; images: { url: string }[] };
 };
 
 export default function CheckoutClient({
@@ -245,7 +245,7 @@ export default function CheckoutClient({
         <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
           {cartItems.map((i) => (
             <div key={i.id} className="flex justify-between text-sm">
-              <span className="text-bimbi-ink/70">{i.product.name} x{i.quantity}</span>
+              <span className="text-bimbi-ink/70">{i.product.displayName ?? i.product.name} x{i.quantity}</span>
               <span className="font-semibold">{formatIDR(unit(i.product.price) * i.quantity)}</span>
             </div>
           ))}

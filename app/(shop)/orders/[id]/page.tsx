@@ -116,7 +116,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             {order.items.map((it) => (
               <li key={it.id} className="flex items-start justify-between gap-3 py-2 text-sm">
                 <span className="text-bimbi-ink">
-                  {it.product.name}
+                  {it.product.displayName ?? it.product.name}
                   <span className="text-slate-400"> ×{it.quantity}</span>
                 </span>
                 <span className="shrink-0 font-semibold">{formatIDR(it.price * it.quantity)}</span>
