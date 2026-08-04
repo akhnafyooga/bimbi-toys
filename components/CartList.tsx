@@ -78,7 +78,7 @@ export default function CartList({
     <div className="grid lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-4">
         {items.map((item) => (
-          <div key={item.id} className="flex gap-3 md:gap-4 rounded-2xl bg-white toy-shelf p-3 md:p-4">
+          <div key={item.id} className="flex gap-3 md:gap-4 rounded-2xl bg-white toy-shelf p-3 md:p-4 items-center">
             <div className="relative h-16 w-16 md:h-24 md:w-24 rounded-xl overflow-hidden shrink-0">
               <ImagePlaceholder className="h-full w-full" />
             </div>
@@ -94,7 +94,7 @@ export default function CartList({
                       </span>
                     )}
                   </p>
-              <div className="flex items-center gap-2 md:gap-3 mt-1.5 md:mt-2">
+              <div className="flex items-center justify-between gap-2 mt-1.5 md:mt-2">
                 <div className="flex items-center rounded-full border-2 border-bimbi-ink/10 overflow-hidden">
                   <button
                     disabled={pending === item.productId}
@@ -125,30 +125,30 @@ export default function CartList({
         ))}
       </div>
 
-      <div className="rounded-2xl bg-white toy-shelf p-6 h-fit">
-        <p className="font-display text-xl mb-4">Ringkasan Belanja</p>
-        <div className="flex justify-between text-sm mb-2">
+      <div className="rounded-2xl bg-white toy-shelf p-3 md:p-6 h-fit">
+        <p className="font-display text-base md:text-xl mb-3 md:mb-4">Ringkasan Belanja</p>
+        <div className="flex justify-between text-xs md:text-sm mb-1.5 md:mb-2">
           <span>Subtotal</span>
           <span className={special ? "" : "font-bold"}>{formatIDR(subtotal)}</span>
         </div>
         {special && (
           <>
-            <div className="flex justify-between text-sm mb-2 text-bimbi-pink">
+            <div className="flex justify-between text-xs md:text-sm mb-1.5 md:mb-2 text-bimbi-pink">
               <span>Harga spesial ({discountPercent}%)</span>
               <span className="font-bold">−{formatIDR(savedTotal)}</span>
             </div>
-            <div className="flex justify-between text-sm mb-2 border-t border-bimbi-ink/10 pt-2">
+            <div className="flex justify-between text-xs md:text-sm mb-1.5 md:mb-2 border-t border-bimbi-ink/10 pt-2">
               <span className="font-bold">Total</span>
               <span className="font-bold">{formatIDR(total)}</span>
             </div>
           </>
         )}
-        <p className="text-xs text-bimbi-ink/50 mb-4">
+        <p className="text-[10px] md:text-xs text-bimbi-ink/50 mb-3 md:mb-4">
           Stok &amp; pembayaran dikonfirmasi lewat chat WhatsApp toko.
         </p>
         <Link
           href="/checkout"
-          className="block text-center w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-6 py-3 font-extrabold text-white transition-colors chip-spring"
+          className="block text-center w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-4 py-2 md:px-6 md:py-3 text-sm md:text-base font-extrabold text-white transition-colors chip-spring"
         >
           Lanjut Pesan via WhatsApp
         </Link>
