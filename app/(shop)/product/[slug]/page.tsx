@@ -91,14 +91,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {product.images.map((img) => (
               <div
                 key={img.id}
-                className="relative h-16 w-16 rounded-md overflow-hidden border border-slate-200 hover:border-bimbi-pink transition-colors"
+                className="relative h-16 w-16 rounded-xl overflow-hidden border border-slate-200 hover:border-bimbi-sky transition-colors"
               >
                 <Image src={img.url} alt={product.displayName ?? product.name} fill className="object-cover" />
               </div>
             ))}
           </div>
         )}
-        <div className="relative flex-1 aspect-square rounded-lg overflow-hidden bg-slate-50 border border-slate-100">
+        <div className="relative flex-1 aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
           {product.images[0]?.url ? (
             <>
               <Image src={product.images[0].url} alt={product.displayName ?? product.name} fill className="object-contain bg-white" priority />
@@ -131,7 +131,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </span>
         </div>
 
-        <h1 className="mt-2 text-2xl font-extrabold text-bimbi-ink leading-snug">{product.displayName ?? product.name}</h1>
+        <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-bimbi-ink leading-snug">{product.displayName ?? product.name}</h1>
 
         <div className="mt-1 flex items-center gap-1 text-amber-400 text-sm">
           <span>★★★★</span><span className="text-slate-200">★</span>
@@ -144,7 +144,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       {/* Right: buy box */}
       <div className="lg:col-span-3">
-        <div className="rounded-lg border border-slate-200 shadow-card p-4 lg:sticky lg:top-4">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-card p-5 lg:sticky lg:top-4">
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className={`text-3xl font-extrabold ${special ? "text-bimbi-pink" : "text-bimbi-ink"}`}>
               {formatIDR(finalPrice)}
@@ -205,13 +205,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
     {recommended.length > 0 && (
       <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-14">
-        <h2 className="text-xl font-extrabold text-bimbi-ink mb-4">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-bimbi-ink mb-4">
           Direkomendasikan untukmu
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {recommended.map((p) => (
             <ProductCard
               key={p.id}
+              productId={p.id}
               slug={p.slug}
               name={p.displayName ?? p.name}
               price={p.price}

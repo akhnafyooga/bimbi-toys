@@ -45,22 +45,39 @@ body {
   background: #ffffff;
   color: var(--color-bimbi-ink);
   font-family: var(--font-nunito), system-ui, sans-serif;
+  /* Poppins runs a touch wide; a hair of negative tracking keeps long
+     Indonesian product names from feeling loose. */
+  letter-spacing: -0.005em;
 }
 
-h1,
-h2,
-h3,
-h4,
-.font-display {
-  font-family: var(--font-nunito), system-ui, sans-serif;
-  font-weight: 800;
+/* Inside @layer base on purpose. Unlayered CSS beats LAYERED CSS whatever the
+   specificity, so an unlayered `h3 { font-weight: 800 }` silently overrode
+   Tailwind's own `font-normal` utility on product-card titles. Putting it in
+   the base layer restores the normal order: utilities win. */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
+    font-family: var(--font-nunito), system-ui, sans-serif;
+    font-weight: 800;
+    /* Big bold headings are the signature of the LEGO layout — tight tracking
+       is what stops them reading as generic bold text. */
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  h1 {
+    letter-spacing: -0.03em;
+  }
 }
 
 /* subtle two-layer elevation for cards, panels, and tables */
 .shadow-card {
   box-shadow:
     0 1px 2px rgba(16, 24, 40, 0.04),
-    0 2px 6px rgba(16, 24, 40, 0.06);
+    0 4px 12px rgba(16, 24, 40, 0.07);
 }
 
 /* slightly stronger lift on hover for interactive cards */
@@ -69,8 +86,8 @@ h4,
 }
 .shadow-card-hover:hover {
   box-shadow:
-    0 2px 4px rgba(16, 24, 40, 0.06),
-    0 8px 20px rgba(16, 24, 40, 0.10);
+    0 4px 8px rgba(16, 24, 40, 0.07),
+    0 16px 32px rgba(16, 24, 40, 0.13);
 }
 
 /* was the playful "toy shelf" — now a flat Walmart-style card */
@@ -190,7 +207,7 @@ h4,
 }
 
 .card-lively:hover {
-  transform: translateY(-6px) rotate(-0.5deg);
+  transform: translateY(-8px);
 }
 
 .card-lively:active {
@@ -241,6 +258,121 @@ h4,
 .reveal.revealed {
   opacity: 1;
   transform: none;
+}
+
+/* Break an element out of a max-width container so its background reaches both
+   screen edges, while its children stay on the normal grid.
+   100vw includes the scrollbar, so this overhangs by the scrollbar width —
+   `overflow-x: clip` on the root swallows that. `clip` and not `hidden`:
+   `hidden` would create a scroll container and break the sticky header. */
+/* html ONLY — never body. `overflow-x: clip` forces the other axis to compute
+   as `auto`, which on body creates a second, nested scroll container: the page
+   then scrolls inside body rather than the viewport, and sticky/vh behaviour
+   goes strange. html is already the viewport scroller, so it is harmless there. */
+html {
+  overflow-x: clip;
+}
+
+.full-bleed {
+  margin-inline: calc(50% - 50vw);
+  width: 100vw;
+}
+
+/* Segment bands: torn-paper edges, like the LEGO store's colour bands.
+   Not a zig-zag and not a repeating mask — it is ONE irregular shape: shallow
+   diagonals with a single step near the middle. clip-path expresses that
+   directly and lets each point sit at its own height.
+
+   The bands JOIN: each one is torn along the TOP only and pulled up by --tear
+   so it overlaps its predecessor. Because a clip-path reveals whatever is
+   painted behind it, the tear exposes the PREVIOUS band's colour rather than
+   the white page — which is what makes the colours meet edge to edge. */
+.segment-stack {
+  display: flow-root;
+}
+
+.segment-band {
+  --tear: 26px;
+  position: relative;
+  padding-top: calc(var(--tear) + 3rem);
+  padding-bottom: 3.5rem;
+  clip-path: polygon(0 22px, 51% 16px, 52% 2px, 100% 10px, 100% 100%, 0 100%);
+}
+
+.segment-band + .segment-band {
+  margin-top: calc(var(--tear) * -1);
+}
+
+/* Depth. Two separate effects:
+   1) a soft inner shading along the torn top edge, so the band above looks like
+      it is casting onto this one — the layered-paper look;
+   2) a very subtle vertical gradient over the flat colour, so each band has its
+      own light-to-dark falloff instead of reading as a solid swatch.
+
+   Deliberately NOT `box-shadow` (clip-path would crop it away) and NOT
+   `filter: drop-shadow` (that filters the children too, muddying every card
+   inside). A clipped pseudo-element follows the tear exactly and touches
+   nothing else. */
+.segment-band {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 255, 255, 0) 22%,
+    rgba(15, 23, 42, 0.05)
+  );
+}
+
+.segment-band::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 56px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.16), rgba(15, 23, 42, 0));
+}
+
+/* The first band has nothing above it, so an edge shadow there would be a
+   shadow cast by nothing. */
+.segment-band:first-child::before {
+  display: none;
+}
+
+/* The last band has nothing beneath it, so it gets a torn bottom too and the
+   page white shows through — closing the group off the same way it opened. */
+.segment-band:last-child {
+  padding-bottom: calc(var(--tear) + 3.5rem);
+  clip-path: polygon(
+    0 22px,
+    51% 16px,
+    52% 2px,
+    100% 10px,
+    100% calc(100% - 12px),
+    53% calc(100% - 24px),
+    52% calc(100% - 6px),
+    0 calc(100% - 18px)
+  );
+}
+
+@media (min-width: 768px) {
+  .segment-band {
+    --tear: 34px;
+    padding-top: calc(var(--tear) + 4.5rem);
+    padding-bottom: 5rem;
+  }
+
+  .segment-band:last-child {
+    padding-bottom: calc(var(--tear) + 5rem);
+  }
+}
+
+/* clip-path crops anything outside the shape, so the rail arrows must sit
+   inside the band rather than hanging over its edge. */
+.segment-band .rail-arrow-left {
+  left: 0.5rem;
+}
+
+.segment-band .rail-arrow-right {
+  right: 0.5rem;
 }
 
 /* Loading screen (components/Loader.tsx): four dots in the logo's colours that

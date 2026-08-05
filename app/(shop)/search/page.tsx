@@ -127,11 +127,12 @@ export default async function SearchPage({
   const recommended = pickIds.map((id) => recById.get(id)).filter((r) => r !== undefined);
 
   const grid = (list: typeof products) => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
       {list.map((p) => (
         <ProductCard
           key={p.id}
-          slug={p.slug}
+          productId={p.id}
+              slug={p.slug}
           name={p.displayName ?? p.name}
           price={p.price}
           compareAtPrice={p.compareAtPrice}
@@ -144,7 +145,7 @@ export default async function SearchPage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
-      <h1 className="font-display text-3xl text-bimbi-pink-dark mb-6">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-bimbi-ink mb-6">
         Hasil pencarian: {query ? `“${query}”` : ""}{" "}
         {selectedCategory ? `di kategori ${selectedCategory.name}` : ""}
       </h1>
@@ -206,7 +207,7 @@ export default async function SearchPage({
 
       {recommended.length > 0 && (
         <section className="mt-12">
-          <h2 className="text-xl font-extrabold text-bimbi-ink mb-4">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-bimbi-ink mb-4">
             Direkomendasikan untukmu
           </h2>
           {grid(recommended)}

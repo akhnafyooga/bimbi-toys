@@ -7,9 +7,14 @@ import CategoryDropdown from "@/components/CategoryDropdown";
 import Reveal from "@/components/Reveal";
 import CatalogControls from "@/components/CatalogControls";
 import { pickDailyBalanced } from "@/lib/dailyPicks";
+import QuickTiles from "@/components/QuickTiles";
+import Rail from "@/components/Rail";
+import SegmentRail from "@/components/SegmentRail";
+import ToyFinder from "@/components/ToyFinder";
+import { SEGMENTS, segmentWhere, isSegmentKey } from "@/lib/homeSegments";
 import type { Prisma } from "@prisma/client";
 
-const PAGE = 24; // catalog page size for "Muat lebih banyak"
+const PAGE = 10; // 2 rows at the desktop 5-column grid, then "Muat lebih banyak"
 
 export default async function HomePage({
   searchParams,
@@ -20,9 +25,11 @@ export default async function HomePage({
     min?: string;
     max?: string;
     show?: string;
+    segment?: string;
   }>;
 }) {
-  const { category, sort, min, max, show } = await searchParams;
+  const { category, sort, min, max, show, segment } = await searchParams;
+  const seg = isSegmentKey(segment) ? segment : undefined;
   const showN = Math.min(Math.max(PAGE, Number(show) || PAGE), 2000);
 
   // Price filter (harga) + sort, both driven by the URL via CatalogControls.
@@ -30,8 +37,15 @@ export default async function HomePage({
     min || max
       ? { price: { ...(min ? { gte: Number(min) } : {}), ...(max ? { lte: Number(max) } : {}) } }
       : {};
+  // `segment` is additive: it ANDs with whatever category/price filters are
+  // already in the URL, so CatalogControls and the category dropdown keep
+  // working exactly as before.
   const where: Prisma.ProductWhereInput = {
-    AND: [category ? { category: { slug: category } } : {}, priceFilter],
+    AND: [
+      category ? { category: { slug: category } } : {},
+      priceFilter,
+      seg ? segmentWhere(seg) : {},
+    ],
   };
   const orderBy: Prisma.ProductOrderByWithRelationInput =
     sort === "termurah"
@@ -57,6 +71,19 @@ export default async function HomePage({
     getUserDiscount(),
   ]);
 
+  // One query per merchandising rail. Each is capped at 12 and only needs a
+  // single image, so this stays cheap next to the catalog query above.
+  const railItems = await Promise.all(
+    SEGMENTS.map((sgm) =>
+      prisma.product.findMany({
+        where: { AND: [segmentWhere(sgm.key), { images: { some: {} } }] },
+        take: 12,
+        orderBy: { createdAt: "desc" },
+        include: { images: { orderBy: { position: "asc" }, take: 1 } },
+      })
+    )
+  );
+
   // 10 products, spread evenly across categories, reshuffled on EVERY request
   // (random seed) so "Penawaran Hits" changes on each refresh / new visit.
   const hitPicks = pickDailyBalanced(allForPicks, 10, crypto.randomUUID());
@@ -67,65 +94,76 @@ export default async function HomePage({
   if (sort) moreQuery.set("sort", sort);
   if (min) moreQuery.set("min", String(min));
   if (max) moreQuery.set("max", String(max));
+  if (seg) moreQuery.set("segment", seg);
   moreQuery.set("show", String(showN + PAGE));
   const moreHref = `/?${moreQuery.toString()}`;
 
   return (
-    <div className="space-bg min-h-screen">
+    <div className="bg-white min-h-screen">
 
-      {/* 1. Hero Banner — FULL WIDTH (edge to edge). bg image: public/brand/hero.jpg */}
-      <div
-        className="relative overflow-hidden bg-bimbi-sun min-h-[240px] md:min-h-[320px] bg-cover bg-center"
-        style={{ backgroundImage: "url(/brand/hero.jpg)" }}
-      >
-        {/* readability wash so the headline stays legible over any photo */}
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent" />
-        <div className="relative mx-auto max-w-7xl px-6 sm:px-6 py-10 md:py-16">
-          <div className="space-y-3 max-w-lg text-left ml-2 sm:ml-6 md:ml-8 lg:ml-16">
-            <span className="text-xs font-extrabold uppercase tracking-widest text-bimbi-pink">
-              Tentang Bimbi Toys
+      {/* 1. Hero — LEGO-style colour block: flat brand blue, oversized headline,
+          one yellow CTA. The photo sits to the side instead of behind the text,
+          so nothing needs a readability wash. */}
+      <div className="relative overflow-hidden bg-bimbi-sky">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 md:py-16 grid md:grid-cols-2 gap-8 items-center">
+          <div className="space-y-4">
+            <span className="inline-block rounded-full bg-wm-yellow px-3 py-1 text-[11px] font-extrabold uppercase tracking-widest text-bimbi-ink">
+              Bimbi Toys
             </span>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl text-bimbi-ink leading-tight font-extrabold">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white leading-[1.05] font-extrabold">
               Teman Bermain &amp; Belajar Anak
             </h1>
-            <p className="text-slate-600 text-sm leading-relaxed">
+            <p className="text-white/90 text-sm sm:text-base leading-relaxed max-w-md">
               Ribuan mainan asli berkualitas, aman, dan edukatif untuk buah hati Anda.
               Dapatkan penawaran harga terbaik!
             </p>
-            <div className="pt-2">
+            <div className="pt-1 flex flex-wrap gap-3">
               <Link
                 href="#katalog"
-                className="inline-block rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-7 py-3 font-extrabold text-white text-sm transition-colors chip-spring"
+                className="inline-block rounded-full bg-wm-yellow hover:bg-white px-7 py-3 font-extrabold text-bimbi-ink text-sm transition-colors chip-spring"
               >
                 Mulai Belanja
               </Link>
+              <Link
+                href="#cari-mainanmu"
+                className="inline-block rounded-full border-2 border-white/70 hover:bg-white/10 px-7 py-3 font-extrabold text-white text-sm transition-colors chip-spring"
+              >
+                Cari Mainanmu?
+              </Link>
             </div>
           </div>
+
+          <div
+            aria-hidden
+            className="hidden md:block relative aspect-[4/3] rounded-3xl bg-cover bg-center shadow-2xl ring-4 ring-white/20"
+            style={{ backgroundImage: "url(/brand/hero.jpg)" }}
+          />
         </div>
       </div>
 
-      {/* White band + fade under the hero: the patterned sky would otherwise
-          start hard against the photo, which read as an abrupt switch. */}
-      <div aria-hidden className="h-10 md:h-16 bg-white" />
-      <div aria-hidden className="h-16 md:h-24 -mt-px bg-gradient-to-b from-white to-transparent" />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 md:pt-10 pb-6 flex flex-col gap-10 md:gap-14">
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 -mt-16 md:-mt-24 pb-6 flex flex-col gap-8">
+        {/* 2. Yang Kamu Cari — category shortcuts */}
+        <Reveal>
+          <QuickTiles />
+        </Reveal>
 
-        {/* 2. Deals strip — 10 daily picks, balanced across categories */}
+        {/* 3. Deals strip — 10 daily picks, balanced across categories */}
         {hitPicks.length > 0 && (
           <Reveal>
             <section>
               <div className="flex items-baseline justify-between mb-3">
-                <h2 className="text-xl font-extrabold text-bimbi-ink">Penawaran Hits</h2>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-bimbi-ink">Penawaran Hits</h2>
                 <Link href="/#katalog" className="text-sm font-bold text-bimbi-pink-dark hover:underline">
                   Lihat semua
                 </Link>
               </div>
-              <div className="flex gap-4 overflow-x-auto scrollbar-none pb-2 -mx-1 px-1">
+              <Rail>
                 {hitPicks.map((p) => (
-                  <div key={p.id} className="w-44 sm:w-52 shrink-0">
+                  <div key={p.id} className="w-32 sm:w-36 lg:w-40 shrink-0">
                     <ProductCard
-                      slug={p.slug}
+                      productId={p.id}
+              slug={p.slug}
                       name={p.displayName ?? p.name}
                       price={p.price}
                       compareAtPrice={p.compareAtPrice}
@@ -134,23 +172,52 @@ export default async function HomePage({
                     />
                   </div>
                 ))}
-              </div>
+              </Rail>
             </section>
           </Reveal>
         )}
 
-        {/* 3. Catalog — full-width Walmart grid */}
+        {/* 4. Merchandising rails — who the toy is for */}
+        {/* One stack, no gap: the bands must be adjacent siblings for the
+            overlap that joins their colours. A <Reveal> wrapper around each
+            would break that adjacency. */}
+        <div className="segment-stack">
+          {SEGMENTS.map((sgm, i) => (
+            <SegmentRail
+              key={sgm.key}
+              title={sgm.title}
+              blurb={sgm.blurb}
+              href={`/?segment=${sgm.key}#katalog`}
+              items={railItems[i]}
+              discountPercent={discountPercent}
+              band={sgm.band}
+              headingClass={sgm.headingClass}
+            />
+          ))}
+        </div>
+
+        {/* 5. Guided finder — gender + budget, lands on the catalog below */}
+        <Reveal>
+          <ToyFinder
+            initialSegment={seg === "bayi" ? undefined : seg}
+            initialMax={max ? Number(max) : undefined}
+          />
+        </Reveal>
+
+        {/* 6. Catalog — full-width Walmart grid */}
         <Reveal>
           <section
             id="katalog"
-            className="scroll-mt-6 rounded-xl bg-white shadow-card p-4 sm:p-6"
+            className="scroll-mt-6 rounded-3xl bg-slate-50 border border-slate-200 p-4 sm:p-8"
           >
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-300 pb-4 mb-5 gap-3">
               <div>
-                <h3 className="text-xl font-extrabold text-bimbi-ink">
-                  {category
-                    ? categories.find((c) => c.slug === category)?.name
-                    : "Semua Koleksi"}{" "}
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-bimbi-ink">
+                  {seg
+                    ? SEGMENTS.find((x) => x.key === seg)?.title
+                    : category
+                      ? categories.find((c) => c.slug === category)?.name
+                      : "Semua Koleksi"}{" "}
                   <span className="text-slate-500 font-semibold text-base">({total})</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">Harga saat dibeli online.</p>
@@ -175,11 +242,12 @@ export default async function HomePage({
               </div>
             ) : (
               <>
-                <div data-tour="products" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 animate-pop-in">
+                <div data-tour="products" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 animate-pop-in">
                   {products.map((p) => (
                     <ProductCard
                       key={p.id}
-                      slug={p.slug}
+                      productId={p.id}
+              slug={p.slug}
                       name={p.displayName ?? p.name}
                       price={p.price}
                       compareAtPrice={p.compareAtPrice}
