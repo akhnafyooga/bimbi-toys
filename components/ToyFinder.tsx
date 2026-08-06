@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { formatIDR } from "@/lib/format";
 
 // "Cari Mainanmu?" — gender pick + budget, then jump to the catalog below.
@@ -22,6 +22,8 @@ export default function ToyFinder({
   const router = useRouter();
   const [gender, setGender] = useState<"laki" | "perempuan" | null>(initialSegment ?? null);
   const [max, setMax] = useState<number>(initialMax ?? 100_000);
+  // router.push has no built-in pending state, so the transition provides it.
+  const [navigating, startNavigating] = useTransition();
 
   // Artwork untouched — only the cursor, a hover nudge, and a subtle lift so a
   // shopper can tell which one they picked. Drop the `on` branch if you would
@@ -35,7 +37,7 @@ export default function ToyFinder({
     const q = new URLSearchParams();
     if (gender) q.set("segment", gender);
     q.set("max", String(max));
-    router.push(`/?${q.toString()}#katalog`);
+    startNavigating(() => router.push(`/?${q.toString()}#katalog`));
   };
 
 
@@ -120,10 +122,12 @@ export default function ToyFinder({
       <button
         type="button"
         onClick={apply}
+        disabled={navigating}
         aria-label="Cari sekarang"
+        aria-busy={navigating}
         // Bottom-right of the panel: it is the terminal action, so it sits
         // where the eye lands after reading the two choices above.
-        className="mt-6 ml-auto block cursor-pointer chip-spring transition-transform hover:scale-105 active:scale-95"
+        className="relative mt-6 ml-auto block cursor-pointer chip-spring transition-transform hover:scale-105 active:scale-95 disabled:cursor-wait"
       >
         <Image
           src="/brand/buttons/proceed.png"
@@ -131,8 +135,25 @@ export default function ToyFinder({
           loading="eager"
           width={267}
           height={134}
-          className="h-auto w-[84px] sm:w-[96px]"
+          className={`h-auto w-[84px] sm:w-[96px] transition-opacity ${navigating ? "opacity-30" : ""}`}
         />
+
+        {navigating && (
+          <span
+            role="status"
+            aria-live="polite"
+            className="absolute inset-0 flex items-center justify-center gap-1"
+          >
+            <span className="sr-only">Mencari…</span>
+            {["var(--color-wm-red)", "var(--color-bimbi-sky)", "var(--color-bimbi-mint)"].map((c, i) => (
+              <span
+                key={c}
+                className="loader-dot block h-2 w-2"
+                style={{ backgroundColor: c, animationDelay: `${i * 120}ms` }}
+              />
+            ))}
+          </span>
+        )}
       </button>
     </section>
   );

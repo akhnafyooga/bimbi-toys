@@ -1,5 +1,6 @@
-import Link from "next/link";
 import Image from "next/image";
+import PendingLink from "@/components/PendingLink";
+import CollapseOnScroll from "@/components/CollapseOnScroll";
 
 // "Mau cari apa?" — the two top-level doorways, directly under the hero.
 //
@@ -21,21 +22,18 @@ const GROUPS = [
 
 export default function ShopByGroup() {
   return (
-    <section aria-labelledby="mau-cari-apa">
-      <h2
-        id="mau-cari-apa"
-        className="mb-5 text-center text-sm sm:text-base font-bold text-bimbi-ink"
-      >
-        Mau cari apa?
-      </h2>
-
+    <CollapseOnScroll
+      id="mau-cari-apa"
+      title="Mau cari apa?"
+      headingClass="text-center text-sm sm:text-base font-bold text-bimbi-ink"
+    >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {GROUPS.map((g) => (
-          <Link
+          <PendingLink
             key={g.label}
             href={g.href}
-            aria-label={g.label}
-            className="group block"
+            label={g.label}
+            className="group relative block"
           >
             {/* No card, no background: the artwork is the link. It scales on
                 hover with nothing to crop it, so the growth reads cleanly. */}
@@ -53,9 +51,10 @@ export default function ShopByGroup() {
             <span className="mt-2 block text-center text-xs sm:text-[13px] font-bold text-bimbi-ink group-hover:text-bimbi-sky transition-colors">
               {g.label}
             </span>
-          </Link>
+
+          </PendingLink>
         ))}
       </div>
-    </section>
+    </CollapseOnScroll>
   );
 }
