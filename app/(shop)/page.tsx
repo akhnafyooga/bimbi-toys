@@ -8,10 +8,12 @@ import Reveal from "@/components/Reveal";
 import CatalogControls from "@/components/CatalogControls";
 import { pickDailyBalanced } from "@/lib/dailyPicks";
 import QuickTiles from "@/components/QuickTiles";
+import ShopByGroup from "@/components/ShopByGroup";
 import Rail from "@/components/Rail";
 import SegmentRail from "@/components/SegmentRail";
 import ToyFinder from "@/components/ToyFinder";
 import { SEGMENTS, segmentWhere, isSegmentKey } from "@/lib/homeSegments";
+import { groupWhere } from "@/lib/adminGroups";
 import type { Prisma } from "@prisma/client";
 
 const PAGE = 10; // 2 rows at the desktop 5-column grid, then "Muat lebih banyak"
@@ -26,10 +28,14 @@ export default async function HomePage({
     max?: string;
     show?: string;
     segment?: string;
+    group?: string;
   }>;
 }) {
-  const { category, sort, min, max, show, segment } = await searchParams;
+  const { category, sort, min, max, show, segment, group } = await searchParams;
   const seg = isSegmentKey(segment) ? segment : undefined;
+  // "Mau cari apa?" doorways. Reuses the admin classifier so the storefront and
+  // the admin panel always mean the same thing by these two groups.
+  const grp = group === "alat-tulis" ? "Alat Tulis" : group === "mainan" ? "Mainan & Lainnya" : undefined;
   const showN = Math.min(Math.max(PAGE, Number(show) || PAGE), 2000);
 
   // Price filter (harga) + sort, both driven by the URL via CatalogControls.
@@ -45,6 +51,7 @@ export default async function HomePage({
       category ? { category: { slug: category } } : {},
       priceFilter,
       seg ? segmentWhere(seg) : {},
+      grp ? groupWhere(grp) : {},
     ],
   };
   const orderBy: Prisma.ProductOrderByWithRelationInput =
@@ -95,55 +102,52 @@ export default async function HomePage({
   if (min) moreQuery.set("min", String(min));
   if (max) moreQuery.set("max", String(max));
   if (seg) moreQuery.set("segment", seg);
+  if (group) moreQuery.set("group", group);
   moreQuery.set("show", String(showN + PAGE));
   const moreHref = `/?${moreQuery.toString()}`;
 
   return (
     <div className="bg-white min-h-screen">
 
-      {/* 1. Hero — LEGO-style colour block: flat brand blue, oversized headline,
-          one yellow CTA. The photo sits to the side instead of behind the text,
-          so nothing needs a readability wash. */}
-      <div className="relative overflow-hidden bg-bimbi-sky">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 md:py-16 grid md:grid-cols-2 gap-8 items-center">
-          <div className="space-y-4">
-            <span className="inline-block rounded-full bg-wm-yellow px-3 py-1 text-[11px] font-extrabold uppercase tracking-widest text-bimbi-ink">
-              Bimbi Toys
+      {/* 1. Hero Banner — FULL WIDTH (edge to edge). bg image: public/brand/hero.jpg */}
+      <div
+        className="relative overflow-hidden bg-bimbi-sun min-h-[240px] md:min-h-[320px] bg-cover bg-center"
+        style={{ backgroundImage: "url(/brand/hero.jpg)" }}
+      >
+        {/* readability wash so the headline stays legible over any photo */}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent" />
+        <div className="relative mx-auto max-w-7xl px-6 sm:px-6 py-10 md:py-16">
+          <div className="space-y-3 max-w-lg text-left ml-2 sm:ml-6 md:ml-8 lg:ml-16">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-bimbi-pink">
+              Tentang Bimbi Toys
             </span>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white leading-[1.05] font-extrabold">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl text-bimbi-ink leading-tight font-extrabold">
               Teman Bermain &amp; Belajar Anak
             </h1>
-            <p className="text-white/90 text-sm sm:text-base leading-relaxed max-w-md">
+            <p className="text-slate-600 text-sm leading-relaxed">
               Ribuan mainan asli berkualitas, aman, dan edukatif untuk buah hati Anda.
               Dapatkan penawaran harga terbaik!
             </p>
-            <div className="pt-1 flex flex-wrap gap-3">
+            <div className="pt-2">
               <Link
                 href="#katalog"
-                className="inline-block rounded-full bg-wm-yellow hover:bg-white px-7 py-3 font-extrabold text-bimbi-ink text-sm transition-colors chip-spring"
+                className="inline-block rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-7 py-3 font-extrabold text-white text-sm transition-colors chip-spring"
               >
                 Mulai Belanja
               </Link>
-              <Link
-                href="#cari-mainanmu"
-                className="inline-block rounded-full border-2 border-white/70 hover:bg-white/10 px-7 py-3 font-extrabold text-white text-sm transition-colors chip-spring"
-              >
-                Cari Mainanmu?
-              </Link>
             </div>
           </div>
-
-          <div
-            aria-hidden
-            className="hidden md:block relative aspect-[4/3] rounded-3xl bg-cover bg-center shadow-2xl ring-4 ring-white/20"
-            style={{ backgroundImage: "url(/brand/hero.jpg)" }}
-          />
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 md:pt-10 pb-6 flex flex-col gap-10 md:gap-14">
 
-        {/* 2. Yang Kamu Cari — category shortcuts */}
+        {/* 2. Mau cari apa? — the two top-level doorways */}
+        <Reveal>
+          <ShopByGroup />
+        </Reveal>
+
+        {/* 3. Yang Kamu Cari — category shortcuts */}
         <Reveal>
           <QuickTiles />
         </Reveal>
@@ -158,7 +162,7 @@ export default async function HomePage({
                   Lihat semua
                 </Link>
               </div>
-              <Rail>
+              <Rail showDots maxTrack="lg:max-w-[1040px]">
                 {hitPicks.map((p) => (
                   <div key={p.id} className="w-32 sm:w-36 lg:w-40 shrink-0">
                     <ProductCard
@@ -199,7 +203,7 @@ export default async function HomePage({
         {/* 5. Guided finder — gender + budget, lands on the catalog below */}
         <Reveal>
           <ToyFinder
-            initialSegment={seg === "bayi" ? undefined : seg}
+            initialSegment={seg}
             initialMax={max ? Number(max) : undefined}
           />
         </Reveal>
@@ -213,7 +217,9 @@ export default async function HomePage({
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-300 pb-4 mb-5 gap-3">
               <div>
                 <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-bimbi-ink">
-                  {seg
+                  {grp
+                    ? grp
+                    : seg
                     ? SEGMENTS.find((x) => x.key === seg)?.title
                     : category
                       ? categories.find((c) => c.slug === category)?.name

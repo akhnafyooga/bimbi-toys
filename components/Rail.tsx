@@ -13,9 +13,14 @@ const SLIDE_FRACTION = 0.85;
 export default function Rail({
   children,
   showDots = false,
+  maxTrack,
 }: {
   children: React.ReactNode;
   showDots?: boolean;
+  /** Tailwind max-width class for the scroll track, e.g. "lg:max-w-[1040px]".
+   *  Centres the row without justify-center, which would make the leading
+   *  cards unreachable once the content overflows. */
+  maxTrack?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
@@ -69,7 +74,7 @@ export default function Rail({
     "hidden sm:flex absolute top-[38%] -translate-y-1/2 z-20 h-9 w-9 lg:h-10 lg:w-10 items-center justify-center rounded-full bg-white text-bimbi-ink text-xl leading-none shadow-lg ring-1 ring-slate-200 hover:bg-bimbi-ink hover:text-white transition-colors disabled:opacity-0 disabled:pointer-events-none";
 
   return (
-    <div className="relative">
+    <div className={`relative mx-auto ${maxTrack ?? ""}`}>
       <button
         type="button"
         aria-label="Geser ke kiri"

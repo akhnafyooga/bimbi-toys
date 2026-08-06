@@ -54,8 +54,8 @@ export default function SegmentRail({
         </Link>
       </div>
 
-      {/* One row only — arrows and touch-scroll reveal the rest. */}
-      <Rail>
+      {/* One row only — arrows, touch-scroll and dots reveal the rest. */}
+      <Rail showDots maxTrack="lg:max-w-[1040px]">
         {items.map((p) => (
           <div key={p.id} className="w-32 sm:w-36 lg:w-40 shrink-0">
             <ProductCard

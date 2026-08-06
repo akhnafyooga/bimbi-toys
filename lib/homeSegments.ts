@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
 // Prisma filter over the categories and product names we already have. That
 // keeps routing, the catalog filters and the admin panel untouched.
 
-export type SegmentKey = "laki" | "perempuan" | "bayi";
+export type SegmentKey = "laki" | "perempuan";
 
 type Segment = {
   key: SegmentKey;
@@ -24,29 +24,28 @@ export const SEGMENTS: Segment[] = [
   {
     key: "laki",
     title: "Untuk Si Kecil Laki-Laki",
-    blurb: "Mobil-mobilan, senjata mainan, robot & petualangan seru",
-    categories: ["mobil-kendaraan", "diecast-rc"],
-    keywords: ["MOBIL", "TRUK", "MOTOR", "PISTOL", "PEDANG", "SENAPAN", "ROBOT", "TAMIYA", "DINO"],
+    blurb: "Mobil-mobilan, senjata mainan, robot, bola & balok susun",
+    categories: ["mobil-kendaraan", "diecast-rc", "mainan-bayi"],
+    keywords: [
+      "MOBIL", "TRUK", "MOTOR", "PISTOL", "PEDANG", "SENAPAN", "ROBOT", "TAMIYA", "DINO",
+      // absorbed from the former "Bayi & Balita" group — building / active play
+      "BOLA", "TUMPUK", "BALOK",
+    ],
     band: "bg-sky-100",
     headingClass: "text-sky-900",
   },
   {
     key: "perempuan",
     title: "Untuk Si Kecil Perempuan",
-    blurb: "Boneka, mainan masak & peralatan bermain peran",
-    categories: ["boneka"],
-    keywords: ["BONEKA", "MASAK", "DAPUR", "SALON", "PRINCESS", "SQUISHI", "SLIME", "TAS"],
+    blurb: "Boneka, mainan masak, puzzle & mainan bayi",
+    categories: ["boneka", "mainan-bayi"],
+    keywords: [
+      "BONEKA", "MASAK", "DAPUR", "SALON", "PRINCESS", "SQUISHI", "SLIME", "TAS",
+      // absorbed from the former "Bayi & Balita" group — soft / sensory play
+      "PUZZLE", "GIGITAN", "KERINCING", "CICIT", "RATTLE",
+    ],
     band: "bg-pink-100",
     headingClass: "text-pink-900",
-  },
-  {
-    key: "bayi",
-    title: "Untuk Bayi & Balita",
-    blurb: "Bola, mainan tumpuk, puzzle & mainan aman untuk si kecil",
-    categories: ["mainan-bayi"],
-    keywords: ["BOLA", "TUMPUK", "PUZZLE", "BALOK", "GIGITAN", "KERINCING", "CICIT", "RATTLE"],
-    band: "bg-amber-100",
-    headingClass: "text-amber-900",
   },
 ];
 
@@ -90,6 +89,5 @@ export const QUICK_TILES: QuickTile[] = [
   { label: "Mainan Masak", image: "/brand/tiles/mainan-masak.png", emoji: "🍳", href: "/search?q=masak", tone: "bg-rose-100" },
   { label: "Balok & Puzzle", image: "/brand/tiles/balok-puzzle.png", emoji: "🧩", href: "/?category=mainan-edukasi-kreatif#katalog", tone: "bg-violet-100" },
   { label: "Outdoor", image: "/brand/tiles/outdoor.png", emoji: "⚽", href: "/?category=outdoor-olahraga#katalog", tone: "bg-emerald-100" },
-  { label: "Mainan Bayi", image: "/brand/tiles/mainan-bayi.png", emoji: "🍼", href: "/?category=mainan-bayi#katalog", tone: "bg-amber-100" },
   { label: "Alat Tulis", image: "/brand/tiles/alat-tulis.png", emoji: "✏️", href: "/?category=alat-tulis#katalog", tone: "bg-lime-100" },
 ];

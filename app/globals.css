@@ -375,6 +375,68 @@ html {
   right: 0.5rem;
 }
 
+/* Budget slider as a stud track with a brick knob — the last piece of the
+   LEGO treatment still drawn in CSS. The gender and proceed buttons are now
+   supplied artwork, so their .brick/.brick-plate rules were removed rather
+   than left behind as dead CSS. */
+.brick-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 26px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.brick-range::-webkit-slider-runnable-track {
+  height: 18px;
+  border-radius: 9px;
+  background:
+    radial-gradient(circle at 12px 50%, rgba(255, 255, 255, 0.5) 0 4px, transparent 4px) repeat-x,
+    linear-gradient(#cbd5e1, #94a3b8);
+  background-size: 24px 18px, auto;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18);
+}
+
+.brick-range::-moz-range-track {
+  height: 18px;
+  border-radius: 9px;
+  background: linear-gradient(#cbd5e1, #94a3b8);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18);
+}
+
+.brick-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 30px;
+  height: 26px;
+  margin-top: -4px;
+  border-radius: 6px;
+  background: var(--color-wm-yellow);
+  box-shadow:
+    inset 0 -5px 0 rgba(0, 0, 0, 0.2),
+    inset 0 5px 0 rgba(255, 255, 255, 0.35),
+    0 2px 0 rgba(0, 0, 0, 0.2),
+    0 4px 8px rgba(15, 23, 42, 0.25);
+}
+
+.brick-range::-moz-range-thumb {
+  width: 30px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-wm-yellow);
+  box-shadow:
+    inset 0 -5px 0 rgba(0, 0, 0, 0.2),
+    0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brick {
+    transition: none;
+  }
+}
+
 /* Loading screen (components/Loader.tsx): four dots in the logo's colours that
    travel top-to-bottom in turn, driven purely by staggered animation-delay. */
 @keyframes loader-travel {

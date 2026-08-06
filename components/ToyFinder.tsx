@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatIDR } from "@/lib/format";
@@ -22,6 +23,14 @@ export default function ToyFinder({
   const [gender, setGender] = useState<"laki" | "perempuan" | null>(initialSegment ?? null);
   const [max, setMax] = useState<number>(initialMax ?? 100_000);
 
+  // Artwork untouched — only the cursor, a hover nudge, and a subtle lift so a
+  // shopper can tell which one they picked. Drop the `on` branch if you would
+  // rather have no selected state at all.
+  const gp = (on: boolean) =>
+    `flex-1 cursor-pointer transition-transform duration-150 hover:scale-[1.03] active:scale-95 ${
+      on ? "scale-[1.03] drop-shadow-lg" : ""
+    }`;
+
   const apply = () => {
     const q = new URLSearchParams();
     if (gender) q.set("segment", gender);
@@ -29,12 +38,11 @@ export default function ToyFinder({
     router.push(`/?${q.toString()}#katalog`);
   };
 
-  const pill = "flex-1 rounded-full px-4 py-3 text-sm font-extrabold border-2 transition-colors chip-spring";
 
   return (
     <section
       aria-labelledby="cari-mainanmu"
-      className="rounded-2xl bg-white shadow-card border border-slate-200 p-5 sm:p-7"
+      className="rounded-2xl bg-white border border-slate-200 shadow-card p-5 sm:p-7"
     >
       <h2
         id="cari-mainanmu"
@@ -50,30 +58,38 @@ export default function ToyFinder({
         {/* Gender */}
         <div>
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Untuk siapa?</p>
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               aria-pressed={gender === "laki"}
               onClick={() => setGender(gender === "laki" ? null : "laki")}
-              className={`${pill} ${
-                gender === "laki"
-                  ? "bg-bimbi-sky text-white border-bimbi-sky"
-                  : "bg-white text-bimbi-sky border-bimbi-sky/40 hover:border-bimbi-sky"
-              }`}
+              className={gp(gender === "laki")}
+              aria-label="Laki-Laki"
             >
-              👦 Laki-Laki
+              <Image
+                src="/brand/buttons/laki.png"
+                alt="Laki-Laki"
+                loading="eager"
+                width={358}
+                height={104}
+                className="h-auto w-full"
+              />
             </button>
             <button
               type="button"
               aria-pressed={gender === "perempuan"}
               onClick={() => setGender(gender === "perempuan" ? null : "perempuan")}
-              className={`${pill} ${
-                gender === "perempuan"
-                  ? "bg-pink-500 text-white border-pink-500"
-                  : "bg-white text-pink-600 border-pink-300 hover:border-pink-500"
-              }`}
+              className={gp(gender === "perempuan")}
+              aria-label="Perempuan"
             >
-              👧 Perempuan
+              <Image
+                src="/brand/buttons/perempuan.png"
+                alt="Perempuan"
+                loading="eager"
+                width={358}
+                height={104}
+                className="h-auto w-full"
+              />
             </button>
           </div>
         </div>
@@ -92,7 +108,7 @@ export default function ToyFinder({
             value={max}
             onChange={(e) => setMax(Number(e.target.value))}
             aria-label="Budget maksimal"
-            className="w-full accent-bimbi-pink cursor-pointer"
+            className="brick-range"
           />
           <div className="flex justify-between text-[11px] text-slate-400 mt-1">
             <span>{formatIDR(STEP)}</span>
@@ -104,9 +120,19 @@ export default function ToyFinder({
       <button
         type="button"
         onClick={apply}
-        className="mt-6 w-full md:w-auto rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-8 py-3 font-extrabold text-white text-sm transition-colors chip-spring"
+        aria-label="Cari sekarang"
+        // Bottom-right of the panel: it is the terminal action, so it sits
+        // where the eye lands after reading the two choices above.
+        className="mt-6 ml-auto block cursor-pointer chip-spring transition-transform hover:scale-105 active:scale-95"
       >
-        Cari Sekarang →
+        <Image
+          src="/brand/buttons/proceed.png"
+          alt="Cari sekarang"
+          loading="eager"
+          width={267}
+          height={134}
+          className="h-auto w-[84px] sm:w-[96px]"
+        />
       </button>
     </section>
   );
