@@ -1,6 +1,6 @@
 import Image from "next/image";
 import PendingLink from "@/components/PendingLink";
-import CollapseOnScroll from "@/components/CollapseOnScroll";
+import ScrollFocus from "@/components/ScrollFocus";
 
 // "Mau cari apa?" — the two top-level doorways, directly under the hero.
 //
@@ -22,15 +22,18 @@ const GROUPS = [
 
 export default function ShopByGroup() {
   return (
-    <CollapseOnScroll
-      id="mau-cari-apa"
-      title="Mau cari apa?"
-      headingClass="text-center text-sm sm:text-base font-bold text-bimbi-ink"
-    >
+    <section aria-labelledby="mau-cari-apa">
+      <h2
+        id="mau-cari-apa"
+        className="mb-5 text-center text-sm sm:text-base font-bold text-bimbi-ink"
+      >
+        Mau cari apa?
+      </h2>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {GROUPS.map((g) => (
+          <ScrollFocus key={g.label}>
           <PendingLink
-            key={g.label}
             href={g.href}
             label={g.label}
             className="group relative block"
@@ -53,8 +56,9 @@ export default function ShopByGroup() {
             </span>
 
           </PendingLink>
+          </ScrollFocus>
         ))}
       </div>
-    </CollapseOnScroll>
+    </section>
   );
 }
