@@ -684,3 +684,34 @@ header[data-scrolled="true"] .header-compact {
     transition: none;
   }
 }
+
+/* ---- "Lingkari" live frame (ShelfPhotoViewer) -----------------------------
+   While circling mode is ON, a red frame pulses along the photo's sides so
+   it's obvious the toggle is active. Same red as the drawn circle. */
+.stage-live {
+  box-shadow:
+    inset 0 0 0 3px rgba(222, 28, 36, 0.55),
+    inset 0 0 18px rgba(222, 28, 36, 0.35);
+  animation: stage-live-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes stage-live-pulse {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 3px rgba(222, 28, 36, 1),
+      inset 0 0 12px rgba(222, 28, 36, 0.2);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 3px rgba(222, 28, 36, 0.5),
+      inset 0 0 28px rgba(222, 28, 36, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-live {
+    animation: none;
+    box-shadow: inset 0 0 0 3px #de1c24;
+  }
+}

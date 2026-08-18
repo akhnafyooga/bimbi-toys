@@ -33,8 +33,9 @@ function extFromContentType(contentType: string) {
 // ---- Public entry points -------------------------------------------------
 
 // Storage folders. "products" is the default; "shelves" holds the physical
-// shelf photos for the "Lihat Ada Apa di Toko" feature.
-export type UploadFolder = "products" | "shelves";
+// shelf photos for the "Lihat Ada Apa di Toko" feature; "shelf-asks" holds
+// customer-cropped "Penasaran sama produk ini?" circles sent to store WhatsApp.
+export type UploadFolder = "products" | "shelves" | "shelf-asks";
 
 // Manual admin upload path (a user-selected File).
 export async function uploadProductImage(file: File, folder: UploadFolder = "products"): Promise<UploadedImage> {

@@ -1,112 +1,87 @@
+import { existsSync } from "fs";
+import path from "path";
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { shelfPriceRange } from "@/lib/shelf";
-import { formatIDR } from "@/lib/format";
+import StoreSlider from "@/components/shelf/StoreSlider";
 
-// Small homepage teaser for "Lihat Ada Apa di Toko" — three representative
-// shelves and a link into the dedicated shelf experience. Renders nothing
-// when the store has no shelves yet, so the homepage is unchanged at launch.
+// Homepage teaser for "Lihat Ada Apa di Toko", reframed around the customer
+// hook: no time to visit the store? Browse each store's racks from home.
+// One wide slide per store. Slide images are the store-collage photos in
+// public/brand/ — drop the edited files in with these names and they appear
+// (no code edit needed); until then each slide shows a text placeholder.
+
+const STORE_SLIDES = [
+  { nameIncludes: "Pamularsih", image: "/brand/shelf-collage-pamularsih.jpg" },
+  { nameIncludes: "Menoreh", image: "/brand/shelf-collage-menoreh.jpg" },
+  { nameIncludes: "Sekaran", image: "/brand/shelf-collage-sekaran.jpg" },
+];
+
 export default async function ShelfTeaser() {
-  // Ordered by display order; the busiest shelves make the best preview.
-  const shelves = await prisma.shelf.findMany({
-    where: { active: true },
-    include: {
-      store: { select: { name: true } },
-      products: { select: { product: { select: { price: true } } } },
-    },
-    orderBy: [{ position: "asc" }, { createdAt: "asc" }],
-    take: 12,
+  const stores = await prisma.storeLocation.findMany({ orderBy: { name: "asc" } });
+  if (stores.length === 0) return null;
+
+  const slides = STORE_SLIDES.flatMap((cfg) => {
+    const store = stores.find((s) => s.name.toLowerCase().includes(cfg.nameIncludes.toLowerCase()));
+    if (!store) return [];
+    const hasImage = existsSync(path.join(process.cwd(), "public", cfg.image));
+    return [{ store, image: hasImage ? cfg.image : null }];
   });
-
-  if (shelves.length === 0) return null;
-
-  const cards = shelves
-    .map((shelf) => {
-      const prices = shelf.products.map((ps) => ps.product.price);
-      const range = shelfPriceRange(prices);
-      return {
-        id: shelf.id,
-        name: shelf.name,
-        code: shelf.code,
-        image: shelf.image,
-        productCount: prices.length,
-        minPrice: range?.min ?? null,
-        maxPrice: range?.max ?? null,
-      };
-    })
-    .sort((a, b) => b.productCount - a.productCount)
-    .slice(0, 3);
+  if (slides.length === 0) return null;
 
   return (
-    <section aria-labelledby="lihat-ada-apa">
+    <section aria-labelledby="buat-kamu-yang-gasempet">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 id="lihat-ada-apa" className="text-xl sm:text-2xl md:text-3xl font-extrabold text-bimbi-ink">
-          Lihat Ada Apa di Toko
+        <h2 id="buat-kamu-yang-gasempet" className="text-xl sm:text-2xl md:text-3xl font-extrabold text-bimbi-ink">
+          Buat kamu yang gak sempet ke toko
         </h2>
         <Link href="/store" className="shrink-0 text-sm font-bold text-bimbi-pink-dark hover:underline">
           Lihat semua
         </Link>
       </div>
       <p className="text-xs sm:text-sm text-slate-600 mt-1 mb-4 sm:mb-5">
-        Intip koleksi mainan yang ada langsung di rak toko kami.
+        Intip rak tiap toko langsung dari sini — pilih tokonya, lihat raknya, lingkari mainan yang kamu penasaran.
       </p>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        {cards.map((shelf) => (
+      <StoreSlider count={slides.length}>
+        {slides.map(({ store, image }, i) => (
           <Link
-            key={shelf.id}
-            href={`/store/${shelf.id}`}
-            className="group block overflow-hidden border border-slate-200 bg-white shadow-card card-lively"
-            aria-label={`Lihat rak ${shelf.name} (${shelf.code})`}
+            key={store.id}
+            href={`/store?toko=${store.id}`}
+            className="group relative block w-full shrink-0 snap-start aspect-[4/3] md:aspect-[21/9] overflow-hidden bg-slate-100"
           >
-            <div className="relative aspect-[4/3] bg-slate-100">
-              {shelf.image ? (
-                <Image
-                  src={shelf.image}
-                  alt={`Foto rak ${shelf.code}`}
-                  fill
-                  sizes="(min-width: 640px) 33vw, 100vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-1">
-                  <span className="text-lg font-extrabold uppercase tracking-widest text-slate-300">
-                    {shelf.code}
-                  </span>
-                  <span className="text-[11px] text-slate-400">foto rak segera hadir</span>
+            {image ? (
+              <Image
+                src={image}
+                alt={`Koleksi rak ${store.name}`}
+                fill
+                priority={i === 0}
+                sizes="(min-width: 1280px) 1216px, 100vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-bimbi-sun via-white to-slate-100 px-6 text-center">
+                <span className="text-lg sm:text-2xl md:text-3xl font-extrabold text-bimbi-ink">{store.name}</span>
+                <span className="text-xs sm:text-sm text-slate-500">Collage foto toko &amp; rak segera hadir</span>
+              </div>
+            )}
+
+            {/* readability wash + store label + CTA */}
+            <div aria-hidden className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/65 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-4 sm:p-6 sm:flex-row sm:items-end sm:justify-between">
+              {image && (
+                <div>
+                  <p className="text-base sm:text-xl font-extrabold text-white drop-shadow">{store.name}</p>
+                  <p className="text-xs sm:text-sm font-semibold text-white/80">{store.city}</p>
                 </div>
               )}
-              <span className="absolute top-2 right-2 bg-bimbi-sky px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                {shelf.productCount} item
+              <span className="self-start rounded-full bg-white px-5 py-2.5 text-xs sm:text-sm font-extrabold text-bimbi-ink shadow chip-spring transition-colors group-hover:bg-bimbi-sun sm:self-auto">
+                Lihat Ada Apa di Toko →
               </span>
-            </div>
-
-            <div className="p-4">
-              <h3 className="text-sm font-bold leading-snug text-bimbi-grape group-hover:underline">
-                {shelf.name}
-              </h3>
-
-              {shelf.minPrice !== null && shelf.maxPrice !== null ? (
-                <p className="mt-1 text-sm font-extrabold tracking-tight text-bimbi-ink">
-                  {shelf.minPrice === shelf.maxPrice
-                    ? formatIDR(shelf.minPrice)
-                    : `${formatIDR(shelf.minPrice)} – ${formatIDR(shelf.maxPrice)}`}
-                </p>
-              ) : (
-                <p className="mt-1 text-sm italic text-slate-400">Belum ada produk di rak ini</p>
-              )}
-
-              <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                  Rak {shelf.code}
-                </span>
-                <span className="text-sm font-bold text-bimbi-pink-dark">Lihat Rak →</span>
-              </div>
             </div>
           </Link>
         ))}
-      </div>
+      </StoreSlider>
     </section>
   );
 }

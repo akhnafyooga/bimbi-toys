@@ -4,15 +4,16 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatIDR } from "@/lib/format";
 import { shelfPriceRange } from "@/lib/shelf";
+import { normalizePhone } from "@/lib/phone";
 import ShelfProductList from "@/components/shelf/ShelfProductList";
 import type { ShelfProductRowData } from "@/components/shelf/ShelfProductRow";
-import ShelfImageFrame from "@/components/shelf/ShelfImageFrame";
+import ShelfPhotoViewer from "@/components/shelf/ShelfPhotoViewer";
 
 async function getShelf(id: string) {
   return prisma.shelf.findUnique({
     where: { id },
     include: {
-      store: { select: { id: true, name: true, city: true } },
+      store: { select: { id: true, name: true, city: true, phone: true } },
       category: { select: { name: true } },
       products: {
         orderBy: { position: "asc" },
@@ -87,21 +88,23 @@ export default async function ShelfDetailPage({ params }: { params: Promise<{ id
           ← Kembali
         </Link>
 
-        {/* Shelf masthead */}
-        <header className="grid gap-6 md:grid-cols-[280px,1fr] md:items-start">
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card max-md:hidden">
-            <ShelfImageFrame
-              src={shelf.image}
-              code={shelf.code}
-              sizes="(max-width: 768px) 80vw, 280px"
-              priority
-            />
-          </div>
+        {/* Interactive shelf photo — zoom, pan, circle a product, ask the store */}
+        {shelf.image && (
+          <ShelfPhotoViewer
+            shelfId={shelf.id}
+            image={shelf.image}
+            code={shelf.code}
+            name={shelf.name}
+            storeName={shelf.store.name}
+            whatsapp={normalizePhone(shelf.store.phone ?? "") ?? ""}
+          />
+        )}
 
-          <div className="space-y-3">
-            <p className="text-xs font-extrabold uppercase tracking-widest text-bimbi-pink">
-              {shelf.category.name} · {shelf.store.name}
-            </p>
+        {/* Shelf masthead */}
+        <header className="space-y-3">
+          <p className="text-xs font-extrabold uppercase tracking-widest text-bimbi-pink">
+            {shelf.category.name} · {shelf.store.name}
+          </p>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-bimbi-ink leading-tight">
               {shelf.name}
             </h1>
@@ -121,7 +124,6 @@ export default async function ShelfDetailPage({ params }: { params: Promise<{ id
             {shelf.description && (
               <p className="max-w-xl text-sm leading-relaxed text-slate-600">{shelf.description}</p>
             )}
-          </div>
         </header>
 
         <hr className="border-slate-200" />
