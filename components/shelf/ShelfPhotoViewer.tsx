@@ -6,10 +6,11 @@ import { isContactReady, waLink } from "@/lib/storeContacts";
 
 // Interactive stage for a shelf photo on the shelf detail page.
 //
-// Default mode: pan (drag) + zoom (wheel/pinch/double-tap) so shoppers can
-// look at the rack up close. The floating "Mau yang mana? Lingkari" toggle
-// switches to circling mode: one drag draws a circle around the product the
-// shopper is curious about, then the mode auto-exits and the WhatsApp CTA
+// Inline mode: pan (drag) + zoom (wheel/pinch/double-tap/pills) so shoppers
+// can look at the rack up close. Pressing "Mau yang mana? Lingkari" blows the
+// photo up to a fullscreen, darkened + blurred overlay separated from the
+// page — one drag there draws a circle around the product the shopper is
+// curious about, then the mode auto-exits and the WhatsApp CTA
 // "Penasaran sama produk ini?" appears. Tapping it crops the circled area to
 // a JPEG, uploads it, and opens a wa.me chat with the store (wa.me can only
 // prefill text, so the message carries the crop's URL).
@@ -39,7 +40,7 @@ export default function ShelfPhotoViewer({
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
 
-  // Photo geometry — set on load, drives the stage's aspect ratio.
+  // Photo geometry — set on load, drives the inline stage's aspect ratio.
   const [aspect, setAspect] = useState<number | null>(null);
   const [dims, setDims] = useState<{ iw: number; ih: number } | null>(null);
   const [stage, setStage] = useState({ w: 0, h: 0 });
@@ -68,26 +69,39 @@ export default function ShelfPhotoViewer({
 
   const ready = isContactReady(whatsapp);
 
-  // Screen px per image px (x and y are identical once the stage aspect
-  // matches the photo, kept separate for the pre-load fallback aspect).
-  const fW = dims && stage.w ? (scale * stage.w) / dims.iw : 0;
-  const fH = dims && stage.h ? (scale * stage.h) / dims.ih : 0;
+  // ---- Display geometry ----------------------------------------------------
+  // The image is object-contain inside the stage, so in fullscreen (stage
+  // aspect ≠ photo aspect) it letterboxes. All pointer↔image math goes
+  // through the displayed-image rect: fit scale, then the transform, then
+  // the centered offsets.
+
+  // px per image px at scale 1 (how much room the photo takes in the stage)
+  const fit = dims && stage.w > 0 && stage.h > 0 ? Math.min(stage.w / dims.iw, stage.h / dims.ih) : 0;
+  // px per image px at the current zoom (uniform in x and y)
+  const f = fit * scale;
+  // displayed image size + top-left corner within the stage
+  const disp = dims ? { w: dims.iw * f, h: dims.ih * f } : { w: 0, h: 0 };
+  const ox = dims ? (stage.w - disp.w) / 2 + tx : 0;
+  const oy = dims ? (stage.h - disp.h) / 2 + ty : 0;
 
   const clampPan = (nx: number, ny: number, ns: number): [number, number] => {
-    if (ns <= MIN_SCALE) return [0, 0];
-    return [
-      Math.min(0, Math.max(stage.w * (1 - ns), nx)),
-      Math.min(0, Math.max(stage.h * (1 - ns), ny)),
-    ];
+    if (!dims) return [0, 0];
+    const mx = Math.max(0, (dims.iw * fit * ns - stage.w) / 2);
+    const my = Math.max(0, (dims.ih * fit * ns - stage.h) / 2);
+    return [Math.min(mx, Math.max(-mx, nx)), Math.min(my, Math.max(-my, ny))];
   };
 
   const zoomAt = (px: number, py: number, factor: number) => {
+    if (!dims) return;
     const ns = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * factor));
     const k = ns / scale;
-    const [nx, ny] = clampPan(px - (px - tx) * k, py - (py - ty) * k, ns);
+    // keep the point under the cursor still: scale the offsets around it
+    const nx = px - (px - ox) * k - (stage.w - dims.iw * fit * ns) / 2;
+    const ny = py - (py - oy) * k - (stage.h - dims.ih * fit * ns) / 2;
+    const [cx2, cy2] = clampPan(nx, ny, ns);
     setScale(ns);
-    setTx(nx);
-    setTy(ny);
+    setTx(cx2);
+    setTy(cy2);
   };
 
   const resetView = () => {
@@ -103,9 +117,35 @@ export default function ShelfPhotoViewer({
   };
 
   const toImage = (x: number, y: number) => {
-    if (!fW || !fH) return null;
-    return { x: (x - tx) / fW, y: (y - ty) / fH };
+    if (!f) return null;
+    return { x: (x - ox) / f, y: (y - oy) / f };
   };
+
+  const startCircling = () => {
+    setCircling(true);
+    setDraft(null);
+    resetView(); // a clean 1x canvas is the easiest to draw on
+  };
+
+  const stopCircling = () => {
+    setCircling(false);
+    setDraft(null);
+  };
+
+  // Esc exits circling; lock page scroll while the fullscreen stage is up.
+  useEffect(() => {
+    if (!circling) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") stopCircling();
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [circling]);
 
   // Wheel must be a native listener so preventDefault isn't ignored (React's
   // synthetic wheel handler is passive). Re-attached each render on purpose —
@@ -173,21 +213,25 @@ export default function ShelfPhotoViewer({
     pointers.current.set(e.pointerId, p);
 
     // Pinch: zoom by finger distance + pan by midpoint travel.
-    if (pointers.current.size >= 2 && pinchPrev.current) {
+    if (pointers.current.size >= 2 && pinchPrev.current && dims) {
       const [a, b] = [...pointers.current.values()];
       const dist = Math.hypot(a.x - b.x, a.y - b.y);
       const mx = (a.x + b.x) / 2;
       const my = (a.y + b.y) / 2;
       const pp = pinchPrev.current;
       if (dist > 0 && pp.dist > 0) {
-        const pannedX = tx + (mx - pp.mx);
-        const pannedY = ty + (my - pp.my);
         const ns = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * (dist / pp.dist)));
         const k = ns / scale;
-        const [nx, ny] = clampPan(mx - (mx - pannedX) * k, my - (my - pannedY) * k, ns);
+        // current offsets, shifted by the midpoint travel…
+        const sx = ox + (mx - pp.mx);
+        const sy = oy + (my - pp.my);
+        // …then scaled around the midpoint
+        const nx = mx - (mx - sx) * k - (stage.w - dims.iw * fit * ns) / 2;
+        const ny = my - (my - sy) * k - (stage.h - dims.ih * fit * ns) / 2;
+        const [cx2, cy2] = clampPan(nx, ny, ns);
         setScale(ns);
-        setTx(nx);
-        setTy(ny);
+        setTx(cx2);
+        setTy(cy2);
       }
       pinchPrev.current = { dist, mx, my };
       return;
@@ -224,7 +268,7 @@ export default function ShelfPhotoViewer({
     // Finish drawing: commit the circle if it's big enough to be intentional,
     // then auto-exit circling mode (one circle at a time, toggle to redo).
     if (circling && drawStart.current) {
-      const minR = fW ? 12 / fW : 0; // ≥12 screen px
+      const minR = f ? 12 / f : 0; // ≥12 screen px
       if (draft && draft.r > minR) {
         setCircle(draft);
         setCircling(false);
@@ -327,13 +371,19 @@ export default function ShelfPhotoViewer({
   }
 
   const shown = draft ?? circle;
-  const ellipse =
-    shown && fW && fH
-      ? { cx: shown.cx * fW + tx, cy: shown.cy * fH + ty, r: shown.r * fW }
-      : null;
+  const ellipse = shown && f ? { cx: shown.cx * f + ox, cy: shown.cy * f + oy, r: shown.r * f } : null;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card">
+    // Inline: a card. Circling: a fullscreen, darkened + blurred overlay
+    // floating in front of the page. Same DOM node either way — only classes
+    // change, so the stage keeps its refs, observers, and loaded image.
+    <div
+      className={
+        circling
+          ? "fixed inset-0 z-[100] flex items-center justify-center bg-bimbi-ink/60 p-3 sm:p-6 backdrop-blur-md"
+          : "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
+      }
+    >
       <div
         ref={stageRef}
         onPointerDown={handlePointerDown}
@@ -341,10 +391,12 @@ export default function ShelfPhotoViewer({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onDoubleClick={handleDoubleClick}
-        className={`relative w-full overflow-hidden bg-slate-100 select-none ${
+        className={`relative overflow-hidden select-none ${
+          circling ? "h-full w-full rounded-xl bg-black" : "w-full bg-slate-100"
+        } ${
           circling || scale > 1.01 ? "touch-none" : "touch-pan-y"
         } ${circling ? "cursor-crosshair" : "cursor-grab"}`}
-        style={aspect ? { aspectRatio: String(aspect) } : { aspectRatio: "4 / 3" }}
+        style={circling ? undefined : aspect ? { aspectRatio: String(aspect) } : { aspectRatio: "4 / 3" }}
       >
         {/* Photo layer — transformed for pan/zoom */}
         <div
@@ -375,7 +427,7 @@ export default function ShelfPhotoViewer({
                 cx={ellipse.cx}
                 cy={ellipse.cy}
                 rx={ellipse.r}
-                ry={ellipse.r * (fW && fH ? fH / fW : 1)}
+                ry={ellipse.r}
                 fill="none"
                 stroke="#de1c24"
                 strokeWidth={3}
@@ -386,7 +438,7 @@ export default function ShelfPhotoViewer({
                 cx={ellipse.cx}
                 cy={ellipse.cy}
                 rx={ellipse.r}
-                ry={ellipse.r * (fW && fH ? fH / fW : 1)}
+                ry={ellipse.r}
                 fill="rgba(222,28,36,0.10)"
                 stroke="#de1c24"
                 strokeWidth={3}
@@ -447,14 +499,11 @@ export default function ShelfPhotoViewer({
                 : "border-slate-300 bg-white text-bimbi-ink hover:border-bimbi-pink/50"
             }`}
           >
-            {zoomed ? "🔍 Perkecil" : "🔍 Perbesar"}
+            {zoomed ? "Perkecil" : "Perbesar"}
           </button>
           <button
             type="button"
-            onClick={() => {
-              setCircling((v) => !v);
-              setDraft(null);
-            }}
+            onClick={() => (circling ? stopCircling() : startCircling())}
             aria-pressed={circling}
             className={`rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-card transition-colors cursor-pointer ${
               circling
@@ -467,8 +516,8 @@ export default function ShelfPhotoViewer({
         </div>
       </div>
 
-      {/* CTA bar — appears once a circle exists */}
-      {circle && (
+      {/* CTA bar — appears once a circle exists (hidden while fullscreen) */}
+      {circle && !circling && (
         <div className="flex flex-col gap-3 border-t border-slate-200 p-4 sm:flex-row sm:items-center">
           {ready ? (
             <button
