@@ -26,6 +26,27 @@ async function main() {
 
   const catId = (slug: string) => categories.find((c) => c.slug === slug)!.id;
 
+  // --- Shelf categories ("Lihat Ada Apa di Toko") ---
+  // Shelves themselves are created in the admin panel (Rak Toko); the
+  // grouping vocabulary is seeded so it's ready to use.
+  await Promise.all(
+    [
+      { name: "Mainan Bayi", slug: "mainan-bayi" },
+      { name: "Edukasi", slug: "edukasi" },
+      { name: "Kendaraan", slug: "kendaraan" },
+      { name: "Boneka", slug: "boneka" },
+      { name: "Kreativitas", slug: "kreativitas" },
+      { name: "Outdoor", slug: "outdoor" },
+      { name: "Koleksi Lainnya", slug: "koleksi-lainnya" },
+    ].map((c, i) =>
+      prisma.shelfCategory.upsert({
+        where: { slug: c.slug },
+        update: {},
+        create: { ...c, position: i },
+      })
+    )
+  );
+
   // --- Store locations ---
   const stores = await Promise.all([
     prisma.storeLocation.create({

@@ -12,6 +12,7 @@ import ShopByGroup from "@/components/ShopByGroup";
 import Rail from "@/components/Rail";
 import SegmentRail from "@/components/SegmentRail";
 import ToyFinder from "@/components/ToyFinder";
+import ShelfTeaser from "@/components/shelf/ShelfTeaser";
 import { SEGMENTS, segmentWhere, isSegmentKey } from "@/lib/homeSegments";
 import { groupWhere } from "@/lib/adminGroups";
 import type { Prisma } from "@prisma/client";
@@ -152,7 +153,12 @@ export default async function HomePage({
           <QuickTiles />
         </Reveal>
 
-        {/* 3. Deals strip — 10 daily picks, balanced across categories */}
+        {/* 3. Shelf teaser — "Lihat Ada Apa di Toko" */}
+        <Reveal>
+          <ShelfTeaser />
+        </Reveal>
+
+        {/* 3.5 Deals strip — 10 daily picks, balanced across categories */}
         {hitPicks.length > 0 && (
           <Reveal>
             <section>

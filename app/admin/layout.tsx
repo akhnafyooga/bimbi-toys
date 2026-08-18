@@ -24,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/admin/kategori", label: "Kategori" },
   { href: "/admin/pesanan", label: "Pesanan" },
   { href: "/admin/stok-toko", label: "Stok Toko" },
+  { href: "/admin/rak", label: "Rak Toko" },
   { href: "/admin/pelanggan", label: "Pelanggan" },
 ];
 

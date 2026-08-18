@@ -72,6 +72,18 @@ Kalau ingin menghapus produk, klik **Hapus** di baris produk itu, lalu konfirmas
 
 ---
 
+## 5b. Mengelola Rak Toko ("Lihat Ada Apa di Toko")
+
+Halaman **/store** di website membiarkan pelanggan menjelajahi rak fisik toko — seperti berjalan di lorong toko, tapi dari rumah. Kamu yang mengatur isinya lewat menu **Rak Toko**:
+
+- **Kategori rak** (misalnya "Mainan Bayi", "Edukasi"): klik **Kelola Kategori Rak** untuk menambah, mengubah nama/urutan, atau menghapus. Kategori yang masih dipakai rak tidak bisa dihapus.
+- **Tambah rak baru**: klik **+ Tambah Rak Baru**, isi nama (misal "Mainan Edukasi"), kode yang tertera di rak fisik (misal `EDU-04`), pilih toko, kategori rak, dan bila ada — foto raknya. Rak tanpa foto tetap tampil dengan papan kode rak.
+- **Mengisi produk ke rak**: buka rak (menu **Rak Toko** → **Edit**), cari nama produk di kotak pencarian, klik **+ Tambah**, atur urutannya dengan tombol ▲▼, lalu klik **Simpan Produk Rak**. Produk yang sama boleh ditempatkan di banyak rak/toko.
+- Rentang harga dan jumlah produk di setiap rak dihitung **otomatis** dari produk yang kamu taruh di raknya — tidak perlu diisi manual.
+- Hapus centang **Tampilkan di halaman pelanggan** kalau mau menyembunyikan rak sementara tanpa menghapus datanya. Menghapus rak **tidak** menghapus produknya; produk hanya lepas dari rak itu.
+
+---
+
 ## 6. Melihat Data Pelanggan
 
 Menu **Pelanggan** menampilkan daftar orang yang sudah mendaftar di toko — nama, email, jumlah pesanan, dan sejak kapan bergabung. Halaman ini hanya untuk dilihat (tidak bisa diubah dari sini), untuk menjaga privasi data pelanggan.

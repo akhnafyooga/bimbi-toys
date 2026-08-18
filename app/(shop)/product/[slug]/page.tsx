@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -29,6 +30,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   ]);
 
   if (!product) notFound();
+
+  // "Lihat Ada Apa di Toko": which physical shelves (across stores) hold this
+  // product. Same product can sit on several shelves — that's the point of
+  // the ProductShelf join model.
+  const productShelves = await prisma.shelf.findMany({
+    where: { products: { some: { productId: product.id } }, active: true },
+    include: {
+      store: { select: { id: true, name: true, city: true } },
+      category: { select: { name: true } },
+    },
+    orderBy: [{ store: { name: "asc" } }, { position: "asc" }],
+  });
 
   // WhatsApp chooser reads the same StoreLocation rows the admin panel edits.
   const storeContacts = storeLocations.map((s) => ({
@@ -199,6 +212,33 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               ))}
             </ul>
           </div>
+
+          {/* Physical shelf locations ("Lihat Ada Apa di Toko") */}
+          {productShelves.length > 0 && (
+            <div className="mt-5 border-t border-slate-200 pt-4">
+              <p className="font-extrabold text-sm text-bimbi-ink mb-2">📍 Tersedia di Rak Toko</p>
+              <ul className="space-y-2 text-sm">
+                {productShelves.map((shelf) => (
+                  <li key={shelf.id}>
+                    <span className="text-slate-500">{shelf.store.name}</span>
+                    <br />
+                    <Link
+                      href={`/store/${shelf.id}`}
+                      className="font-semibold text-bimbi-pink-dark hover:underline"
+                    >
+                      Rak {shelf.code} — {shelf.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href={`/store?toko=${productShelves[0].store.id}`}
+                className="mt-2 inline-block text-xs font-bold text-slate-500 hover:text-bimbi-pink-dark hover:underline"
+              >
+                Lihat di Rak →
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

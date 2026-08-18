@@ -4,12 +4,14 @@ import { getR2Object } from "@/lib/upload";
 // so display never depends on the r2.dev host being reachable from the client
 // (some Indonesian ISPs block r2.dev). Reads via the S3 endpoint server-side.
 //
-// Locked to the `products/` prefix so it can't be used to read arbitrary keys.
+// Locked to known prefixes so it can't be used to read arbitrary keys.
+// `shelves/` holds the physical shelf photos for "Lihat Ada Apa di Toko".
 export async function GET(_req: Request, { params }: { params: Promise<{ key: string[] }> }) {
   const { key } = await params;
   const objectKey = key.join("/");
 
-  if (!objectKey.startsWith("products/") || objectKey.includes("..")) {
+  const allowed = objectKey.startsWith("products/") || objectKey.startsWith("shelves/");
+  if (!allowed || objectKey.includes("..")) {
     return new Response("Not found", { status: 404 });
   }
 

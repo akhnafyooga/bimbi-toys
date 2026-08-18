@@ -32,25 +32,33 @@ function extFromContentType(contentType: string) {
 
 // ---- Public entry points -------------------------------------------------
 
+// Storage folders. "products" is the default; "shelves" holds the physical
+// shelf photos for the "Lihat Ada Apa di Toko" feature.
+export type UploadFolder = "products" | "shelves";
+
 // Manual admin upload path (a user-selected File).
-export async function uploadProductImage(file: File): Promise<UploadedImage> {
+export async function uploadProductImage(file: File, folder: UploadFolder = "products"): Promise<UploadedImage> {
   assertValidImageFile(file);
   const buffer = Buffer.from(await file.arrayBuffer());
-  return uploadImageBytes(buffer, file.type);
+  return uploadImageBytes(buffer, file.type, folder);
 }
 
 // Raw-bytes path, used by the auto-fetch pipeline (lib/productImages.ts), which
 // downloads a remote image and hands us the buffer + content-type.
-export async function uploadImageBytes(buffer: Buffer, contentType: string): Promise<UploadedImage> {
+export async function uploadImageBytes(
+  buffer: Buffer,
+  contentType: string,
+  folder: UploadFolder = "products"
+): Promise<UploadedImage> {
   if (!ALLOWED_IMAGE_TYPES.includes(contentType)) {
     throw new UploadValidationError("Format gambar harus JPG, PNG, atau WEBP.");
   }
   if (buffer.length > MAX_IMAGE_SIZE_BYTES) {
     throw new UploadValidationError("Ukuran gambar maksimal 5MB.");
   }
-  if (isR2Configured()) return uploadToR2(buffer, contentType);
+  if (isR2Configured()) return uploadToR2(buffer, contentType, folder);
   if (isCloudinaryConfigured()) return uploadToCloudinary(buffer, contentType);
-  return uploadToLocalDisk(buffer, contentType);
+  return uploadToLocalDisk(buffer, contentType, folder);
 }
 
 // ---- Cloudflare R2 -------------------------------------------------------
@@ -82,8 +90,8 @@ function getR2Client() {
   return r2Client;
 }
 
-async function uploadToR2(buffer: Buffer, contentType: string): Promise<UploadedImage> {
-  const key = `products/${crypto.randomUUID()}.${extFromContentType(contentType)}`;
+async function uploadToR2(buffer: Buffer, contentType: string, folder: UploadFolder): Promise<UploadedImage> {
+  const key = `${folder}/${crypto.randomUUID()}.${extFromContentType(contentType)}`;
   await getR2Client().send(
     new PutObjectCommand({
       Bucket: process.env.R2_BUCKET!,
@@ -118,12 +126,12 @@ export async function getR2Object(key: string): Promise<{ body: ArrayBuffer; con
 
 // ---- Local disk (dev only) ----------------------------------------------
 
-async function uploadToLocalDisk(buffer: Buffer, contentType: string): Promise<UploadedImage> {
-  const uploadDir = path.join(process.cwd(), "public", "uploads", "products");
+async function uploadToLocalDisk(buffer: Buffer, contentType: string, folder: UploadFolder): Promise<UploadedImage> {
+  const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
   await mkdir(uploadDir, { recursive: true });
   const filename = `${crypto.randomUUID()}.${extFromContentType(contentType)}`;
   await writeFile(path.join(uploadDir, filename), buffer);
-  return { url: `/uploads/products/${filename}` };
+  return { url: `/uploads/${folder}/${filename}` };
 }
 
 // ---- Cloudinary ----------------------------------------------------------

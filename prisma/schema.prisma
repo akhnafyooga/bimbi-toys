@@ -73,6 +73,7 @@ model Product {
   cartItems     CartItem[]
   orderItems    OrderItem[]
   stockByStore  StoreStock[]
+  shelves       ProductShelf[]
 
   @@index([categoryId])
   @@index([featured])
@@ -125,6 +126,7 @@ model StoreLocation {
   phone     String?
   stock     StoreStock[]
   orders    Order[]
+  shelves   Shelf[]
 }
 
 model StoreStock {
@@ -136,6 +138,58 @@ model StoreStock {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([storeId, productId])
+  @@index([productId])
+}
+
+// ---- "Lihat Ada Apa di Toko" shelf system ---------------------------------
+// A Shelf is one physical shelf/rack inside a store; ShelfCategory groups
+// shelves on the browsing page (e.g. "Mainan Bayi"). ShelfCategory is separate
+// from the product Category on purpose: it describes store sections, not the
+// product taxonomy, and admins curate it independently.
+model ShelfCategory {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  slug     String  @unique
+  position Int     @default(0)
+  shelves  Shelf[]
+}
+
+model Shelf {
+  id          String        @id @default(cuid())
+  storeId     String
+  store       StoreLocation @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    ShelfCategory @relation(fields: [categoryId], references: [id])
+  name        String
+  // Short physical code printed on the rack, e.g. "EDU-04". Unique per store.
+  code        String
+  description String?
+  // Photo of the physical shelf (uploaded via the admin panel).
+  image       String?
+  position    Int           @default(0)
+  active      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  products    ProductShelf[]
+
+  @@unique([storeId, code])
+  @@index([storeId, active])
+  @@index([categoryId])
+}
+
+// Join model: the same product can sit on many shelves across many stores,
+// and a shelf holds many products — so no `shelfId` column on Product.
+model ProductShelf {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shelfId   String
+  shelf     Shelf    @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([productId, shelfId])
+  @@index([shelfId])
   @@index([productId])
 }
 

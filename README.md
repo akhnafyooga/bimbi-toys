@@ -42,6 +42,7 @@ Demo login: `demo@bimbitoys.id` / `bimbi123` — or just register a new account.
 - 🔒 **Price gating** — prices are hidden until the visitor signs in (`components/ProductActions.tsx`, `app/product/[slug]/page.tsx`)
 - 💖 **Wishlist** & 🛒 **Cart** — both saved per-account in the database (`app/api/wishlist`, `app/api/cart`)
 - 📍 **Pickup or shipping** — checkout lets the customer choose a store (`/stores`) or enter an address and pick a courier
+- 🏷️ **"Lihat Ada Apa di Toko"** (`/store`) — customers browse the physical shelves of each store: shelf categories → shelf (photo, code, auto price range) → text-first product list, with price filters and in-store product search. Managed by admins under `/admin/rak` (see `HANDOFF.md`)
 - 📱 **QRIS payment** — checkout creates a Midtrans QRIS charge and shows the scannable code (`lib/midtrans.ts`, `app/api/checkout`, `app/api/midtrans-webhook`)
 - 🗄️ **Order tracking** — `/orders/[id]` polls for payment status after scanning
 
