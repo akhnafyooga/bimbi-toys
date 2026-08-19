@@ -11,9 +11,10 @@ import { isContactReady, waLink } from "@/lib/storeContacts";
 // photo up to a fullscreen, darkened + blurred overlay separated from the
 // page — one drag there draws a rectangle around the product the shopper is
 // curious about, then the mode auto-exits and the WhatsApp CTA
-// "Penasaran sama produk ini?" appears. Tapping it crops the marked area to
-// a JPEG, uploads it, and opens a wa.me chat with the store (wa.me can only
-// prefill text, so the message carries the crop's URL).
+// "Penasaran sama produk ini?" appears. Tapping it builds a two-part image
+// (the marked-area crop, plus the full photo with the mark drawn on it),
+// uploads it, and opens a wa.me chat with the store (wa.me can only prefill
+// text, so the message carries the image's URL).
 //
 // The floating controls (zoom pills, mode pills) live INSIDE the stage, so
 // every stage pointer handler bails out when the press started on a control:
@@ -351,8 +352,12 @@ export default function ShelfPhotoViewer({
     else zoomAt(x, y, DOUBLE_TAP_SCALE);
   }
 
-  // Crop the marked region to a JPEG (≤800px, the mark re-drawn on top).
-  async function makeCropFile(): Promise<File | null> {
+  // Build the image that rides along in the WhatsApp chat: the marked-area
+  // crop on top, and the full shelf photo with the mark drawn on it below —
+  // the store sees the detail AND where it sits on the rack. Both parts are
+  // joined into one JPEG (≤800px wide, ≤1600px tall) because the message
+  // carries a single URL.
+  async function makeAskImage(): Promise<File | null> {
     const img = imgElRef.current;
     const m = mark;
     if (!img || !m || !dims) return null;
@@ -369,9 +374,20 @@ export default function ShelfPhotoViewer({
     const h = bEdge - t;
     if (w < 8 || h < 8) return null;
 
-    const s = Math.min(1, 800 / Math.max(w, h));
-    const cw = Math.max(1, Math.round(w * s));
-    const ch = Math.max(1, Math.round(h * s));
+    // Both parts share the canvas width (each scaled to it) and are stacked
+    // vertically with a white gap. The width caps at 800 and the total height
+    // at 1600 — the height cap also keeps extreme-aspect marks from blowing
+    // up the canvas past browser limits. Never upscale past the larger
+    // natural width.
+    const GAP = 12;
+    const maxByHeight = (1600 - GAP) / (h / w + ih / iw);
+    const W = Math.max(64, Math.min(800, Math.max(w, iw), maxByHeight));
+    const sc = W / w; // crop → canvas scale
+    const sf = W / iw; // full photo → canvas scale
+    const cw = Math.max(1, Math.round(W));
+    const hc = Math.max(1, Math.round(h * sc));
+    const hf = Math.max(1, Math.round(ih * sf));
+    const ch = hc + GAP + hf;
 
     const canvas = document.createElement("canvas");
     canvas.width = cw;
@@ -404,12 +420,14 @@ export default function ShelfPhotoViewer({
     try {
       ctx.fillStyle = "#fff";
       ctx.fillRect(0, 0, cw, ch);
-      ctx.drawImage(source, l * kx, t * ky, w * kx, h * ky, 0, 0, cw, ch);
-      // Re-draw the shopper's mark on top of the crop (canvas space = the
-      // marked region plus margin, scaled by s).
       ctx.lineWidth = Math.max(3, cw * 0.012);
       ctx.strokeStyle = "#de1c24";
-      ctx.strokeRect((m.x - l) * s, (m.y - t) * s, m.w * s, m.h * s);
+      // Part 1: the marked area, with the mark re-drawn on it.
+      ctx.drawImage(source, l * kx, t * ky, w * kx, h * ky, 0, 0, cw, hc);
+      ctx.strokeRect((m.x - l) * sc, (m.y - t) * sc, m.w * sc, m.h * sc);
+      // Part 2: the full photo, with the mark right where the shopper drew it.
+      ctx.drawImage(source, 0, 0, iw * kx, ih * ky, 0, hc + GAP, cw, hf);
+      ctx.strokeRect(m.x * sf, hc + GAP + m.y * sf, m.w * sf, m.h * sf);
     } finally {
       bmp?.close();
     }
@@ -427,8 +445,8 @@ export default function ShelfPhotoViewer({
     const popup = window.open("", "_blank");
     setSending(true);
     try {
-      const file = await makeCropFile();
-      if (!file) throw new Error("crop failed");
+      const file = await makeAskImage();
+      if (!file) throw new Error("image failed");
       const fd = new FormData();
       fd.append("file", file);
       fd.append("shelfId", shelfId);
@@ -442,7 +460,7 @@ export default function ShelfPhotoViewer({
       else window.open(href, "_blank");
     } catch (err) {
       popup?.close();
-      setError(err instanceof Error && err.message !== "crop failed" && err.message !== "upload failed"
+      setError(err instanceof Error && err.message !== "image failed" && err.message !== "upload failed"
         ? err.message
         : "Gagal menyiapkan foto. Coba lagi ya.");
     } finally {
@@ -608,7 +626,7 @@ export default function ShelfPhotoViewer({
                 disabled={sending}
                 className="pointer-events-auto rounded-full bg-[#25D366] hover:bg-[#1FB356] disabled:opacity-60 disabled:cursor-not-allowed px-8 py-3.5 text-base sm:text-lg font-extrabold text-white shadow-lg transition-colors chip-spring cursor-pointer"
               >
-                {sending ? "Membuka WhatsApp..." : "Penasaran sama produk ini?"}
+                {sending ? "Membuka WhatsApp..." : "Tanyakan tentang produk ini"}
               </button>
             ) : (
               <span className="rounded-full bg-white/90 px-6 py-3 text-sm font-bold text-slate-400 shadow-lg">
