@@ -17,6 +17,13 @@ export type UploadedImage = { url: string };
 
 export class UploadValidationError extends Error {}
 
+// Some tools report JPEG as the non-standard "image/jpg" — normalize it to
+// the canonical MIME so stored objects (and their Content-Type when served)
+// are always standard. Everything else passes through unchanged.
+function canonicalContentType(contentType: string) {
+  return contentType === "image/jpg" ? "image/jpeg" : contentType;
+}
+
 export function assertValidImageFile(file: File) {
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     throw new UploadValidationError("Format file harus JPG, PNG, atau WEBP.");
@@ -41,7 +48,7 @@ export type UploadFolder = "products" | "shelves" | "shelf-asks";
 export async function uploadProductImage(file: File, folder: UploadFolder = "products"): Promise<UploadedImage> {
   assertValidImageFile(file);
   const buffer = Buffer.from(await file.arrayBuffer());
-  return uploadImageBytes(buffer, file.type, folder);
+  return uploadImageBytes(buffer, canonicalContentType(file.type), folder);
 }
 
 // Raw-bytes path, used by the auto-fetch pipeline (lib/productImages.ts), which
@@ -51,15 +58,16 @@ export async function uploadImageBytes(
   contentType: string,
   folder: UploadFolder = "products"
 ): Promise<UploadedImage> {
-  if (!ALLOWED_IMAGE_TYPES.includes(contentType)) {
+  const ct = canonicalContentType(contentType);
+  if (!ALLOWED_IMAGE_TYPES.includes(ct)) {
     throw new UploadValidationError("Format gambar harus JPG, PNG, atau WEBP.");
   }
   if (buffer.length > MAX_IMAGE_SIZE_BYTES) {
     throw new UploadValidationError("Ukuran gambar maksimal 5MB.");
   }
-  if (isR2Configured()) return uploadToR2(buffer, contentType, folder);
-  if (isCloudinaryConfigured()) return uploadToCloudinary(buffer, contentType);
-  return uploadToLocalDisk(buffer, contentType, folder);
+  if (isR2Configured()) return uploadToR2(buffer, ct, folder);
+  if (isCloudinaryConfigured()) return uploadToCloudinary(buffer, ct);
+  return uploadToLocalDisk(buffer, ct, folder);
 }
 
 // ---- Cloudflare R2 -------------------------------------------------------

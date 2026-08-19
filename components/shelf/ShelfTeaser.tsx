@@ -7,11 +7,13 @@ import StoreSlider from "@/components/shelf/StoreSlider";
 
 // Homepage teaser for "Lihat Ada Apa di Toko", reframed around the customer
 // hook: no time to visit the store? Browse each store's racks from home.
-// One wide slide per store. Slide images are the store-collage photos in
-// public/brand/ — drop the edited files in with these names and they appear
-// (no code edit needed); until then each slide shows a text placeholder.
+// One wide slide per store — EVERY store in the DB gets one. Collage photos
+// are optional garnish: a store whose name contains a fragment below (and
+// has the matching file in public/brand/) shows that photo, any other store
+// gets the text-placeholder slide. Renaming/adding stores never removes
+// them from here.
 
-const STORE_SLIDES = [
+const COLLAGES = [
   { nameIncludes: "Pamularsih", image: "/brand/shelf-collage-pamularsih.jpg" },
   { nameIncludes: "Menoreh", image: "/brand/shelf-collage-menoreh.jpg" },
   { nameIncludes: "Sekaran", image: "/brand/shelf-collage-sekaran.jpg" },
@@ -21,13 +23,11 @@ export default async function ShelfTeaser() {
   const stores = await prisma.storeLocation.findMany({ orderBy: { name: "asc" } });
   if (stores.length === 0) return null;
 
-  const slides = STORE_SLIDES.flatMap((cfg) => {
-    const store = stores.find((s) => s.name.toLowerCase().includes(cfg.nameIncludes.toLowerCase()));
-    if (!store) return [];
-    const hasImage = existsSync(path.join(process.cwd(), "public", cfg.image));
-    return [{ store, image: hasImage ? cfg.image : null }];
+  const slides = stores.map((store) => {
+    const cfg = COLLAGES.find((c) => store.name.toLowerCase().includes(c.nameIncludes.toLowerCase()));
+    const image = cfg && existsSync(path.join(process.cwd(), "public", cfg.image)) ? cfg.image : null;
+    return { store, image };
   });
-  if (slides.length === 0) return null;
 
   return (
     <section aria-labelledby="buat-kamu-yang-gasempet">
