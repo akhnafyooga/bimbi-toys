@@ -378,13 +378,41 @@ export default function ShelfPhotoViewer({
     canvas.height = ch;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, cw, ch);
-    ctx.drawImage(img, l, t, w, h, 0, 0, cw, ch);
-    // Re-draw the shopper's mark on top of the crop.
-    ctx.lineWidth = Math.max(3, cw * 0.012);
-    ctx.strokeStyle = "#de1c24";
-    ctx.strokeRect((m.x - l) * s, (m.y - t) * s, m.w * s, m.h * s);
+
+    // Sample from an ImageBitmap, not the <img>: the bitmap is decoded with
+    // EXIF orientation applied and independently of which srcset rendition
+    // the element is showing, so source-rect sampling matches the mark's
+    // coordinate space (drawing a source rect straight from an <img> is the
+    // one layer where browsers still mis-handle orientation/rendition size).
+    // kx/ky map the mark (naturalWidth/Height space) onto the bitmap's own
+    // pixel space in case its dimensions differ.
+    let source: CanvasImageSource = img;
+    let kx = 1;
+    let ky = 1;
+    let bmp: ImageBitmap | null = null;
+    if (typeof createImageBitmap === "function") {
+      try {
+        bmp = await createImageBitmap(img);
+        source = bmp;
+        kx = bmp.width / iw;
+        ky = bmp.height / ih;
+      } catch {
+        bmp = null; // decode refused — draw the <img> directly after all
+      }
+    }
+
+    try {
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, cw, ch);
+      ctx.drawImage(source, l * kx, t * ky, w * kx, h * ky, 0, 0, cw, ch);
+      // Re-draw the shopper's mark on top of the crop (canvas space = the
+      // marked region plus margin, scaled by s).
+      ctx.lineWidth = Math.max(3, cw * 0.012);
+      ctx.strokeStyle = "#de1c24";
+      ctx.strokeRect((m.x - l) * s, (m.y - t) * s, m.w * s, m.h * s);
+    } finally {
+      bmp?.close();
+    }
 
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
     if (!blob) return null;
@@ -566,35 +594,42 @@ export default function ShelfPhotoViewer({
             {marking ? "✕ Kembali" : "▢ Mau yang mana? Tandai"}
           </button>
         </div>
-      </div>
 
-      {/* CTA bar — appears once a mark exists (hidden while fullscreen) */}
-      {mark && !marking && (
-        <div className="flex flex-col gap-3 border-t border-slate-200 p-4 sm:flex-row sm:items-center">
-          {ready ? (
+        {/* Ask CTA — big, floating dead-center over the photo once a mark
+            exists (hidden while fullscreen). The overlay is click-through so
+            panning/zooming the photo still works; only the buttons catch
+            presses. */}
+        {mark && !marking && (
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center">
+            {ready ? (
+              <button
+                type="button"
+                onClick={handleAsk}
+                disabled={sending}
+                className="pointer-events-auto rounded-full bg-[#25D366] hover:bg-[#1FB356] disabled:opacity-60 disabled:cursor-not-allowed px-8 py-3.5 text-base sm:text-lg font-extrabold text-white shadow-lg transition-colors chip-spring cursor-pointer"
+              >
+                {sending ? "Membuka WhatsApp..." : "Penasaran sama produk ini?"}
+              </button>
+            ) : (
+              <span className="rounded-full bg-white/90 px-6 py-3 text-sm font-bold text-slate-400 shadow-lg">
+                Toko ini belum punya WhatsApp aktif
+              </span>
+            )}
             <button
               type="button"
-              onClick={handleAsk}
-              disabled={sending}
-              className="rounded-full bg-[#25D366] hover:bg-[#1FB356] disabled:opacity-60 disabled:cursor-not-allowed px-5 py-2.5 text-sm font-extrabold text-white transition-colors chip-spring cursor-pointer"
+              onClick={() => setMark(null)}
+              className="pointer-events-auto rounded-full bg-white/85 px-3 py-1 text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer"
             >
-              {sending ? "Membuka WhatsApp..." : "Penasaran sama produk ini?"}
+              Hapus tanda
             </button>
-          ) : (
-            <span className="rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-400">
-              Toko ini belum punya WhatsApp aktif
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={() => setMark(null)}
-            className="text-left text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer"
-          >
-            Hapus tanda
-          </button>
-          {error && <span className="text-xs font-semibold text-bimbi-pink-dark">⚠️ {error}</span>}
-        </div>
-      )}
+            {error && (
+              <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-bimbi-pink-dark">
+                ⚠️ {error}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

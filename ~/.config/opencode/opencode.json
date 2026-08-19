@@ -1,0 +1,11 @@
+{
+  "models": {
+    "your-vision-model-name": {
+      "attachment": true,
+      "modalities": {
+        "input": ["text", "image"],
+        "output": ["text"]
+      }
+    }
+  }
+}
