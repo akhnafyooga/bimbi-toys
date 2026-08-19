@@ -685,9 +685,9 @@ header[data-scrolled="true"] .header-compact {
   }
 }
 
-/* ---- "Lingkari" live frame (ShelfPhotoViewer) -----------------------------
-   While circling mode is ON, a red frame pulses along the photo's sides so
-   it's obvious the toggle is active. Same red as the drawn circle. */
+/* ---- "Tandai" live frame (ShelfPhotoViewer) --------------------------------
+   While marking mode is ON, a red frame pulses along the photo's sides so
+   it's obvious the toggle is active. Same red as the drawn mark. */
 .stage-live {
   box-shadow:
     inset 0 0 0 3px rgba(222, 28, 36, 0.55),

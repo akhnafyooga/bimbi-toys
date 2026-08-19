@@ -40,7 +40,7 @@ export default async function ShelfTeaser() {
         </Link>
       </div>
       <p className="text-xs sm:text-sm text-slate-600 mt-1 mb-4 sm:mb-5">
-        Intip rak tiap toko langsung dari sini — pilih tokonya, lihat raknya, lingkari mainan yang kamu penasaran.
+        Intip rak tiap toko langsung dari sini — pilih tokonya, lihat raknya, tandai mainan yang kamu penasaran.
       </p>
 
       <StoreSlider count={slides.length}>

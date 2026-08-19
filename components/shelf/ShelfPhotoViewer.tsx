@@ -7,21 +7,35 @@ import { isContactReady, waLink } from "@/lib/storeContacts";
 // Interactive stage for a shelf photo on the shelf detail page.
 //
 // Inline mode: pan (drag) + zoom (wheel/pinch/double-tap/pills) so shoppers
-// can look at the rack up close. Pressing "Mau yang mana? Lingkari" blows the
+// can look at the rack up close. Pressing "Mau yang mana? Tandai" blows the
 // photo up to a fullscreen, darkened + blurred overlay separated from the
-// page — one drag there draws a circle around the product the shopper is
+// page — one drag there draws a rectangle around the product the shopper is
 // curious about, then the mode auto-exits and the WhatsApp CTA
-// "Penasaran sama produk ini?" appears. Tapping it crops the circled area to
+// "Penasaran sama produk ini?" appears. Tapping it crops the marked area to
 // a JPEG, uploads it, and opens a wa.me chat with the store (wa.me can only
 // prefill text, so the message carries the crop's URL).
 //
+// The floating controls (zoom pills, mode pills) live INSIDE the stage, so
+// every stage pointer handler bails out when the press started on a control:
+// without that, the stage's setPointerCapture retargets the click away from
+// the pill (first press does nothing) and the follow-up press registers as a
+// double-tap zoom instead — the pill would "serve the same purpose as
+// perbesar".
+//
 // Everything is hand-rolled with pointer events — no viewer dependency.
 
-type Circle = { cx: number; cy: number; r: number }; // natural image pixels
+type Rect = { x: number; y: number; w: number; h: number }; // natural image pixels, x/y = top-left
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
 const DOUBLE_TAP_SCALE = 2.5;
+
+const CONTROL_SELECTOR = "button, a, [role=button]";
+
+// Did this event land on (or bubble from) one of the floating controls?
+function onControl(e: React.PointerEvent | React.MouseEvent) {
+  return e.target instanceof Element && e.target.closest(CONTROL_SELECTOR) !== null;
+}
 
 export default function ShelfPhotoViewer({
   shelfId,
@@ -51,10 +65,18 @@ export default function ShelfPhotoViewer({
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
 
-  // Circling mode + the drawn circle (committed) / in-progress draft.
-  const [circling, setCircling] = useState(false);
-  const [circle, setCircle] = useState<Circle | null>(null);
-  const [draft, setDraft] = useState<Circle | null>(null);
+  // Marking mode + the drawn mark (committed) / in-progress draft.
+  const [marking, setMarking] = useState(false);
+  const [mark, setMark] = useState<Rect | null>(null);
+  const [draft, setDraft] = useState<Rect | null>(null);
+  // Mirror of `draft`: pointerup reads the ref, not the render closure — a
+  // fast flick can end before React re-renders, and the closure would be
+  // stale (the mark would silently vanish).
+  const draftRef = useRef<Rect | null>(null);
+  const setDraftRect = (r: Rect | null) => {
+    draftRef.current = r;
+    setDraft(r);
+  };
 
   // Cross-pointer-event interaction state (refs, not state).
   const pointers = useRef(new Map<number, { x: number; y: number }>());
@@ -121,22 +143,27 @@ export default function ShelfPhotoViewer({
     return { x: (x - ox) / f, y: (y - oy) / f };
   };
 
-  const startCircling = () => {
-    setCircling(true);
-    setDraft(null);
+  const startMarking = () => {
+    setMarking(true);
+    setDraftRect(null);
     resetView(); // a clean 1x canvas is the easiest to draw on
   };
 
-  const stopCircling = () => {
-    setCircling(false);
-    setDraft(null);
+  const stopMarking = () => {
+    setMarking(false);
+    setDraftRect(null);
   };
 
-  // Esc exits circling; lock page scroll while the fullscreen stage is up.
+  // Esc exits marking; lock page scroll while the fullscreen stage is up.
+  // The keydown handler inlines what stopMarking does (setters + ref only) so
+  // the effect genuinely depends on nothing but `marking`.
   useEffect(() => {
-    if (!circling) return;
+    if (!marking) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") stopCircling();
+      if (e.key !== "Escape") return;
+      setMarking(false);
+      draftRef.current = null;
+      setDraft(null);
     };
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
@@ -145,7 +172,7 @@ export default function ShelfPhotoViewer({
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [circling]);
+  }, [marking]);
 
   // Wheel must be a native listener so preventDefault isn't ignored (React's
   // synthetic wheel handler is passive). Re-attached each render on purpose —
@@ -179,6 +206,7 @@ export default function ShelfPhotoViewer({
   };
 
   function handlePointerDown(e: React.PointerEvent) {
+    if (onControl(e)) return; // presses on the pills belong to the pills
     if (!dims) return; // photo not loaded yet — nothing to interact with
     try {
       stageRef.current?.setPointerCapture(e.pointerId);
@@ -191,15 +219,20 @@ export default function ShelfPhotoViewer({
       // Two fingers always means pinch: cancel whatever single-finger mode
       // (draw or pan) was starting.
       drawStart.current = null;
-      setDraft(null);
+      setDraftRect(null);
       panStart.current = null;
       const [a, b] = [...pointers.current.values()];
       pinchPrev.current = { dist: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
       return;
     }
 
-    if (circling) {
-      drawStart.current = toImage(p.x, p.y);
+    if (marking) {
+      const s = toImage(p.x, p.y);
+      // Clamp to the photo itself — presses in the letterboxed black area
+      // shouldn't anchor a mark outside the picture.
+      if (s) {
+        drawStart.current = { x: Math.min(Math.max(s.x, 0), dims.iw), y: Math.min(Math.max(s.y, 0), dims.ih) };
+      }
     } else {
       panStart.current = { px: p.x, py: p.y, tx, ty };
     }
@@ -237,15 +270,19 @@ export default function ShelfPhotoViewer({
       return;
     }
 
-    // Drawing: circle from the press point to the current point.
-    if (circling && drawStart.current) {
+    // Drawing: rectangle from the press point to the current point, in any
+    // drag direction, clamped to the photo.
+    if (marking && drawStart.current && dims) {
       const cur = toImage(p.x, p.y);
       if (cur) {
         const s = drawStart.current;
-        setDraft({
-          cx: (s.x + cur.x) / 2,
-          cy: (s.y + cur.y) / 2,
-          r: Math.hypot(cur.x - s.x, cur.y - s.y) / 2,
+        const ex = Math.min(Math.max(cur.x, 0), dims.iw);
+        const ey = Math.min(Math.max(cur.y, 0), dims.ih);
+        setDraftRect({
+          x: Math.min(s.x, ex),
+          y: Math.min(s.y, ey),
+          w: Math.abs(ex - s.x),
+          h: Math.abs(ey - s.y),
         });
       }
       return;
@@ -264,22 +301,31 @@ export default function ShelfPhotoViewer({
     const p = pointers.current.get(e.pointerId) ?? null;
     pointers.current.delete(e.pointerId);
     if (pointers.current.size < 2) pinchPrev.current = null;
+    if (!p) {
+      // An untracked release — e.g. a press that began on one of the pills.
+      // It can't finish a pan or a mark, and it also breaks any tap chain so
+      // a pill press between two photo taps can't forge a double-tap zoom.
+      lastTap.current = null;
+      return;
+    }
 
-    // Finish drawing: commit the circle if it's big enough to be intentional,
-    // then auto-exit circling mode (one circle at a time, toggle to redo).
-    if (circling && drawStart.current) {
-      const minR = f ? 12 / f : 0; // ≥12 screen px
-      if (draft && draft.r > minR) {
-        setCircle(draft);
-        setCircling(false);
+    // Finish drawing: commit the mark if it's big enough to be intentional
+    // (both sides ≥ 12 screen px), then auto-exit marking mode (one mark at
+    // a time, toggle to redo). Read the draft from the ref — see draftRef.
+    if (marking && drawStart.current) {
+      const minPx = f ? 12 / f : 0;
+      const d = draftRef.current;
+      if (d && d.w > minPx && d.h > minPx) {
+        setMark(d);
+        setMarking(false);
       }
-      setDraft(null);
+      setDraftRect(null);
       drawStart.current = null;
       return;
     }
 
     // Double-tap zoom (touch). Mouse uses onDoubleClick below.
-    if (e.pointerType !== "mouse" && p && !moved.current) {
+    if (e.pointerType !== "mouse" && !moved.current) {
       const now = Date.now();
       const lt = lastTap.current;
       if (lt && now - lt.t < 300 && Math.hypot(p.x - lt.x, p.y - lt.y) < 32) {
@@ -290,9 +336,14 @@ export default function ShelfPhotoViewer({
         lastTap.current = { t: now, x: p.x, y: p.y };
       }
     }
+
+    // End the single-pointer bookkeeping so the next press starts clean.
+    drawStart.current = null;
+    panStart.current = null;
   }
 
   function handleDoubleClick(e: React.MouseEvent) {
+    if (onControl(e)) return; // a double click on a pill must not zoom
     const r = stageRef.current!.getBoundingClientRect();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
@@ -300,18 +351,20 @@ export default function ShelfPhotoViewer({
     else zoomAt(x, y, DOUBLE_TAP_SCALE);
   }
 
-  // Crop the circled region to a JPEG (≤800px, circle outlined on top).
+  // Crop the marked region to a JPEG (≤800px, the mark re-drawn on top).
   async function makeCropFile(): Promise<File | null> {
     const img = imgElRef.current;
-    const c = circle;
-    if (!img || !c || !dims) return null;
+    const m = mark;
+    if (!img || !m || !dims) return null;
     const { iw, ih } = dims;
 
-    const pad = 1.35;
-    const l = Math.max(0, c.cx - c.r * pad);
-    const t = Math.max(0, c.cy - c.r * pad);
-    const rEdge = Math.min(iw, c.cx + c.r * pad);
-    const bEdge = Math.min(ih, c.cy + c.r * pad);
+    // A little breathing room around the mark so the red frame reads inside
+    // the crop; clamped to the photo's edges.
+    const margin = 16;
+    const l = Math.max(0, m.x - margin);
+    const t = Math.max(0, m.y - margin);
+    const rEdge = Math.min(iw, m.x + m.w + margin);
+    const bEdge = Math.min(ih, m.y + m.h + margin);
     const w = rEdge - l;
     const h = bEdge - t;
     if (w < 8 || h < 8) return null;
@@ -328,11 +381,10 @@ export default function ShelfPhotoViewer({
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, cw, ch);
     ctx.drawImage(img, l, t, w, h, 0, 0, cw, ch);
-    ctx.beginPath();
-    ctx.ellipse((c.cx - l) * s, (c.cy - t) * s, c.r * s, c.r * s, 0, 0, Math.PI * 2);
+    // Re-draw the shopper's mark on top of the crop.
     ctx.lineWidth = Math.max(3, cw * 0.012);
     ctx.strokeStyle = "#de1c24";
-    ctx.stroke();
+    ctx.strokeRect((m.x - l) * s, (m.y - t) * s, m.w * s, m.h * s);
 
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
     if (!blob) return null;
@@ -356,7 +408,7 @@ export default function ShelfPhotoViewer({
       const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
       if (!res.ok || !data.url) throw new Error(data.error ?? "upload failed");
       const cropUrl = new URL(data.url, window.location.origin).toString();
-      const msg = `Halo, saya penasaran sama produk ini di toko, boleh tahu harga dan detail ga ya?\n\nRak ${code} — ${name} (${storeName})\nLihat bagian yang saya lingkari: ${cropUrl}`;
+      const msg = `Halo, saya penasaran sama produk ini di toko, boleh tahu harga dan detail ga ya?\n\nRak ${code} — ${name} (${storeName})\nLihat bagian yang saya tandai: ${cropUrl}`;
       const href = waLink(whatsapp, msg);
       if (popup) popup.location.href = href;
       else window.open(href, "_blank");
@@ -370,16 +422,16 @@ export default function ShelfPhotoViewer({
     }
   }
 
-  const shown = draft ?? circle;
-  const ellipse = shown && f ? { cx: shown.cx * f + ox, cy: shown.cy * f + oy, r: shown.r * f } : null;
+  const shown = draft ?? mark;
+  const rv = shown && f ? { x: shown.x * f + ox, y: shown.y * f + oy, w: shown.w * f, h: shown.h * f } : null;
 
   return (
-    // Inline: a card. Circling: a fullscreen, darkened + blurred overlay
+    // Inline: a card. Marking: a fullscreen, darkened + blurred overlay
     // floating in front of the page. Same DOM node either way — only classes
     // change, so the stage keeps its refs, observers, and loaded image.
     <div
       className={
-        circling
+        marking
           ? "fixed inset-0 z-[100] flex items-center justify-center bg-bimbi-ink/60 p-3 sm:p-6 backdrop-blur-md"
           : "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
       }
@@ -392,11 +444,11 @@ export default function ShelfPhotoViewer({
         onPointerCancel={handlePointerUp}
         onDoubleClick={handleDoubleClick}
         className={`relative overflow-hidden select-none ${
-          circling ? "h-full w-full rounded-xl bg-black" : "w-full bg-slate-100"
+          marking ? "h-full w-full rounded-xl bg-black" : "w-full bg-slate-100"
         } ${
-          circling || scale > 1.01 ? "touch-none" : "touch-pan-y"
-        } ${circling ? "cursor-crosshair" : "cursor-grab"}`}
-        style={circling ? undefined : aspect ? { aspectRatio: String(aspect) } : { aspectRatio: "4 / 3" }}
+          marking || scale > 1.01 ? "touch-none" : "touch-pan-y"
+        } ${marking ? "cursor-crosshair" : "cursor-grab"}`}
+        style={marking ? undefined : aspect ? { aspectRatio: String(aspect) } : { aspectRatio: "4 / 3" }}
       >
         {/* Photo layer — transformed for pan/zoom */}
         <div
@@ -419,26 +471,26 @@ export default function ShelfPhotoViewer({
           />
         </div>
 
-        {/* Circle overlay */}
-        {ellipse && (
+        {/* Mark overlay */}
+        {rv && (
           <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
             {draft ? (
-              <ellipse
-                cx={ellipse.cx}
-                cy={ellipse.cy}
-                rx={ellipse.r}
-                ry={ellipse.r}
+              <rect
+                x={rv.x}
+                y={rv.y}
+                width={rv.w}
+                height={rv.h}
                 fill="none"
                 stroke="#de1c24"
                 strokeWidth={3}
                 strokeDasharray="7 6"
               />
             ) : (
-              <ellipse
-                cx={ellipse.cx}
-                cy={ellipse.cy}
-                rx={ellipse.r}
-                ry={ellipse.r}
+              <rect
+                x={rv.x}
+                y={rv.y}
+                width={rv.w}
+                height={rv.h}
                 fill="rgba(222,28,36,0.10)"
                 stroke="#de1c24"
                 strokeWidth={3}
@@ -447,13 +499,13 @@ export default function ShelfPhotoViewer({
           </svg>
         )}
 
-        {/* "Lingkari" mode is ON — live red frame pulsing on the photo's sides */}
-        {circling && <div aria-hidden className="stage-live pointer-events-none absolute inset-0" />}
+        {/* "Tandai" mode is ON — live red frame pulsing on the photo's sides */}
+        {marking && <div aria-hidden className="stage-live pointer-events-none absolute inset-0" />}
 
-        {/* Circling hint */}
-        {circling && (
+        {/* Marking hint */}
+        {marking && (
           <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3.5 py-1.5 text-xs font-semibold text-white">
-            Seret di foto untuk melingkari mainan yang kamu maksud
+            Seret di foto untuk menandai mainan yang kamu maksud
           </div>
         )}
 
@@ -487,7 +539,7 @@ export default function ShelfPhotoViewer({
           )}
         </div>
 
-        {/* Mode pills — zoom toggle + circling toggle */}
+        {/* Mode pills — zoom toggle + marking toggle */}
         <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -503,21 +555,21 @@ export default function ShelfPhotoViewer({
           </button>
           <button
             type="button"
-            onClick={() => (circling ? stopCircling() : startCircling())}
-            aria-pressed={circling}
+            onClick={() => (marking ? stopMarking() : startMarking())}
+            aria-pressed={marking}
             className={`rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-card transition-colors cursor-pointer ${
-              circling
+              marking
                 ? "border-bimbi-pink bg-bimbi-sun text-bimbi-pink-dark animate-pulse"
                 : "border-slate-300 bg-white text-bimbi-ink hover:border-bimbi-pink/50"
             }`}
           >
-            {circling ? "✕ Kembali" : "◯ Mau yang mana? Lingkari"}
+            {marking ? "✕ Kembali" : "▢ Mau yang mana? Tandai"}
           </button>
         </div>
       </div>
 
-      {/* CTA bar — appears once a circle exists (hidden while fullscreen) */}
-      {circle && !circling && (
+      {/* CTA bar — appears once a mark exists (hidden while fullscreen) */}
+      {mark && !marking && (
         <div className="flex flex-col gap-3 border-t border-slate-200 p-4 sm:flex-row sm:items-center">
           {ready ? (
             <button
@@ -535,10 +587,10 @@ export default function ShelfPhotoViewer({
           )}
           <button
             type="button"
-            onClick={() => setCircle(null)}
+            onClick={() => setMark(null)}
             className="text-left text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer"
           >
-            Hapus lingkaran
+            Hapus tanda
           </button>
           {error && <span className="text-xs font-semibold text-bimbi-pink-dark">⚠️ {error}</span>}
         </div>
