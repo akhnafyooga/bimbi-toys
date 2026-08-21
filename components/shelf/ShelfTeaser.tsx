@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import path from "path";
 import Image from "next/image";
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { prisma } from "@/lib/prisma";
 import StoreSlider from "@/components/shelf/StoreSlider";
 
@@ -35,9 +35,14 @@ export default async function ShelfTeaser() {
         <h2 id="buat-kamu-yang-gasempet" className="text-xl sm:text-2xl md:text-3xl font-extrabold text-bimbi-ink">
           Buat kamu yang gak sempet ke toko
         </h2>
-        <Link href="/store" className="shrink-0 text-sm font-bold text-bimbi-pink-dark hover:underline">
+        <PendingLink
+          href="/store"
+          label="Lihat semua rak toko"
+          overlayLabel={null}
+          className="relative shrink-0 text-sm font-bold text-bimbi-pink-dark hover:underline"
+        >
           Lihat semua
-        </Link>
+        </PendingLink>
       </div>
       <p className="text-xs sm:text-sm text-slate-600 mt-1 mb-4 sm:mb-5">
         Intip rak tiap toko langsung dari sini — pilih tokonya, lihat raknya, tandai mainan yang kamu penasaran.
@@ -45,9 +50,10 @@ export default async function ShelfTeaser() {
 
       <StoreSlider count={slides.length}>
         {slides.map(({ store, image }, i) => (
-          <Link
+          <PendingLink
             key={store.id}
             href={`/store?toko=${store.id}`}
+            label={`Lihat rak ${store.name}`}
             className="group relative block w-full shrink-0 snap-start aspect-[4/3] md:aspect-[21/9] overflow-hidden bg-slate-100"
           >
             {image ? (
@@ -79,7 +85,7 @@ export default async function ShelfTeaser() {
                 Lihat Ada Apa di Toko →
               </span>
             </div>
-          </Link>
+          </PendingLink>
         ))}
       </StoreSlider>
     </section>

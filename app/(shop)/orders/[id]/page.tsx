@@ -1,4 +1,4 @@
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -54,9 +54,9 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6 py-10">
-      <Link href="/orders" className="text-sm font-bold text-bimbi-pink hover:underline">
+      <PendingLink href="/orders" label="Pesanan Saya" overlayLabel={null} className="relative text-sm font-bold text-bimbi-pink hover:underline">
         ← Pesanan Saya
-      </Link>
+      </PendingLink>
 
       <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         {/* header */}

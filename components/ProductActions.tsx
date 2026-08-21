@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { isContactReady, waLink, type StoreContact } from "@/lib/storeContacts";
 import AppIcon from "@/components/AppIcon";
+import Loader from "@/components/Loader";
 
 export default function ProductActions({
   productId,
@@ -114,17 +115,21 @@ export default function ProductActions({
           <button
             onClick={toggleWishlist}
             disabled={loading !== null}
-            className="btn-press rounded-full border border-slate-300 px-4 py-2.5 text-lg hover:border-bimbi-pink transition-colors"
+            className="btn-press flex items-center justify-center rounded-full border border-slate-300 px-4 py-2.5 text-lg hover:border-bimbi-pink transition-colors"
             title="Simpan ke wishlist"
           >
-            {/* key retriggers the pop animation on every toggle; the heart
-                icon dims when the product isn't wishlisted yet */}
-            <span
-              key={String(wishlisted)}
-              className={`inline-block animate-heart-pop ${wishlisted ? "" : "opacity-30 grayscale"}`}
-            >
-              <AppIcon name="wishlist" size={20} />
-            </span>
+            {loading === "wishlist" ? (
+              <Loader label={null} size={5} />
+            ) : (
+              /* key retriggers the pop animation on every toggle; the heart
+                 icon dims when the product isn't wishlisted yet */
+              <span
+                key={String(wishlisted)}
+                className={`inline-block animate-heart-pop ${wishlisted ? "" : "opacity-30 grayscale"}`}
+              >
+                <AppIcon name="wishlist" size={20} />
+              </span>
+            )}
           </button>
         </div>
       </div>

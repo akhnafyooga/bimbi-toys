@@ -1,4 +1,4 @@
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import ProductCard from "@/components/ProductCard";
 import Rail from "@/components/Rail";
 
@@ -46,12 +46,14 @@ export default function SegmentRail({
           </h2>
           <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5">{blurb}</p>
         </div>
-        <Link
+        <PendingLink
           href={href}
-          className="shrink-0 text-xs sm:text-sm font-bold text-bimbi-pink-dark hover:underline"
+          label={`Lihat semua: ${title}`}
+          overlayLabel={null}
+          className="relative shrink-0 text-xs sm:text-sm font-bold text-bimbi-pink-dark hover:underline"
         >
           Lihat semua
-        </Link>
+        </PendingLink>
       </div>
 
       {/* One row only — arrows, touch-scroll and dots reveal the rest. */}

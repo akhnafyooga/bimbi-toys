@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { formatIDR } from "@/lib/format";
 import { normalizePhone } from "@/lib/phone";
 import { isContactReady, waLink } from "@/lib/storeContacts";
@@ -127,9 +127,9 @@ export default function CheckoutClient({
           nggak otomatis kebuka, klik tombol hijau di atas ya.
         </p>
 
-        <Link href="/orders" className="inline-block mt-5 font-bold text-bimbi-pink hover:underline">
+        <PendingLink href="/orders" label="Lihat Pesanan Saya" overlayLabel={null} className="relative inline-block mt-5 font-bold text-bimbi-pink hover:underline">
           Lihat Pesanan Saya →
-        </Link>
+        </PendingLink>
       </div>
     );
   }

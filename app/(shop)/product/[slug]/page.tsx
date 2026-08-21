@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -222,21 +222,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <li key={shelf.id}>
                     <span className="text-slate-500">{shelf.store.name}</span>
                     <br />
-                    <Link
+                    <PendingLink
                       href={`/store/${shelf.id}`}
-                      className="font-semibold text-bimbi-pink-dark hover:underline"
+                      label={`Lihat rak ${shelf.code}`}
+                      overlayLabel={null}
+                      className="relative font-semibold text-bimbi-pink-dark hover:underline"
                     >
                       Rak {shelf.code} — {shelf.name}
-                    </Link>
+                    </PendingLink>
                   </li>
                 ))}
               </ul>
-              <Link
+              <PendingLink
                 href={`/store?toko=${productShelves[0].store.id}`}
-                className="mt-2 inline-block text-xs font-bold text-slate-500 hover:text-bimbi-pink-dark hover:underline"
+                label="Lihat di Rak"
+                overlayLabel={null}
+                className="relative mt-2 inline-block text-xs font-bold text-slate-500 hover:text-bimbi-pink-dark hover:underline"
               >
                 Lihat di Rak →
-              </Link>
+              </PendingLink>
             </div>
           )}
         </div>

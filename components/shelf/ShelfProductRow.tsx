@@ -1,4 +1,4 @@
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { formatIDR } from "@/lib/format";
 import { availabilityFor, AVAILABILITY_LABEL, storeQty } from "@/lib/shelf";
 
@@ -31,9 +31,11 @@ export default function ShelfProductRow({ product }: { product: ShelfProductRowD
   const qty = storeQty(product.globalStock, product.storeStock);
 
   return (
-    <Link
+    <PendingLink
       href={`/product/${product.slug}`}
-      className="group flex items-center justify-between gap-4 px-4 py-4 hover:bg-slate-50 transition-colors"
+      label={product.name}
+      overlayLabel={null}
+      className="group relative flex items-center justify-between gap-4 px-4 py-4 hover:bg-slate-50 transition-colors"
     >
       <div className="min-w-0">
         <p className="text-sm sm:text-base font-bold text-bimbi-grape leading-snug group-hover:underline">{product.name}</p>
@@ -51,6 +53,6 @@ export default function ShelfProductRow({ product }: { product: ShelfProductRowD
       >
         →
       </span>
-    </Link>
+    </PendingLink>
   );
 }

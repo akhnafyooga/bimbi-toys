@@ -1,4 +1,4 @@
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { prisma } from "@/lib/prisma";
 import { isPriceBucketKey, priceBucket, priceInRange, shelfPriceRange } from "@/lib/shelf";
 import ShelfToolbar from "@/components/shelf/ShelfToolbar";
@@ -136,9 +136,14 @@ export default async function ShelfBrowsePage({
               <h2 className="text-lg sm:text-xl font-extrabold text-bimbi-ink">
                 Hasil pencarian &quot;{query}&quot;
               </h2>
-              <Link href={`/store?toko=${selected.id}`} className="text-xs font-bold text-bimbi-pink-dark hover:underline">
+              <PendingLink
+                href={`/store?toko=${selected.id}`}
+                label="Batal pencarian"
+                overlayLabel={null}
+                className="relative text-xs font-bold text-bimbi-pink-dark hover:underline"
+              >
                 Batal pencarian ×
-              </Link>
+              </PendingLink>
             </div>
             <ShelfSearchResults query={query} hits={searchHits} />
           </section>
@@ -152,12 +157,14 @@ export default async function ShelfBrowsePage({
         ) : visibleShelves.length === 0 ? (
           <div className="rounded-xl border border-slate-200 bg-white shadow-card px-6 py-14 text-center">
             <p className="font-display text-lg font-bold text-slate-800">Tidak ada rak dengan harga di rentang itu.</p>
-            <Link
+            <PendingLink
               href={`/store?toko=${selected.id}`}
-              className="mt-3 inline-block text-sm font-bold text-bimbi-pink-dark hover:underline"
+              label="Lihat semua harga"
+              overlayLabel={null}
+              className="relative mt-3 inline-block text-sm font-bold text-bimbi-pink-dark hover:underline"
             >
               Lihat semua harga
-            </Link>
+            </PendingLink>
           </div>
         ) : (
           <div className="space-y-10 md:space-y-12">

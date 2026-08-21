@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatIDR } from "@/lib/format";
@@ -81,12 +81,14 @@ export default async function ShelfDetailPage({ params }: { params: Promise<{ id
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10 md:py-14 space-y-8">
-        <Link
+        <PendingLink
           href={`/store?toko=${shelf.store.id}`}
-          className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
+          label="Kembali ke daftar rak"
+          overlayLabel={null}
+          className="relative inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
         >
           ← Kembali
-        </Link>
+        </PendingLink>
 
         {/* Interactive shelf photo — zoom, pan, circle a product, ask the store */}
         {shelf.image && (

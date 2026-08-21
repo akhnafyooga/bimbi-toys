@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Loader from "@/components/Loader";
 
 // The two interactive controls on a product card: wishlist heart and
 // "Tambah ke Keranjang". They live in their own client component so the card
@@ -72,22 +73,27 @@ export default function CardActions({
       <button
         type="button"
         onClick={toggleWishlist}
+        disabled={busy === "wishlist"}
         aria-label={liked ? "Hapus dari wishlist" : "Simpan ke wishlist"}
         aria-pressed={liked}
         className="absolute top-2 left-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow ring-1 ring-slate-200 hover:ring-bimbi-pink transition-colors"
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill={liked ? "currentColor" : "none"}
-          stroke="currentColor"
-          strokeWidth="2"
-          className={liked ? "text-wm-red" : "text-slate-500"}
-          aria-hidden
-        >
-          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8Z" />
-        </svg>
+        {busy === "wishlist" ? (
+          <Loader label={null} size={4.5} />
+        ) : (
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill={liked ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="2"
+            className={liked ? "text-wm-red" : "text-slate-500"}
+            aria-hidden
+          >
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8Z" />
+          </svg>
+        )}
       </button>
 
       <button

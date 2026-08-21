@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -123,9 +124,9 @@ export default async function OrdersPage() {
                         Chat toko
                       </a>
                     )}
-                    <Link href={`/orders/${o.id}`} className="text-sm font-bold text-bimbi-pink hover:underline">
+                    <PendingLink href={`/orders/${o.id}`} label={`Detail pesanan ${o.id}`} overlayLabel={null} className="relative text-sm font-bold text-bimbi-pink hover:underline">
                       Lihat detail →
-                    </Link>
+                    </PendingLink>
                   </div>
                 </div>
               </div>

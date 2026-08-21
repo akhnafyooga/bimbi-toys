@@ -1,4 +1,4 @@
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 
 type Props = {
   page: number;
@@ -6,6 +6,8 @@ type Props = {
   makeHref: (page: number) => string;
 };
 
+// Paging only changes ?page= on the same route, which the admin loading.tsx
+// boundary doesn't re-trigger for — PendingLink covers that gap.
 export default function Pagination({ page, totalPages, makeHref }: Props) {
   if (totalPages <= 1) return null;
 
@@ -14,29 +16,33 @@ export default function Pagination({ page, totalPages, makeHref }: Props) {
 
   return (
     <div className="flex items-center justify-center gap-2 mt-6">
-      <Link
+      <PendingLink
         href={makeHref(Math.max(1, page - 1))}
-        className={`px-3 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
+        label="Halaman sebelumnya"
+        overlayLabel={null}
+        className={`relative px-3 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
           prevDisabled
             ? "pointer-events-none opacity-40 border-slate-200 text-slate-400"
             : "border-slate-300 text-slate-600 hover:bg-slate-50"
         }`}
       >
         ← Sebelumnya
-      </Link>
+      </PendingLink>
       <span className="text-sm text-slate-500 px-2">
         Halaman {page} dari {totalPages}
       </span>
-      <Link
+      <PendingLink
         href={makeHref(Math.min(totalPages, page + 1))}
-        className={`px-3 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
+        label="Halaman selanjutnya"
+        overlayLabel={null}
+        className={`relative px-3 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
           nextDisabled
             ? "pointer-events-none opacity-40 border-slate-200 text-slate-400"
             : "border-slate-300 text-slate-600 hover:bg-slate-50"
         }`}
       >
         Selanjutnya →
-      </Link>
+      </PendingLink>
     </div>
   );
 }

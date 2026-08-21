@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useRef } from "react";
+import PendingLink from "@/components/PendingLink";
 
 type Category = { id: string; slug: string; name: string };
 
@@ -28,20 +28,24 @@ export default function CategoryNav({ categories }: { categories: Category[] }) 
         ref={rowRef}
         className="flex flex-1 min-w-0 items-center overflow-x-auto scrollbar-none whitespace-nowrap"
       >
-        <Link
+        <PendingLink
           href="/"
-          className="shrink-0 px-4 py-3 font-bold text-sm text-slate-800 hover:text-bimbi-pink border-b-2 border-transparent hover:border-bimbi-pink transition-colors chip-spring"
+          label="Home"
+          overlayLabel={null}
+          className="relative shrink-0 px-4 py-3 font-bold text-sm text-slate-800 hover:text-bimbi-pink border-b-2 border-transparent hover:border-bimbi-pink transition-colors chip-spring"
         >
           Home
-        </Link>
+        </PendingLink>
         {categories.map((c) => (
-          <Link
+          <PendingLink
             key={c.id}
             href={`/?category=${c.slug}`}
-            className="shrink-0 px-4 py-3 font-semibold text-sm text-slate-600 hover:text-bimbi-pink border-b-2 border-transparent hover:border-bimbi-pink transition-colors chip-spring"
+            label={c.name}
+            overlayLabel={null}
+            className="relative shrink-0 px-4 py-3 font-semibold text-sm text-slate-600 hover:text-bimbi-pink border-b-2 border-transparent hover:border-bimbi-pink transition-colors chip-spring"
           >
             {c.name}
-          </Link>
+          </PendingLink>
         ))}
       </nav>
 

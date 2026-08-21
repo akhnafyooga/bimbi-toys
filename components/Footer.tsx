@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { prisma } from "@/lib/prisma";
 import BrandLogo from "@/components/BrandLogo";
 import AppIcon from "@/components/AppIcon";
@@ -96,17 +97,17 @@ export default async function Footer() {
                 Semua Koleksi
               </Link>
 
-              <Link href="/stores" className="block hover:text-bimbi-pink hover:underline">
+              <PendingLink href="/stores" label="Cari Toko" overlayLabel={null} className="relative block hover:text-bimbi-pink hover:underline">
                 Cari Toko
-              </Link>
+              </PendingLink>
 
-              <Link href="/wishlist" className="block hover:text-bimbi-pink hover:underline">
+              <PendingLink href="/wishlist" label="Wishlist" overlayLabel={null} className="relative block hover:text-bimbi-pink hover:underline">
                 Wishlist
-              </Link>
+              </PendingLink>
 
-              <Link href="/orders" className="block hover:text-bimbi-pink hover:underline">
+              <PendingLink href="/orders" label="Pesanan Saya" overlayLabel={null} className="relative block hover:text-bimbi-pink hover:underline">
                 Pesanan Saya
-              </Link>
+              </PendingLink>
             </nav>
 
             {/* Payment */}

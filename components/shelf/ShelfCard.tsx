@@ -1,4 +1,4 @@
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { formatIDR } from "@/lib/format";
 import ShelfImageFrame from "@/components/shelf/ShelfImageFrame";
 
@@ -17,10 +17,10 @@ export type ShelfCardData = {
 // computed from assigned products by the caller.
 export default function ShelfCard({ shelf, priority = false }: { shelf: ShelfCardData; priority?: boolean }) {
   return (
-    <Link
+    <PendingLink
       href={`/store/${shelf.id}`}
-      className="group block overflow-hidden border border-slate-200 bg-white shadow-card card-lively"
-      aria-label={`Lihat rak ${shelf.name} (${shelf.code})`}
+      className="group relative block overflow-hidden border border-slate-200 bg-white shadow-card card-lively"
+      label={`Lihat rak ${shelf.name} (${shelf.code})`}
     >
       <div className="relative">
         <ShelfImageFrame src={shelf.image} code={shelf.code} priority={priority} />
@@ -47,6 +47,6 @@ export default function ShelfCard({ shelf, priority = false }: { shelf: ShelfCar
           <span className="text-sm font-bold text-bimbi-pink-dark">Lihat Rak →</span>
         </div>
       </div>
-    </Link>
+    </PendingLink>
   );
 }

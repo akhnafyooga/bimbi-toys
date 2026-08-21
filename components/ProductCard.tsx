@@ -1,8 +1,8 @@
-import Link from "next/link";
 import Image from "next/image";
 import { formatIDR } from "@/lib/format";
 import { applyDiscount } from "@/lib/discount";
 import CardActions from "@/components/CardActions";
+import PendingLink from "@/components/PendingLink";
 
 type Props = {
   /** Needed for the wishlist + cart buttons; omit to render a link-only card. */
@@ -49,7 +49,7 @@ export default function ProductCard({
         </span>
       ) : null}
 
-      <Link href={`/product/${slug}`} className="flex flex-1 flex-col">
+      <PendingLink href={`/product/${slug}`} label={name} className="relative flex flex-1 flex-col">
         {/* Photo on white with breathing room — LEGO never crops product shots */}
         <div className="relative aspect-square w-full">
           {imageUrl ? (
@@ -89,7 +89,7 @@ export default function ProductCard({
             )
           )}
         </div>
-      </Link>
+      </PendingLink>
 
       {/* Rendered last on purpose: the cart button follows normal flow, so its
           DOM position IS its visual position. The heart is absolute, so it
@@ -97,12 +97,14 @@ export default function ProductCard({
       {productId && <CardActions productId={productId} wishlisted={wishlisted} />}
 
       {!productId && (
-        <Link
+        <PendingLink
           href={`/product/${slug}`}
-          className="mt-2 -mx-3 -mb-3 w-[calc(100%+1.5rem)] bg-[#f26722] hover:bg-[#d9551a] px-2 py-1.5 text-center text-[11px] font-bold text-white transition-colors btn-press"
+          label={name}
+          overlayLabel={null}
+          className="relative mt-2 -mx-3 -mb-3 w-[calc(100%+1.5rem)] bg-[#f26722] hover:bg-[#d9551a] px-2 py-1.5 text-center text-[11px] font-bold text-white transition-colors btn-press"
         >
           Tambahkan
-        </Link>
+        </PendingLink>
       )}
     </div>
   );

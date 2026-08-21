@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserDiscount } from "@/lib/discount";
@@ -155,13 +156,15 @@ export default async function SearchPage({
           {grid(visible)}
           {showN < total && (
             <div className="flex justify-center mt-8">
-              <Link
+              <PendingLink
                 href={moreHref}
                 scroll={false}
-                className="font-bold text-bimbi-pink hover:underline chip-spring"
+                label="Muat lebih banyak produk"
+                overlayLabel={null}
+                className="relative font-bold text-bimbi-pink hover:underline chip-spring"
               >
                 Muat lebih banyak ↓
-              </Link>
+              </PendingLink>
             </div>
           )}
         </>
@@ -174,12 +177,14 @@ export default async function SearchPage({
           {suggestion && (
             <p className="text-bimbi-ink">
               Apakah maksud kamu:{" "}
-              <Link
+              <PendingLink
                 href={`/search?q=${encodeURIComponent(suggestion)}${category ? `&category=${category}` : ""}`}
-                className="font-extrabold text-bimbi-pink hover:underline"
+                label={`Cari ${suggestion}`}
+                overlayLabel={null}
+                className="relative font-extrabold text-bimbi-pink hover:underline"
               >
                 {suggestion}
-              </Link>
+              </PendingLink>
               ?
             </p>
           )}

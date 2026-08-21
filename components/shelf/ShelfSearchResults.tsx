@@ -1,4 +1,4 @@
-import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { formatIDR } from "@/lib/format";
 
 export type ShelfSearchHit = {
@@ -30,29 +30,34 @@ export default function ShelfSearchResults({ query, hits }: { query: string; hit
       {hits.map((hit) => (
         <div key={hit.productId} className="group flex items-center justify-between gap-4 px-4 py-4 hover:bg-slate-50 transition-colors">
           <div className="min-w-0">
-            <Link
+            <PendingLink
               href={`/product/${hit.slug}`}
-              className="text-sm sm:text-base font-bold text-bimbi-grape leading-snug hover:underline"
+              label={hit.name}
+              overlayLabel={null}
+              className="relative text-sm sm:text-base font-bold text-bimbi-grape leading-snug hover:underline"
             >
               {hit.name}
-            </Link>
+            </PendingLink>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="text-sm font-extrabold text-bimbi-ink tabular-nums">{formatIDR(hit.price)}</span>
-              <Link
+              <PendingLink
                 href={`/store/${hit.shelfId}`}
-                className="text-[11px] font-bold text-bimbi-pink-dark hover:underline"
+                label={`Lihat rak ${hit.shelfCode}`}
+                overlayLabel={null}
+                className="relative text-[11px] font-bold text-bimbi-pink-dark hover:underline"
               >
                 {hit.shelfName} · Rak {hit.shelfCode}
-              </Link>
+              </PendingLink>
             </div>
           </div>
-          <Link
+          <PendingLink
             href={`/store/${hit.shelfId}`}
-            className="shrink-0 text-lg text-slate-300 group-hover:text-bimbi-pink-dark transition-colors"
-            aria-label={`Lihat rak ${hit.shelfCode}`}
+            className="relative shrink-0 text-lg text-slate-300 group-hover:text-bimbi-pink-dark transition-colors"
+            label={`Lihat rak ${hit.shelfCode}`}
+            overlayLabel={null}
           >
             →
-          </Link>
+          </PendingLink>
         </div>
       ))}
     </div>

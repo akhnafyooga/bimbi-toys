@@ -1,5 +1,5 @@
-import Link from "next/link";
 import Image from "next/image";
+import PendingLink from "@/components/PendingLink";
 import Rail from "@/components/Rail";
 import { QUICK_TILES } from "@/lib/homeSegments";
 
@@ -22,10 +22,10 @@ export default function QuickTiles() {
 
       <Rail showDots>
         {QUICK_TILES.map((t) => (
-          <Link
+          <PendingLink
             key={t.label}
             href={t.href}
-            aria-label={t.label}
+            label={t.label}
             // 3.5 across on desktop; fewer on small screens, where a 3.5-up
             // card would be too small to read the artwork inside it.
             className="group relative block shrink-0 w-[62%] sm:w-[42%] lg:w-[27%] chip-spring"
@@ -39,7 +39,7 @@ export default function QuickTiles() {
                 className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
               />
             </div>
-          </Link>
+          </PendingLink>
         ))}
       </Rail>
     </section>

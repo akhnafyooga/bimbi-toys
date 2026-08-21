@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { prisma } from "@/lib/prisma";
 import { getUserDiscount } from "@/lib/discount";
 import ProductCard from "@/components/ProductCard";
@@ -271,13 +272,15 @@ export default async function HomePage({
 
                 {showN < total && (
                   <div className="flex justify-center mt-8">
-                    <Link
+                    <PendingLink
                       href={moreHref}
                       scroll={false}
-                      className="font-bold text-bimbi-pink-dark hover:underline chip-spring"
+                      label="Muat lebih banyak produk"
+                      overlayLabel={null}
+                      className="relative font-bold text-bimbi-pink-dark hover:underline chip-spring"
                     >
                       Muat lebih banyak ↓
-                    </Link>
+                    </PendingLink>
                   </div>
                 )}
               </>

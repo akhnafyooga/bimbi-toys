@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatIDR } from "@/lib/format";
 import { applyDiscount } from "@/lib/discount";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
+import PendingLink from "@/components/PendingLink";
 
 type Item = {
   id: string;
@@ -61,14 +61,14 @@ export default function CartList({
       <div className="text-center py-20">
         <p className="font-display text-2xl mt-4">Keranjang kamu masih kosong</p>
         <p className="text-bimbi-ink/60 mt-1">Yuk cari mainan favoritmu!</p>
-        <Link href="/" className="inline-block mt-4 rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white">
+        <PendingLink href="/" label="Belanja Sekarang" className="relative inline-block mt-4 rounded-full bg-bimbi-pink px-6 py-3 font-bold text-white">
           Belanja Sekarang
-        </Link>
+        </PendingLink>
         <p className="text-sm text-bimbi-ink/70 mt-6">
           Udah pesan?{" "}
-          <Link href="/orders" className="font-bold text-bimbi-pink hover:underline">
+          <PendingLink href="/orders" label="Lihat pesanan kamu" overlayLabel={null} className="relative font-bold text-bimbi-pink hover:underline">
             Lihat pesanan kamu di sini!
-          </Link>
+          </PendingLink>
         </p>
       </div>
     );
@@ -83,9 +83,14 @@ export default function CartList({
               <ImagePlaceholder className="h-full w-full" />
             </div>
             <div className="flex-1 min-w-0 overflow-hidden">
-              <Link href={`/product/${item.product.slug}`} className="font-display text-sm md:text-lg hover:text-bimbi-pink-dark block truncate">
+              <PendingLink
+                href={`/product/${item.product.slug}`}
+                label={item.product.displayName ?? item.product.name}
+                overlayLabel={null}
+                className="relative font-display text-sm md:text-lg hover:text-bimbi-pink-dark block truncate"
+              >
                 {item.product.displayName ?? item.product.name}
-              </Link>
+              </PendingLink>
               <p className="font-bold text-sm md:text-base text-bimbi-pink-dark mt-0.5 md:mt-1">
                     {formatIDR(applyDiscount(item.product.price, discountPercent))}
                     {special && (
@@ -146,12 +151,13 @@ export default function CartList({
         <p className="text-[10px] md:text-xs text-bimbi-ink/50 mb-3 md:mb-4">
           Stok &amp; pembayaran dikonfirmasi lewat chat WhatsApp toko.
         </p>
-        <Link
+        <PendingLink
           href="/checkout"
-          className="block text-center w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-4 py-2 md:px-6 md:py-3 text-sm md:text-base font-extrabold text-white transition-colors chip-spring"
+          label="Lanjut Pesan via WhatsApp"
+          className="relative block text-center w-full rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-4 py-2 md:px-6 md:py-3 text-sm md:text-base font-extrabold text-white transition-colors chip-spring"
         >
           Lanjut Pesan via WhatsApp
-        </Link>
+        </PendingLink>
       </div>
     </div>
   );

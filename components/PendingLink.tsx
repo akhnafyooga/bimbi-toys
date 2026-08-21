@@ -18,12 +18,24 @@ export default function PendingLink({
   className = "",
   label,
   overlayLabel = "Membuka…",
+  scroll = true,
+  id,
+  dataTour,
+  title,
 }: {
   href: string;
   children: React.ReactNode;
   className?: string;
   label: string;
-  overlayLabel?: string;
+  /** Text under the overlay dots; pass null for small links where only the dots fit. */
+  overlayLabel?: string | null;
+  /** Mirrors next/link's scroll — false keeps the scroll position on push. */
+  scroll?: boolean;
+  id?: string;
+  /** Forwarded as data-tour so the onboarding tour keeps highlighting the link. */
+  dataTour?: string;
+  /** Tooltip — matters for icon-only links. */
+  title?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -34,12 +46,15 @@ export default function PendingLink({
       aria-label={label}
       aria-busy={pending}
       className={className}
+      id={id}
+      data-tour={dataTour}
+      title={title}
       onClick={(e) => {
         // Leave modified clicks alone so "open in new tab" still works, and
         // keep the real href so the link stays crawlable and right-clickable.
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
         e.preventDefault();
-        startTransition(() => router.push(href));
+        startTransition(() => router.push(href, { scroll }));
       }}
     >
       {children}
@@ -64,7 +79,9 @@ export default function PendingLink({
               />
             ))}
           </span>
-          <span className="text-xs font-bold text-bimbi-ink">{overlayLabel}</span>
+          {overlayLabel && (
+            <span className="text-xs font-bold text-bimbi-ink">{overlayLabel}</span>
+          )}
         </span>
       )}
     </Link>

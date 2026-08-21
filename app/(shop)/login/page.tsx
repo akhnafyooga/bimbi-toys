@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PendingLink from "@/components/PendingLink";
 import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
@@ -84,12 +85,14 @@ export default async function LoginPage({
 
       <div className="mt-8 rounded-lg bg-bimbi-sun p-5 text-center">
         <p className="font-extrabold text-bimbi-ink">Belum punya akun?</p>
-        <Link
+        <PendingLink
           href="/register"
-          className="mt-3 inline-block rounded-full border border-bimbi-ink px-6 py-2 text-sm font-extrabold text-bimbi-ink hover:bg-white transition-colors chip-spring"
+          label="Daftar sekarang"
+          overlayLabel={null}
+          className="relative mt-3 inline-block rounded-full border border-bimbi-ink px-6 py-2 text-sm font-extrabold text-bimbi-ink hover:bg-white transition-colors chip-spring"
         >
           Daftar sekarang
-        </Link>
+        </PendingLink>
       </div>
     </div>
   );

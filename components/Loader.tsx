@@ -18,8 +18,13 @@ export default function Loader({
 }) {
   return (
     <div className="flex flex-col items-center gap-4" role="status" aria-live="polite">
-      {/* Height gives the dots room to travel without resizing the row. */}
-      <div className="flex items-center gap-3" style={{ height: size * 3 }}>
+      {/* Height gives the dots room to travel without resizing the row. The gap
+          scales with the dots (0.85 ≈ gap-3 at the default size) so the loader
+          also fits inside small busy buttons. */}
+      <div
+        className="flex items-center"
+        style={{ height: size * 3, gap: Math.max(4, Math.round(size * 0.85)) }}
+      >
         {DOTS.map((d) => (
           <span
             key={d.color}
