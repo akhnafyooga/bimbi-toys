@@ -27,11 +27,17 @@ export default function CatalogControls({
   sort,
   min,
   max,
+  basePath = "/",
+  extraParams,
 }: {
   category?: string;
   sort?: string;
   min?: string;
   max?: string;
+  /** Route the filters apply to — "/search" reuses this component there. */
+  basePath?: string;
+  /** Params that must survive the navigation, e.g. { q } on the search page. */
+  extraParams?: Record<string, string | undefined>;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -50,12 +56,17 @@ export default function CatalogControls({
 
   function push(sortV: string, minV: string, maxV: string) {
     const p = new URLSearchParams();
+    if (extraParams) {
+      for (const [k, v] of Object.entries(extraParams)) {
+        if (v) p.set(k, v);
+      }
+    }
     if (category) p.set("category", category);
     if (sortV) p.set("sort", sortV);
     if (minV) p.set("min", minV);
     if (maxV) p.set("max", maxV);
     const qs = p.toString();
-    router.push(qs ? `/?${qs}` : "/", { scroll: false });
+    router.push(qs ? `${basePath}?${qs}` : basePath, { scroll: false });
     setOpen(false);
   }
 

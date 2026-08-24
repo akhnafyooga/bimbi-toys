@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PendingLink from "@/components/PendingLink";
+import CatalogControls from "@/components/CatalogControls";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserDiscount } from "@/lib/discount";
@@ -51,9 +52,16 @@ function rankByRelevance<
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; show?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    category?: string;
+    show?: string;
+    sort?: string;
+    min?: string;
+    max?: string;
+  }>;
 }) {
-  const { q, category, show } = await searchParams;
+  const { q, category, show, sort, min, max } = await searchParams;
   const query = (q ?? "").trim();
   const tokens = tokenize(query);
   // Very short queries ("a", "di") produce no tokens — an empty token list
@@ -69,12 +77,24 @@ export default async function SearchPage({
     : null;
   const categoryFilter: Prisma.ProductWhereInput = category ? { category: { slug: category } } : {};
 
+  // Price filter from CatalogControls — same shape as the home catalog.
+  const priceFilter: Prisma.ProductWhereInput =
+    min || max
+      ? { price: { ...(min ? { gte: Number(min) } : {}), ...(max ? { lte: Number(max) } : {}) } }
+      : {};
+
+  // Explicit price sorts are pushed into SQL (meaningful with the MAX_MATCHES
+  // cap); otherwise relevance ranking decides once results are in memory.
+  const priceSort =
+    sort === "termurah" ? ("asc" as const) : sort === "termahal" ? ("desc" as const) : null;
+
   // Fetch bounded by MAX_MATCHES, then rank by relevance so best matches lead.
   async function fetchMatches(where: Prisma.ProductWhereInput, limit = MAX_MATCHES) {
     return prisma.product.findMany({
-      where: { AND: [categoryFilter, where] },
+      where: { AND: [categoryFilter, priceFilter, where] },
       include: INCLUDE_IMAGE,
       take: limit,
+      ...(priceSort ? { orderBy: { price: priceSort } } : {}),
     });
   }
 
@@ -92,14 +112,21 @@ export default async function SearchPage({
     }
   }
 
-  if (query && products.length > 1) {
+  // Category-only browse (no query) has nothing to rank by relevance, so give
+  // it the same "Terbaru" default as the home catalog instead of raw DB order.
+  if (query && !priceSort && products.length > 1) {
     products = rankByRelevance(products, query, effectiveTokens);
+  } else if (!query && !priceSort && products.length > 1) {
+    products = [...products].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   // No hits → "apakah maksud kamu ..." + show results for the corrected term.
+  // With a price filter active an empty result set usually means the range is
+  // too narrow, not that the query is misspelled — so skip the spell path.
+  const hasPriceFilter = Boolean(min || max);
   let suggestion: string | null = null;
   let suggestedProducts: typeof products = [];
-  if (query && products.length === 0) {
+  if (query && products.length === 0 && !hasPriceFilter) {
     const names = await prisma.product.findMany({ select: { name: true, displayName: true } });
     suggestion = suggestQuery(query, buildVocab(names.map((n) => n.displayName ?? n.name)));
     if (suggestion) {
@@ -115,6 +142,9 @@ export default async function SearchPage({
   const moreQuery = new URLSearchParams();
   if (query) moreQuery.set("q", query);
   if (category) moreQuery.set("category", category);
+  if (sort) moreQuery.set("sort", sort);
+  if (min) moreQuery.set("min", min);
+  if (max) moreQuery.set("max", max);
   moreQuery.set("show", String(showN + PAGE));
   const moreHref = `/search?${moreQuery.toString()}`;
 
@@ -161,7 +191,7 @@ export default async function SearchPage({
   const recById = new Map(recRows.map((r) => [r.id, r]));
   const recommended = pickIds.map((id) => recById.get(id)).filter((r) => r !== undefined);
 
-  const grid = (list: typeof products) => (
+  const grid = (list: typeof products, highlightTokens?: string[]) => (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
       {list.map((p) => (
         <ProductCard
@@ -173,6 +203,7 @@ export default async function SearchPage({
           compareAtPrice={p.compareAtPrice}
           imageUrl={p.images[0]?.url ?? ""}
           discountPercent={discountPercent}
+          highlightTokens={highlightTokens}
         />
       ))}
     </div>
@@ -185,9 +216,22 @@ export default async function SearchPage({
         {selectedCategory ? `di kategori ${selectedCategory.name}` : ""}
       </h1>
 
+      {/* Sort + price filter — same controls as the home catalog, driving the
+          /search URL instead. `q` rides along via extraParams. */}
+      <div className="mb-5">
+        <CatalogControls
+          basePath="/search"
+          extraParams={{ q: query }}
+          category={category}
+          sort={sort}
+          min={min}
+          max={max}
+        />
+      </div>
+
       {products.length > 0 ? (
         <>
-          {grid(visible)}
+          {grid(visible, query ? effectiveTokens : undefined)}
           {showN < total && (
             <div className="flex justify-center mt-8">
               <PendingLink
@@ -204,42 +248,61 @@ export default async function SearchPage({
         </>
       ) : (
         <div className="space-y-6">
-          <p className="text-bimbi-ink/70">
-            Nggak ketemu hasil untuk <span className="font-bold">“{query}”</span>.
-          </p>
-
-          {suggestion && (
-            <p className="text-bimbi-ink">
-              Apakah maksud kamu:{" "}
-              <PendingLink
-                href={`/search?q=${encodeURIComponent(suggestion)}${category ? `&category=${category}` : ""}`}
-                label={`Cari ${suggestion}`}
-                overlayLabel={null}
-                className="relative font-extrabold text-bimbi-pink hover:underline"
-              >
-                {suggestion}
-              </PendingLink>
-              ?
-            </p>
-          )}
-
-          {suggestedProducts.length > 0 && (
+          {hasPriceFilter ? (
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-bimbi-ink/60">
-                Menampilkan hasil untuk “{suggestion}”:
+              <p className="text-bimbi-ink/70">
+                Nggak ada yang cocok dengan{" "}
+                <span className="font-bold">“{query}”</span> di rentang harga ini.
               </p>
-              {grid(suggestedProducts)}
+              <PendingLink
+                href={query ? `/search?q=${encodeURIComponent(query)}` : "/search"}
+                label="Reset filter harga"
+                overlayLabel={null}
+                className="relative inline-block font-bold text-bimbi-pink hover:underline chip-spring"
+              >
+                Lihat semua harga ↓
+              </PendingLink>
             </div>
-          )}
+          ) : (
+            <>
+              <p className="text-bimbi-ink/70">
+                Nggak ketemu hasil untuk <span className="font-bold">“{query}”</span>.
+              </p>
 
-          {!suggestion && suggestedProducts.length === 0 && (
-            <p className="text-bimbi-ink/60">
-              Coba kata kunci lain, atau lihat semua koleksi kami di{" "}
-              <Link href="/#katalog" className="font-bold text-bimbi-pink hover:underline">
-                halaman utama
-              </Link>
-              .
-            </p>
+              {suggestion && (
+                <p className="text-bimbi-ink">
+                  Apakah maksud kamu:{" "}
+                  <PendingLink
+                    href={`/search?q=${encodeURIComponent(suggestion)}${category ? `&category=${category}` : ""}`}
+                    label={`Cari ${suggestion}`}
+                    overlayLabel={null}
+                    className="relative font-extrabold text-bimbi-pink hover:underline"
+                  >
+                    {suggestion}
+                  </PendingLink>
+                  ?
+                </p>
+              )}
+
+              {suggestedProducts.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm font-semibold text-bimbi-ink/60">
+                    Menampilkan hasil untuk “{suggestion}”:
+                  </p>
+                  {grid(suggestedProducts, suggestion ? tokenize(suggestion) : undefined)}
+                </div>
+              )}
+
+              {!suggestion && suggestedProducts.length === 0 && (
+                <p className="text-bimbi-ink/60">
+                  Coba kata kunci lain, atau lihat semua koleksi kami di{" "}
+                  <Link href="/#katalog" className="font-bold text-bimbi-pink hover:underline">
+                    halaman utama
+                  </Link>
+                  .
+                </p>
+              )}
+            </>
           )}
         </div>
       )}

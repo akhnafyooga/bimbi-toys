@@ -88,3 +88,26 @@ export function suggestQuery(q: string, vocab: Map<string, number>): string | nu
   });
   return changed ? corrected.join(" ") : null;
 }
+
+// Split a name into alternating plain/matched parts so the UI can wrap the
+// matched tokens in a <mark>. Case-insensitive; tokens are sorted longest-first
+// so "mobilan" wins over its "mobil" prefix, and tokens under 2 chars are
+// ignored (they would highlight noise like "di").
+export function highlightParts(name: string, tokens: string[]): { text: string; match: boolean }[] {
+  const terms = [...new Set(tokens.filter((t) => t.length >= 2))].sort((a, b) => b.length - a.length);
+  if (terms.length === 0) return [{ text: name, match: false }];
+
+  const escaped = terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const re = new RegExp(`(${escaped.join("|")})`, "gi");
+
+  const parts: { text: string; match: boolean }[] = [];
+  let last = 0;
+  for (const m of name.matchAll(re)) {
+    const i = m.index ?? 0;
+    if (i > last) parts.push({ text: name.slice(last, i), match: false });
+    parts.push({ text: m[0], match: true });
+    last = i + m[0].length;
+  }
+  if (last < name.length) parts.push({ text: name.slice(last), match: false });
+  return parts.length ? parts : [{ text: name, match: false }];
+}

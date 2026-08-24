@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { formatIDR } from "@/lib/format";
+import { tokenize, highlightParts } from "@/lib/search";
 import AppIcon from "@/components/AppIcon";
 
 type SuggestProduct = { id: string; name: string; slug: string; price: number; imageUrl: string };
@@ -219,7 +220,15 @@ export default function SearchSuggest({ categories }: { categories: SuggestCateg
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold text-bimbi-ink">
-                          {p.name}
+                          {highlightParts(p.name, tokenize(trimmed)).map((part, j) =>
+                            part.match ? (
+                              <mark key={j} className="rounded-sm bg-bimbi-sun/70 px-0.5 text-inherit">
+                                {part.text}
+                              </mark>
+                            ) : (
+                              <span key={j}>{part.text}</span>
+                            )
+                          )}
                         </span>
                         <span className="block text-xs font-bold text-bimbi-pink-dark">
                           {formatIDR(p.price)}

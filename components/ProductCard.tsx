@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { formatIDR } from "@/lib/format";
 import { applyDiscount } from "@/lib/discount";
+import { highlightParts } from "@/lib/search";
 import CardActions from "@/components/CardActions";
 import PendingLink from "@/components/PendingLink";
 
@@ -15,6 +16,8 @@ type Props = {
   /** "Harga spesial kenalan" percentage for the signed-in user (0 = none). */
   discountPercent?: number;
   wishlisted?: boolean;
+  /** Search tokens to marker-highlight in the title (search results only). */
+  highlightTokens?: string[];
 };
 
 // LEGO-store card: SHARP corners, tall proportions, product photo on white with
@@ -31,6 +34,7 @@ export default function ProductCard({
   imageUrl,
   discountPercent = 0,
   wishlisted = false,
+  highlightTokens,
 }: Props) {
   const discount = compareAtPrice ? Math.round((1 - price / compareAtPrice) * 100) : 0;
   // A special price replaces the normal one and strikes the original through.
@@ -68,7 +72,17 @@ export default function ProductCard({
         {/* Title takes the slack so every card in a row ends the same height and
             the prices line up across the grid. */}
         <h3 className="mt-3 min-h-[3.4rem] flex-1 text-[13px] font-normal leading-snug text-bimbi-grape line-clamp-3 group-hover:underline">
-          {name}
+          {highlightTokens
+            ? highlightParts(name, highlightTokens).map((part, i) =>
+                part.match ? (
+                  <mark key={i} className="rounded-sm bg-bimbi-sun/70 px-0.5 text-inherit">
+                    {part.text}
+                  </mark>
+                ) : (
+                  <span key={i}>{part.text}</span>
+                )
+              )
+            : name}
         </h3>
 
         <div className="mt-2 flex items-baseline gap-2 flex-wrap">
