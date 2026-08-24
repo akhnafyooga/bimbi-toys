@@ -9,6 +9,7 @@ import AppIcon from "@/components/AppIcon";
 import NavPanel from "@/components/NavPanel";
 import HeaderScrollState from "@/components/HeaderScrollState";
 import PendingLink from "@/components/PendingLink";
+import SearchSuggest from "@/components/SearchSuggest";
 
 // Shared look for one nav tile: icon on top, label underneath. `relative` so a
 // PendingLink overlay can anchor to the tile (harmless on the plain buttons).
@@ -43,7 +44,10 @@ export default async function Navbar() {
       className="sticky top-0 w-full z-50 flex flex-col shadow-sm"
     >
       <HeaderScrollState />
-      <div className="clouds-bg w-full text-bimbi-ink border-b border-slate-200">
+      {/* z-10 lifts this whole layer above the category strip inside the
+          header's stacking context, so the search suggest dropdown (trapped
+          here by clouds-bg's isolation) paints over it. */}
+      <div className="clouds-bg z-10 w-full text-bimbi-ink border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 md:py-4">
 
           {/* Only the logo folds away on scroll. The tile row below stays put so
@@ -123,36 +127,7 @@ export default async function Navbar() {
               scroll, the compact shortcuts below appear beside the search so
               Pesanan / Wishlist / Keranjang never become unreachable. */}
           <div className="mt-2 md:mt-3 header-search flex items-center gap-2">
-          <form
-            id="tour-search"
-            action="/search"
-            className="flex-1 min-w-0 flex items-center rounded-full bg-slate-100 border border-slate-200 overflow-hidden"
-          >
-            <select
-              name="category"
-              className="hidden sm:block bg-transparent text-slate-600 text-xs font-bold pl-4 pr-2 py-2.5 outline-none cursor-pointer max-w-[140px]"
-            >
-              <option value="">Semua</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.slug}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              name="q"
-              placeholder="Cari semua di Bimbi Toys online dan di toko"
-              className="flex-1 min-w-0 px-4 py-2.5 md:py-3 text-sm text-bimbi-ink outline-none placeholder:text-slate-400 bg-transparent"
-            />
-            <button
-              type="submit"
-              aria-label="Cari"
-              className="m-1 h-8 w-8 md:h-9 md:w-9 shrink-0 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center transition-colors btn-press"
-            >
-              <AppIcon name="search" size={18} />
-            </button>
-          </form>
+          <SearchSuggest categories={categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }))} />
 
           {/* Shown only while scrolled (CSS keys off the header's data-scrolled),
               so it never duplicates the tiles when the menu is open. */}
