@@ -18,8 +18,8 @@ export default async function AdminShelvesPage({
         ...(q
           ? {
               OR: [
-                { name: { contains: q } },
-                { code: { contains: q.toUpperCase() } },
+                { name: { contains: q, mode: "insensitive" as const } },
+                { code: { contains: q, mode: "insensitive" as const } },
               ],
             }
           : {}),

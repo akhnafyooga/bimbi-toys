@@ -15,7 +15,15 @@ export async function GET(req: Request) {
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
   const where = {
-    ...(q ? { name: { contains: q } } : {}),
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" as const } },
+            { displayName: { contains: q, mode: "insensitive" as const } },
+            { sku: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
     ...(categoryId ? { categoryId } : {}),
   };
 

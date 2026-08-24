@@ -19,7 +19,15 @@ export default async function AdminProductsPage({
   const page = Math.max(1, Number(sp.page) || 1);
 
   const where = {
-    ...(q ? { name: { contains: q } } : {}),
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" as const } },
+            { displayName: { contains: q, mode: "insensitive" as const } },
+            { sku: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
     ...(categoryId ? { categoryId } : {}),
   };
 
@@ -70,7 +78,7 @@ export default async function AdminProductsPage({
           type="text"
           name="q"
           defaultValue={q}
-          placeholder="Cari nama produk..."
+          placeholder="Cari nama, nama tampilan, atau SKU..."
           className="flex-1 min-w-[200px] rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-bimbi-sky"
         />
         <select

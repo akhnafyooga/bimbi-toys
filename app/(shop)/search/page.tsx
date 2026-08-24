@@ -19,6 +19,35 @@ function tokenWhere(tokens: string[]): Prisma.ProductWhereInput {
   };
 }
 
+// Strict match: EVERY token must appear somewhere (any of the three fields).
+function tokenWhereAll(tokens: string[]): Prisma.ProductWhereInput {
+  return {
+    AND: tokens.map((t) => ({
+      OR: [
+        { name: { contains: t, mode: "insensitive" as const } },
+        { displayName: { contains: t, mode: "insensitive" as const } },
+        { description: { contains: t, mode: "insensitive" as const } },
+      ],
+    })),
+  };
+}
+
+// Cap on how many broad matches we pull into memory for ranking — bounds the
+// in-JS sort on very broad queries. "Load more" can never exceed this either.
+const MAX_MATCHES = 500;
+
+// Decorate-sort-undecorate: score every product once instead of re-running
+// relevance() inside each comparator call.
+function rankByRelevance<
+  T extends { name: string; displayName: string | null; description: string },
+>(list: T[], phrase: string, tokens: string[]): T[] {
+  if (list.length < 2) return list;
+  return list
+    .map((p) => ({ p, s: relevance(p.displayName ?? p.name, p.description, phrase, tokens) }))
+    .sort((a, b) => b.s - a.s)
+    .map((x) => x.p);
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
@@ -27,8 +56,11 @@ export default async function SearchPage({
   const { q, category, show } = await searchParams;
   const query = (q ?? "").trim();
   const tokens = tokenize(query);
+  // Very short queries ("a", "di") produce no tokens — an empty token list
+  // would match the whole catalog, so fall back to the raw phrase instead.
+  const effectiveTokens = tokens.length ? tokens : query ? [query.toLowerCase()] : [];
   const PAGE = 24;
-  const showN = Math.min(Math.max(PAGE, Number(show) || PAGE), 2000);
+  const showN = Math.min(Math.max(PAGE, Number(show) || PAGE), MAX_MATCHES);
   // "Harga spesial kenalan" — 0 for guests and normal customers.
   const discountPercent = await getUserDiscount();
 
@@ -37,21 +69,31 @@ export default async function SearchPage({
     : null;
   const categoryFilter: Prisma.ProductWhereInput = category ? { category: { slug: category } } : {};
 
-  // Fetch broadly (any token), then rank by relevance so best matches lead.
-  let products =
-    query || category
-      ? await prisma.product.findMany({
-          where: { AND: [categoryFilter, tokens.length ? tokenWhere(tokens) : {}] },
-          include: INCLUDE_IMAGE,
-        })
-      : [];
+  // Fetch bounded by MAX_MATCHES, then rank by relevance so best matches lead.
+  async function fetchMatches(where: Prisma.ProductWhereInput, limit = MAX_MATCHES) {
+    return prisma.product.findMany({
+      where: { AND: [categoryFilter, where] },
+      include: INCLUDE_IMAGE,
+      take: limit,
+    });
+  }
+
+  // Multi-token queries try strict AND matching first ("mobil merah" must hit
+  // both words somewhere); only when that finds nothing do we fall back to the
+  // broad any-token OR match.
+  let products: Awaited<ReturnType<typeof fetchMatches>> = [];
+  if (query || category) {
+    const broadWhere = effectiveTokens.length ? tokenWhere(effectiveTokens) : {};
+    if (tokens.length > 1) {
+      const strict = await fetchMatches(tokenWhereAll(tokens));
+      products = strict.length > 0 ? strict : await fetchMatches(broadWhere);
+    } else {
+      products = await fetchMatches(broadWhere);
+    }
+  }
 
   if (query && products.length > 1) {
-    products = [...products].sort(
-      (a, b) =>
-        relevance(b.displayName ?? b.name, b.description, query, tokens) -
-        relevance(a.displayName ?? a.name, a.description, query, tokens)
-    );
+    products = rankByRelevance(products, query, effectiveTokens);
   }
 
   // No hits → "apakah maksud kamu ..." + show results for the corrected term.
@@ -62,16 +104,8 @@ export default async function SearchPage({
     suggestion = suggestQuery(query, buildVocab(names.map((n) => n.displayName ?? n.name)));
     if (suggestion) {
       const sTokens = tokenize(suggestion);
-      suggestedProducts = await prisma.product.findMany({
-        where: { AND: [categoryFilter, sTokens.length ? tokenWhere(sTokens) : {}] },
-        include: INCLUDE_IMAGE,
-        take: 20,
-      });
-      suggestedProducts = [...suggestedProducts].sort(
-        (a, b) =>
-          relevance(b.displayName ?? b.name, b.description, suggestion!, sTokens) -
-          relevance(a.displayName ?? a.name, a.description, suggestion!, sTokens)
-      );
+      suggestedProducts = await fetchMatches(sTokens.length ? tokenWhere(sTokens) : {}, 20);
+      suggestedProducts = rankByRelevance(suggestedProducts, suggestion, sTokens);
     }
   }
 

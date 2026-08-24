@@ -18,9 +18,9 @@ export async function GET(req: Request) {
     ...(q
       ? {
           OR: [
-            { orderNumber: { contains: q } },
-            { user: { name: { contains: q } } },
-            { user: { email: { contains: q } } },
+            { orderNumber: { contains: q, mode: "insensitive" as const } },
+            { user: { name: { contains: q, mode: "insensitive" as const } } },
+            { user: { email: { contains: q, mode: "insensitive" as const } } },
           ],
         }
       : {}),
