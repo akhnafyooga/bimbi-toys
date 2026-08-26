@@ -2,11 +2,9 @@ import type { Metadata } from "next";
 import PendingLink from "@/components/PendingLink";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { formatIDR } from "@/lib/format";
-import { shelfPriceRange } from "@/lib/shelf";
+import { formatShelfRange } from "@/lib/shelf";
 import { normalizePhone } from "@/lib/phone";
-import ShelfProductList from "@/components/shelf/ShelfProductList";
-import type { ShelfProductRowData } from "@/components/shelf/ShelfProductRow";
+import { isContactReady, waLink } from "@/lib/storeContacts";
 import ShelfPhotoViewer from "@/components/shelf/ShelfPhotoViewer";
 
 async function getShelf(id: string) {
@@ -15,22 +13,6 @@ async function getShelf(id: string) {
     include: {
       store: { select: { id: true, name: true, city: true, phone: true } },
       category: { select: { name: true } },
-      products: {
-        orderBy: { position: "asc" },
-        include: {
-          product: {
-            select: {
-              id: true,
-              name: true,
-              displayName: true,
-              slug: true,
-              price: true,
-              stock: true,
-              category: { select: { name: true } },
-            },
-          },
-        },
-      },
     },
   });
 }
@@ -50,33 +32,18 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
+// The shelf page deliberately does NOT list the products on the shelf — it
+// shows the shelf photo, its description, and one curated price range. For
+// anything more specific (availability, exact prices, details), the shopper
+// marks the product on the photo and asks the store via WhatsApp.
 export default async function ShelfDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const shelf = await getShelf(id);
   if (!shelf || !shelf.active) notFound();
 
-  const prices = shelf.products.map((ps) => ps.product.price);
-  const range = shelfPriceRange(prices);
-
-  // Availability reflects this shelf's store when per-store stock rows exist;
-  // otherwise the product's global stock (stock tracking per store is optional).
-  const stockRows = shelf.products.length
-    ? await prisma.storeStock.findMany({
-        where: { storeId: shelf.storeId, productId: { in: shelf.products.map((ps) => ps.productId) } },
-        select: { productId: true, quantity: true },
-      })
-    : [];
-  const stockByProduct = new Map(stockRows.map((r) => [r.productId, r.quantity]));
-
-  const products: ShelfProductRowData[] = shelf.products.map((ps) => ({
-    productId: ps.product.id,
-    slug: ps.product.slug,
-    name: ps.product.displayName ?? ps.product.name,
-    categoryName: ps.product.category.name,
-    price: ps.product.price,
-    globalStock: ps.product.stock,
-    storeStock: stockByProduct.get(ps.productId) ?? null,
-  }));
+  const whatsapp = normalizePhone(shelf.store.phone ?? "") ?? "";
+  const ready = isContactReady(whatsapp);
+  const askMessage = `Halo, saya mau tanya isi rak ${shelf.code} — ${shelf.name} di ${shelf.store.name} 😊`;
 
   return (
     <div className="min-h-screen bg-white">
@@ -98,7 +65,7 @@ export default async function ShelfDetailPage({ params }: { params: Promise<{ id
             code={shelf.code}
             name={shelf.name}
             storeName={shelf.store.name}
-            whatsapp={normalizePhone(shelf.store.phone ?? "") ?? ""}
+            whatsapp={whatsapp}
           />
         )}
 
@@ -107,36 +74,45 @@ export default async function ShelfDetailPage({ params }: { params: Promise<{ id
           <p className="text-xs font-extrabold uppercase tracking-widest text-bimbi-pink">
             {shelf.category.name} · {shelf.store.name}
           </p>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-bimbi-ink leading-tight">
-              {shelf.name}
-            </h1>
-            <p className="text-sm font-bold uppercase tracking-wide text-slate-400">Rak {shelf.code}</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-bimbi-ink leading-tight">
+            {shelf.name}
+          </h1>
+          <p className="text-sm font-bold uppercase tracking-wide text-slate-400">Rak {shelf.code}</p>
 
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 pt-1">
-              {range && (
-                <p className="text-sm font-extrabold text-bimbi-ink tabular-nums">
-                  {range.min === range.max
-                    ? formatIDR(range.min)
-                    : `${formatIDR(range.min)} – ${formatIDR(range.max)}`}
-                </p>
-              )}
-              <p className="text-sm text-slate-500 tabular-nums">{range?.count ?? 0} produk</p>
-            </div>
+          {shelf.priceMin !== null && shelf.priceMax !== null && (
+            <p className="pt-1 text-lg sm:text-xl font-extrabold text-bimbi-ink tabular-nums">
+              {formatShelfRange(shelf.priceMin, shelf.priceMax)}
+            </p>
+          )}
 
-            {shelf.description && (
-              <p className="max-w-xl text-sm leading-relaxed text-slate-600">{shelf.description}</p>
-            )}
+          {shelf.description && (
+            <p className="max-w-xl text-sm leading-relaxed text-slate-600">{shelf.description}</p>
+          )}
         </header>
 
-        <hr className="border-slate-200" />
-
-        {/* The products on this shelf — text-first list, no product images */}
-        <section className="space-y-4">
-          <div className="flex items-baseline gap-4">
-            <h2 className="text-lg sm:text-xl font-extrabold text-bimbi-ink">Produk di Rak Ini</h2>
-            <span className="h-px flex-1 bg-slate-200" aria-hidden />
-          </div>
-          <ShelfProductList products={products} />
+        {/* WhatsApp flow — all product info lives here, answered manually by
+            the store. Visible even without a photo; the photo viewer has its
+            own marked-product CTA on top of this. */}
+        <section className="rounded-xl border border-slate-200 bg-white shadow-card px-6 py-6 space-y-3">
+          <h2 className="text-base sm:text-lg font-extrabold text-bimbi-ink">Mau tahu isi rak ini?</h2>
+          <p className="text-sm leading-relaxed text-slate-600">
+            Tandai mainan di foto rak, atau tanya langsung — tim toko balas detail produk &amp; harga terbarunya
+            lewat WhatsApp.
+          </p>
+          {ready ? (
+            <a
+              href={waLink(whatsapp, askMessage)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1FB356] px-7 py-3 text-sm sm:text-base font-extrabold text-white shadow chip-spring transition-colors"
+            >
+              Tanya isi rak via WhatsApp
+            </a>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-400">
+              Toko ini belum punya WhatsApp aktif
+            </span>
+          )}
         </section>
 
         <footer className="border-t border-slate-200 pt-6 text-xs text-slate-400">

@@ -16,6 +16,8 @@ export type ShelfCategoryInput = {
 
 export type ProductShelfListInput = {
   products?: { productId?: string }[];
+  priceMin?: number | string | null;
+  priceMax?: number | string | null;
 };
 
 export function validateShelfInput(body: ShelfInput) {
@@ -66,4 +68,29 @@ export function validateProductShelfList(body: ProductShelfListInput) {
     items.push({ productId });
   }
   return { items, error: null };
+}
+
+// The customer-facing price range of the shelf as a whole. Both ends are
+// optional — but only together, and min must not exceed max.
+export function validateShelfPriceRange(body: ProductShelfListInput) {
+  const rawMin = body.priceMin;
+  const rawMax = body.priceMax;
+  const hasMin = rawMin !== undefined && rawMin !== null && String(rawMin).trim() !== "";
+  const hasMax = rawMax !== undefined && rawMax !== null && String(rawMax).trim() !== "";
+
+  if (!hasMin && !hasMax) return { priceMin: null, priceMax: null, error: null };
+
+  if (!hasMin || !hasMax) {
+    return { priceMin: null, priceMax: null, error: "Isi kedua batas harga (termurah dan termahal), atau kosongkan keduanya." };
+  }
+
+  const priceMin = Number(rawMin);
+  const priceMax = Number(rawMax);
+  if (!Number.isInteger(priceMin) || priceMin < 0 || !Number.isInteger(priceMax) || priceMax < 0) {
+    return { priceMin: null, priceMax: null, error: "Harga harus angka bulat 0 atau lebih (dalam rupiah)." };
+  }
+  if (priceMin > priceMax) {
+    return { priceMin: null, priceMax: null, error: "Harga termurah tidak boleh lebih besar dari harga termahal." };
+  }
+  return { priceMin, priceMax, error: null };
 }

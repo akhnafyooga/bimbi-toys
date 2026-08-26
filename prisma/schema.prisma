@@ -164,6 +164,10 @@ model Shelf {
   // Short physical code printed on the rack, e.g. "EDU-04". Unique per store.
   code        String
   description String?
+  // Customer-facing price range for the shelf as a whole — curated manually,
+  // NOT derived from assigned products (shelves no longer list products).
+  priceMin    Int?
+  priceMax    Int?
   // Photo of the physical shelf (uploaded via the admin panel).
   image       String?
   position    Int           @default(0)

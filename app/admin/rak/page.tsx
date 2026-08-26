@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { formatShelfRange } from "@/lib/shelf";
 import EmptyState from "@/components/admin/EmptyState";
 import ShelfDeleteButton from "@/components/admin/ShelfDeleteButton";
 
@@ -27,7 +28,6 @@ export default async function AdminShelvesPage({
       include: {
         store: { select: { id: true, name: true, city: true } },
         category: { select: { id: true, name: true } },
-        _count: { select: { products: true } },
       },
       orderBy: [{ store: { name: "asc" } }, { position: "asc" }, { createdAt: "asc" }],
     }),
@@ -105,7 +105,7 @@ export default async function AdminShelvesPage({
                 <th className="px-4 py-3 font-semibold">Rak</th>
                 <th className="px-4 py-3 font-semibold">Toko</th>
                 <th className="px-4 py-3 font-semibold">Kategori</th>
-                <th className="px-4 py-3 font-semibold">Produk</th>
+                <th className="px-4 py-3 font-semibold">Rentang Harga</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
                 <th className="px-4 py-3 font-semibold text-right">Aksi</th>
               </tr>
@@ -122,7 +122,13 @@ export default async function AdminShelvesPage({
                     <span className="block text-xs text-slate-400">{s.store.city}</span>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{s.category.name}</td>
-                  <td className="px-4 py-3 text-slate-600">{s._count.products}</td>
+                  <td className="px-4 py-3 text-slate-600 tabular-nums">
+                    {s.priceMin !== null && s.priceMax !== null ? (
+                      formatShelfRange(s.priceMin, s.priceMax)
+                    ) : (
+                      <span className="text-slate-400">Belum diatur</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     {s.active ? (
                       <span className="inline-block rounded bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-0.5">

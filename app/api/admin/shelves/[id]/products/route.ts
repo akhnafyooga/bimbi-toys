@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/adminAuth";
-import { validateProductShelfList, type ProductShelfListInput } from "@/lib/shelfValidation";
+import {
+  validateProductShelfList,
+  validateShelfPriceRange,
+  type ProductShelfListInput,
+} from "@/lib/shelfValidation";
 
-// Replace the full product list of a shelf in one PUT. The array order is the
-// display order — position is written from the index.
+// Replace the full product list of a shelf (internal bookkeeping) AND its
+// customer-facing price range in one PUT. The array order is the display
+// order — position is written from the index.
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireAdmin();
   if (error) return error;
@@ -16,6 +21,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const body = (await req.json()) as ProductShelfListInput;
   const { items, error: listError } = validateProductShelfList(body);
   if (!items) return NextResponse.json({ error: listError }, { status: 400 });
+
+  const { priceMin, priceMax, error: rangeError } = validateShelfPriceRange(body);
+  if (rangeError) return NextResponse.json({ error: rangeError }, { status: 400 });
 
   if (items.length > 0) {
     const products = await prisma.product.findMany({
@@ -32,6 +40,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   await prisma.$transaction([
+    prisma.shelf.update({ where: { id }, data: { priceMin, priceMax } }),
     prisma.productShelf.deleteMany({ where: { shelfId: id } }),
     prisma.productShelf.createMany({
       data: items.map((item, index) => ({ ...item, shelfId: id, position: index })),

@@ -1,22 +1,21 @@
 import PendingLink from "@/components/PendingLink";
 import { prisma } from "@/lib/prisma";
-import { isPriceBucketKey, priceBucket, priceInRange, shelfPriceRange } from "@/lib/shelf";
+import { isPriceBucketKey, shelfRangeInBucket } from "@/lib/shelf";
 import ShelfToolbar from "@/components/shelf/ShelfToolbar";
 import ShelfGroup from "@/components/shelf/ShelfGroup";
-import ShelfSearchResults, { type ShelfSearchHit } from "@/components/shelf/ShelfSearchResults";
 import type { ShelfCardData } from "@/components/shelf/ShelfCard";
 
 // "Lihat Ada Apa di Toko" — a digital store-shelf catalog, not the product
 // catalog. Customer journey: choose store → browse shelf categories → open a
-// shelf → open a product.
+// shelf → ask about a product via WhatsApp. Shelves show a photo, a
+// description, and one manually curated price range — never a product list.
 export default async function ShelfBrowsePage({
   searchParams,
 }: {
-  searchParams: Promise<{ toko?: string; harga?: string; q?: string }>;
+  searchParams: Promise<{ toko?: string; harga?: string }>;
 }) {
-  const { toko, harga, q } = await searchParams;
+  const { toko, harga } = await searchParams;
   const priceKey = isPriceBucketKey(harga) ? harga : undefined;
-  const query = q?.trim() ?? "";
 
   const stores = await prisma.storeLocation.findMany({ orderBy: { name: "asc" } });
 
@@ -34,35 +33,28 @@ export default async function ShelfBrowsePage({
 
   const selected = stores.find((s) => s.id === toko) ?? stores[0];
 
-  // Shelves with their products' prices — enough to compute each shelf's
-  // count and min–max range, and to test the price filter against actual
-  // products (a shelf stays visible if ANY of its prices fits the bucket).
+  // Shelves with their manually curated price range. The ?harga= filter
+  // matches a shelf when its range overlaps the bucket; shelves without a
+  // range stay visible while unfiltered.
   const shelves = await prisma.shelf.findMany({
     where: { storeId: selected.id, active: true },
-    include: {
-      category: true,
-      products: { select: { product: { select: { price: true } } }, orderBy: { position: "asc" } },
-    },
+    include: { category: true },
     orderBy: [{ position: "asc" }, { createdAt: "asc" }],
   });
 
+  const hasRange = (s: (typeof shelves)[number]) => s.priceMin !== null && s.priceMax !== null;
   const visibleShelves = priceKey
-    ? shelves.filter((s) => s.products.some((ps) => priceInRange(ps.product.price, priceKey)))
+    ? shelves.filter((s) => hasRange(s) && shelfRangeInBucket(s.priceMin!, s.priceMax!, priceKey))
     : shelves;
 
-  const asCard = (shelf: (typeof shelves)[number]): ShelfCardData => {
-    const prices = shelf.products.map((ps) => ps.product.price);
-    const range = shelfPriceRange(prices);
-    return {
-      id: shelf.id,
-      name: shelf.name,
-      code: shelf.code,
-      image: shelf.image,
-      productCount: shelf.products.length,
-      minPrice: range?.min ?? null,
-      maxPrice: range?.max ?? null,
-    };
-  };
+  const asCard = (shelf: (typeof shelves)[number]): ShelfCardData => ({
+    id: shelf.id,
+    name: shelf.name,
+    code: shelf.code,
+    image: shelf.image,
+    priceMin: shelf.priceMin,
+    priceMax: shelf.priceMax,
+  });
 
   // Group by shelf category, keeping the admin's ordering.
   const groups = new Map<string, { position: number; cards: ShelfCardData[] }>();
@@ -75,40 +67,6 @@ export default async function ShelfBrowsePage({
     (a, b) => a[1].position - b[1].position || a[0].localeCompare(b[0])
   );
 
-  // Store-wide product search across this store's shelves (architecture is
-  // structured so this stays one query on the join model).
-  let searchHits: ShelfSearchHit[] = [];
-  if (query.length >= 2) {
-    const bucket = priceKey ? priceBucket(priceKey) : null;
-    const rows = await prisma.productShelf.findMany({
-      where: {
-        shelf: { storeId: selected.id, active: true },
-        product: {
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { displayName: { contains: query, mode: "insensitive" } },
-          ],
-          ...(bucket ? { price: { gte: bucket.min, lte: bucket.max } } : {}),
-        },
-      },
-      include: {
-        product: { select: { id: true, name: true, displayName: true, slug: true, price: true } },
-        shelf: { select: { id: true, name: true, code: true } },
-      },
-      orderBy: [{ shelf: { position: "asc" } }, { position: "asc" }],
-      take: 40,
-    });
-    searchHits = rows.map((row) => ({
-      productId: row.product.id,
-      slug: row.product.slug,
-      name: row.product.displayName ?? row.product.name,
-      price: row.product.price,
-      shelfId: row.shelf.id,
-      shelfName: row.shelf.name,
-      shelfCode: row.shelf.code,
-    }));
-  }
-
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10 md:py-14 space-y-8">
@@ -118,7 +76,7 @@ export default async function ShelfBrowsePage({
             Lihat Ada Apa di Toko
           </h1>
           <p className="mt-3 text-sm text-slate-600 leading-relaxed">
-            Lihat koleksi mainan yang tersedia di rak toko kami.
+            Intip koleksi mainan di rak toko kami — mau tahu lebih detail? Tanya lewat WhatsApp.
           </p>
         </header>
 
@@ -126,28 +84,9 @@ export default async function ShelfBrowsePage({
           stores={stores.map((s) => ({ id: s.id, name: s.name, city: s.city }))}
           selectedStoreId={selected.id}
           activePrice={priceKey}
-          query={query}
         />
 
-        {/* Search results replace the shelf groups while searching */}
-        {query.length >= 2 ? (
-          <section className="space-y-4">
-            <div className="flex items-baseline justify-between gap-4">
-              <h2 className="text-lg sm:text-xl font-extrabold text-bimbi-ink">
-                Hasil pencarian &quot;{query}&quot;
-              </h2>
-              <PendingLink
-                href={`/store?toko=${selected.id}`}
-                label="Batal pencarian"
-                overlayLabel={null}
-                className="relative text-xs font-bold text-bimbi-pink-dark hover:underline"
-              >
-                Batal pencarian ×
-              </PendingLink>
-            </div>
-            <ShelfSearchResults query={query} hits={searchHits} />
-          </section>
-        ) : shelves.length === 0 ? (
+        {shelves.length === 0 ? (
           <div className="rounded-xl border border-slate-200 bg-white shadow-card px-6 py-14 text-center">
             <p className="font-display text-lg font-bold text-slate-800">Rak toko ini sedang disiapkan.</p>
             <p className="mt-1 text-sm text-slate-500">

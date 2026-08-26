@@ -86,6 +86,7 @@ async function main() {
 
     for (const m of [...MATCHERS, FALLBACK]) {
       const list = buckets.get(m.slug)!.slice(0, 12);
+      const prices = list.map((p) => p.price);
       const shelf = await prisma.shelf.create({
         data: {
           storeId: store.id,
@@ -93,6 +94,8 @@ async function main() {
           name: m.name,
           code: m.code,
           description: `Pilihan ${m.name.toLowerCase()} yang sedang dipajang di ${store.name}.`,
+          priceMin: prices.length ? Math.min(...prices) : null,
+          priceMax: prices.length ? Math.max(...prices) : null,
           position: MATCHERS.findIndex((x) => x.slug === m.slug) >= 0
             ? MATCHERS.findIndex((x) => x.slug === m.slug)
             : MATCHERS.length,

@@ -10,6 +10,7 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-shelves": "tsx prisma/seed-shelves.ts",
+    "db:backfill-shelf-prices": "tsx prisma/backfill-shelf-prices.ts",
     "db:import": "tsx prisma/import.ts",
     "db:studio": "prisma studio",
     "admin:promote": "tsx scripts/promote-admin.ts",

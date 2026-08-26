@@ -32,7 +32,7 @@ export default async function AdminEditShelfPage({ params }: { params: Promise<{
         <h1 className="font-display text-2xl font-bold text-slate-800 mt-2">
           {shelf.name} <span className="text-slate-400 font-semibold">— Rak {shelf.code}</span>
         </h1>
-        <p className="text-slate-500 text-sm mt-1">Ubah detail rak, atau atur produk yang ditampilkan di dalamnya.</p>
+        <p className="text-slate-500 text-sm mt-1">Ubah detail rak, atur rentang harga yang tampil, atau catat produk di dalamnya.</p>
       </div>
 
       <section className="space-y-4">
@@ -56,10 +56,12 @@ export default async function AdminEditShelfPage({ params }: { params: Promise<{
 
       <section id="produk" className="space-y-4 scroll-mt-24">
         <h2 className="font-display text-lg font-bold text-slate-800 border-b border-slate-200 pb-2">
-          Produk di Rak Ini
+          Harga &amp; Produk Rak
         </h2>
         <ShelfProductsEditor
           shelfId={shelf.id}
+          initialPriceMin={shelf.priceMin}
+          initialPriceMax={shelf.priceMax}
           initialItems={shelf.products.map((ps) => ({
             productId: ps.product.id,
             name: ps.product.displayName ?? ps.product.name,
