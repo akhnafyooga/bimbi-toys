@@ -63,7 +63,7 @@ export default function PendingLink({
         <span
           role="status"
           aria-live="polite"
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/70 backdrop-blur-[1px]"
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/60 backdrop-blur-md"
         >
           <span className="flex items-center gap-1.5">
             {[

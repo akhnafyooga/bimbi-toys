@@ -30,7 +30,7 @@ export default async function Footer() {
         style={{ backgroundImage: "url(/wood-strip.webp)" }}
       />
 
-      <div className="border-t border-slate-200 bg-bimbi-cream">
+      <div className="border-t border-white/60 bg-white/60 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 md:py-10">
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-8 lg:grid-cols-[auto_1fr_auto_auto_auto] lg:gap-6">
 
@@ -67,7 +67,7 @@ export default async function Footer() {
                   href={`https://wa.me/${waNumber}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs md:text-sm font-bold hover:border-bimbi-mint hover:text-bimbi-mint transition-colors chip-spring"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white/70 px-3 py-1.5 text-xs md:text-sm font-bold hover:border-bimbi-mint hover:text-bimbi-mint transition-colors chip-spring"
                 >
                   <svg
                     width="14"
@@ -120,7 +120,7 @@ export default async function Footer() {
                 {PAYMENTS.map((m) => (
                   <li
                     key={m}
-                    className="rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] md:text-[11px] font-bold text-slate-600"
+                    className="rounded-md border border-slate-300 bg-white/70 px-1.5 py-0.5 text-[10px] md:text-[11px] font-bold text-slate-600"
                   >
                     {m}
                   </li>

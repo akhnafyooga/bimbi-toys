@@ -2,13 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { PRICE_BUCKETS, type PriceBucketKey } from "@/lib/shelf";
+import FancySelect from "@/components/FancySelect";
 
 export type ToolbarStore = { id: string; name: string; city: string };
 
-// Store picker + price chips for the shelf browsing page. Everything is URL
-// state (?toko= &harga=) so the page stays shareable and works without JS for
-// the chips; only the <select> needs JS. (No product search anymore — shelves
-// don't list products; shoppers ask via WhatsApp instead.)
+// Store picker + price chips, floating as a glass pill OVER the free-roam
+// shelf board. Everything is still URL state (?toko= &harga=) so the page
+// stays shareable and works without JS for the chips; only the store picker
+// needs JS. (No product search — shelves don't list products; shoppers ask
+// via WhatsApp instead.)
 export default function ShelfToolbar({
   stores,
   selectedStoreId,
@@ -27,46 +29,40 @@ export default function ShelfToolbar({
     return `/store?${params.toString()}`;
   }
 
+  function selectStore(storeId: string) {
+    const params = new URLSearchParams();
+    params.set("toko", storeId);
+    if (activePrice) params.set("harga", activePrice);
+    router.push(`/store?${params.toString()}`);
+  }
+
   const chipClass = (active: boolean) =>
-    `rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${
-      active
-        ? "border-bimbi-pink bg-bimbi-sun text-bimbi-pink-dark"
-        : "border-slate-300 bg-white text-bimbi-ink hover:border-bimbi-pink/50"
+    `rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${
+      active ? "bg-bimbi-pink text-white" : "bg-white/70 text-bimbi-ink hover:bg-white"
     }`;
 
   return (
-    <div className="space-y-5">
-      {/* Store selector */}
-      <div className="flex flex-wrap items-center gap-3">
-        <label htmlFor="shelf-store" className="text-sm font-bold text-slate-700">
-          Pilih Toko
-        </label>
-        <select
-          id="shelf-store"
+    // The wrapper spans the board but passes drags through; only the pill
+    // itself is interactive, so panning can start right beside it.
+    <div className="pointer-events-none absolute inset-x-0 top-3 z-30 flex justify-center px-3">
+      <div className="glass-strong pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-full py-2 pl-4 pr-2">
+        <span className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">
+          Toko
+        </span>
+        <FancySelect
           value={selectedStoreId}
-          onChange={(e) => {
-            const params = new URLSearchParams();
-            params.set("toko", e.target.value);
-            if (activePrice) params.set("harga", activePrice);
-            router.push(`/store?${params.toString()}`);
-          }}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 pr-8 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-bimbi-sky focus:border-bimbi-sky cursor-pointer"
-        >
-          {stores.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
+          onChange={selectStore}
+          ariaLabel="Pilih toko"
+          options={stores.map((s) => ({ value: s.id, label: s.name }))}
+          triggerClassName="max-w-[10rem] rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-bimbi-ink hover:bg-white"
+        />
 
-      <div className="flex flex-col gap-4 border-y border-slate-200 py-4">
-        {/* Price chips — plain links; matched against each shelf's manual
-            price range (see lib/shelf.ts) */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-slate-500">Harga:</span>
+        <span className="hidden h-4 w-px bg-slate-300 sm:block" aria-hidden />
+
+        <span className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">Harga</span>
+        <div className="flex flex-wrap items-center gap-1.5">
           <a href={hrefWith(null)} className={chipClass(!activePrice)}>
-            Semua Harga
+            Semua
           </a>
           {PRICE_BUCKETS.map((b) => (
             <a key={b.key} href={hrefWith(b.key)} className={chipClass(activePrice === b.key)}>

@@ -26,6 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="id">
       <body className={`${poppins.variable} antialiased flex min-h-screen flex-col`}>
+        {/* Fixed colour wash behind everything — the backdrop the frosted
+            chrome (navbar, toolbar, dropdowns) plays against. Decorative
+            only: aria-hidden + pointer-events-none, defined in globals.css. */}
+        <div aria-hidden className="aurora-bg" />
         <Providers>
           <NavbarGate>
             <Navbar />

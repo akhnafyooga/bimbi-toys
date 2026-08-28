@@ -76,7 +76,7 @@ export default function CardActions({
         disabled={busy === "wishlist"}
         aria-label={liked ? "Hapus dari wishlist" : "Simpan ke wishlist"}
         aria-pressed={liked}
-        className="absolute top-2 left-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow ring-1 ring-slate-200 hover:ring-bimbi-pink transition-colors"
+        className="absolute top-2 left-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/75 shadow ring-1 ring-white/80 hover:ring-bimbi-pink transition-colors"
       >
         {busy === "wishlist" ? (
           <Loader label={null} size={4.5} />

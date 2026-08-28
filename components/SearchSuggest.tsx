@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { formatIDR } from "@/lib/format";
 import { tokenize, highlightParts } from "@/lib/search";
 import AppIcon from "@/components/AppIcon";
+import FancySelect from "@/components/FancySelect";
 
 type SuggestProduct = { id: string; name: string; slug: string; price: number; imageUrl: string };
 type SuggestCategory = { id: string; name: string; slug: string };
@@ -109,24 +110,32 @@ export default function SearchSuggest({ categories }: { categories: SuggestCateg
 
   return (
     <div ref={rootRef} className="relative flex-1 min-w-0">
+      {/* overflow-hidden is gone ON PURPOSE: it clipped the category
+          scoper's popover, which opens downward out of the bar. */}
       <form
         id="tour-search"
         action="/search"
-        className="w-full flex items-center rounded-full bg-slate-100 border border-slate-200 overflow-hidden"
+        className="glass-chip w-full flex items-center rounded-full"
       >
-        <select
-          name="category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="hidden sm:block bg-transparent text-slate-600 text-xs font-bold pl-4 pr-2 py-2.5 outline-none cursor-pointer max-w-[140px]"
-        >
-          <option value="">Semua</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.slug}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        {/* Category scoper — FancySelect for the shop's look; a hidden input
+            keeps the no-JS GET form carrying ?category=. Opening it closes
+            the suggest panel so two menus never overlap. */}
+        <div className="hidden sm:block pl-1.5">
+          <FancySelect
+            value={category}
+            onChange={setCategory}
+            ariaLabel="Scope kategori pencarian"
+            options={[
+              { value: "", label: "Semua" },
+              ...categories.map((c) => ({ value: c.slug, label: c.name })),
+            ]}
+            onOpenChange={(o) => {
+              if (o) setOpen(false);
+            }}
+            triggerClassName="rounded-full bg-white/60 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-white/90 hover:text-bimbi-ink"
+          />
+          <input type="hidden" name="category" value={category} />
+        </div>
         <input
           type="text"
           name="q"
@@ -161,6 +170,9 @@ export default function SearchSuggest({ categories }: { categories: SuggestCateg
         <div
           id="navbar-suggest-panel"
           role="listbox"
+          // Solid ON PURPOSE, not glass: this panel holds search results the
+          // user is actively reading — full opacity keeps text crispest, and
+          // the user asked for the floating results to be 100% opaque.
           className="absolute left-0 right-0 top-full mt-2 z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl"
         >
           {loading && (
@@ -181,7 +193,7 @@ export default function SearchSuggest({ categories }: { categories: SuggestCateg
                   href={`/search?category=${c.slug}`}
                   onClick={() => setOpen(false)}
                   className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${
-                    active === i ? "bg-bimbi-pink/20 text-bimbi-ink" : "bg-bimbi-cream text-bimbi-ink hover:bg-bimbi-pink/20"
+                    active === i ? "bg-bimbi-sun text-bimbi-ink" : "bg-bimbi-cream text-bimbi-ink hover:bg-bimbi-sun"
                   }`}
                 >
                   {c.name}

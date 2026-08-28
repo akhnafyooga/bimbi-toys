@@ -1,0 +1,78 @@
+/* IntroOverlay — onboarding veil. The orbit is compositor-only (one
+   transform, no layout/paint). The hand is an emoji, so the grey-white
+   tone comes from a grayscale + brightness filter, not a color property. */
+
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.75rem;
+  background: rgba(0, 0, 0, 0.82);
+  opacity: 1;
+  transition: opacity 500ms ease;
+}
+
+.intro-overlay.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 84px box + 2px border => ring radius 40px, exactly the translate()
+   distance, so the hand rides ON the dashed line */
+.intro-track {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+}
+
+.intro-hand {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  font-size: 22px;
+  line-height: 28px;
+  text-align: center;
+  filter: grayscale(1) brightness(1.9);
+  animation: intro-orbit 2s linear infinite;
+  will-change: transform;
+}
+
+@keyframes intro-orbit {
+  from {
+    transform: rotate(0deg) translate(40px) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translate(40px) rotate(-360deg);
+  }
+}
+
+.intro-text {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+/* body lock applied by the component on mount */
+body.scroll-locked {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-overlay {
+    transition: none;
+  }
+  .intro-hand {
+    animation: none;
+  }
+}

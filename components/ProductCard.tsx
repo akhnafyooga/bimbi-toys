@@ -25,6 +25,9 @@ type Props = {
 // No rating stars — they were decorative and every product showed the same 4/5.
 // The card is a <div>, not a <Link>: the heart and cart controls are real
 // buttons and cannot legally live inside an anchor.
+// Material is FAUX glass (.glass-faux): translucent white, no backdrop-filter
+// — catalog grids hold dozens of these and the list grows via "load more".
+// The photo plate stays opaque so product shots keep a clean white backdrop.
 export default function ProductCard({
   productId,
   slug,
@@ -42,8 +45,7 @@ export default function ProductCard({
   const finalPrice = applyDiscount(price, discountPercent);
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden border border-slate-200 bg-white p-3 shadow-card shadow-card-hover card-lively">
-      {special ? (
+      <div className="group relative glass-faux flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 p-3 shadow-[0_6px_24px_rgba(15,23,42,0.08)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_32px_rgba(15,23,42,0.13)]">      {special ? (
         <span className="absolute top-2 right-2 z-20 bg-bimbi-sky px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
           Spesial
         </span>
@@ -54,8 +56,9 @@ export default function ProductCard({
       ) : null}
 
       <PendingLink href={`/product/${slug}`} label={name} className="relative flex flex-1 flex-col">
-        {/* Photo on white with breathing room — LEGO never crops product shots */}
-        <div className="relative aspect-square w-full">
+        {/* Photo on white with breathing room — LEGO never crops product shots.
+            The plate is opaque so the aurora bleed never tints a product shot. */}
+        <div className="relative aspect-square w-full bg-white">
           {imageUrl ? (
             <Image
               src={imageUrl}
