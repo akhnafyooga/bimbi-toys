@@ -10,11 +10,13 @@ import { isContactReady, waLink } from "@/lib/storeContacts";
 // can look at the rack up close. Pressing "Mau yang mana? Tandai" blows the
 // photo up to a fullscreen, darkened + blurred overlay separated from the
 // page — one drag there draws a rectangle around the product the shopper is
-// curious about, then the mode auto-exits and the WhatsApp CTA
-// "Penasaran sama produk ini?" appears. Tapping it builds a two-part image
-// (the marked-area crop, plus the full photo with the mark drawn on it),
-// uploads it, and opens a wa.me chat with the store (wa.me can only prefill
-// text, so the message carries the image's URL).
+// curious about. Committing the mark KEEPS the fullscreen presentation and
+// swaps into ask mode: the WhatsApp CTA "Tanyakan tentang produk ini?" (plus
+// Hapus tanda / Tutup) pops in dead-center above the darkened page. Only
+// dismissing the mark returns the photo to its inline card. Tapping the CTA
+// builds a two-part image (the marked-area crop, plus the full photo with
+// the mark drawn on it), uploads it, and opens a wa.me chat with the store
+// (wa.me can only prefill text, so the message carries the image's URL).
 //
 // The floating controls (zoom pills, mode pills) live INSIDE the stage, so
 // every stage pointer handler bails out when the press started on a control:
@@ -155,16 +157,20 @@ export default function ShelfPhotoViewer({
     setDraftRect(null);
   };
 
-  // Esc exits marking; lock page scroll while the fullscreen stage is up.
-  // The keydown handler inlines what stopMarking does (setters + ref only) so
-  // the effect genuinely depends on nothing but `marking`.
+  // Esc exits marking / ask mode; the page scroll stays locked while ANY
+  // fullscreen presentation is up (marking or ask). The keydown handler
+  // inlines the setters so the effect only depends on the two flags.
   useEffect(() => {
-    if (!marking) return;
+    if (!marking && !mark) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      setMarking(false);
-      draftRef.current = null;
-      setDraft(null);
+      if (marking) {
+        setMarking(false);
+        draftRef.current = null;
+        setDraft(null);
+      } else {
+        setMark(null);
+      }
     };
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
@@ -173,7 +179,7 @@ export default function ShelfPhotoViewer({
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [marking]);
+  }, [marking, mark]);
 
   // Wheel must be a native listener so preventDefault isn't ignored (React's
   // synthetic wheel handler is passive). Re-attached each render on purpose —
@@ -470,14 +476,18 @@ export default function ShelfPhotoViewer({
 
   const shown = draft ?? mark;
   const rv = shown && f ? { x: shown.x * f + ox, y: shown.y * f + oy, w: shown.w * f, h: shown.h * f } : null;
+  // Ask mode: a mark is committed and marking mode is off. The fullscreen
+  // presentation stays up — this is the "buttons on top, page darkened"
+  // moment between drawing the mark and sending the WhatsApp question.
+  const askMode = !!mark && !marking;
 
   return (
-    // Inline: a card. Marking: a fullscreen, darkened + blurred overlay
-    // floating in front of the page. Same DOM node either way — only classes
-    // change, so the stage keeps its refs, observers, and loaded image.
+    // Inline: a card. Marking OR ask mode: a fullscreen, darkened + blurred
+    // overlay floating in front of the page. Same DOM node either way — only
+    // classes change, so the stage keeps its refs, observers, and loaded image.
     <div
       className={
-        marking
+        marking || mark
           ? "fixed inset-0 z-[100] flex items-center justify-center bg-bimbi-ink/60 p-3 sm:p-6 backdrop-blur-md"
           : "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
       }
@@ -490,11 +500,11 @@ export default function ShelfPhotoViewer({
         onPointerCancel={handlePointerUp}
         onDoubleClick={handleDoubleClick}
         className={`relative overflow-hidden select-none ${
-          marking ? "h-full w-full rounded-xl bg-black" : "w-full bg-slate-100"
+          marking || mark ? "h-full w-full rounded-xl bg-black" : "w-full bg-slate-100"
         } ${
           marking || scale > 1.01 ? "touch-none" : "touch-pan-y"
         } ${marking ? "cursor-crosshair" : "cursor-grab"}`}
-        style={marking ? undefined : aspect ? { aspectRatio: String(aspect) } : { aspectRatio: "4 / 3" }}
+        style={marking || mark ? undefined : aspect ? { aspectRatio: String(aspect) } : { aspectRatio: "4 / 3" }}
       >
         {/* Photo layer — transformed for pan/zoom */}
         <div
@@ -585,40 +595,55 @@ export default function ShelfPhotoViewer({
           )}
         </div>
 
-        {/* Mode pills — zoom toggle + marking toggle */}
+        {/* Mode pills — zoom toggle + marking toggle. Ask mode swaps them for
+            a single "Tutup" that clears the mark and returns to the inline
+            card (Hapus tanda in the center cluster does the same). */}
         <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleZoom}
-            aria-pressed={zoomed}
-            className={`rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-card transition-colors cursor-pointer ${
-              zoomed
-                ? "border-bimbi-pink bg-bimbi-sun text-bimbi-pink-dark"
-                : "border-slate-300 bg-white text-bimbi-ink hover:border-bimbi-pink/50"
-            }`}
-          >
-            {zoomed ? "Perkecil" : "Perbesar"}
-          </button>
-          <button
-            type="button"
-            onClick={() => (marking ? stopMarking() : startMarking())}
-            aria-pressed={marking}
-            className={`rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-card transition-colors cursor-pointer ${
-              marking
-                ? "border-bimbi-pink bg-bimbi-sun text-bimbi-pink-dark animate-pulse"
-                : "border-slate-300 bg-white text-bimbi-ink hover:border-bimbi-pink/50"
-            }`}
-          >
-            {marking ? "✕ Kembali" : "▢ Mau yang mana? Tandai"}
-          </button>
+          {askMode ? (
+            <button
+              type="button"
+              onClick={() => setMark(null)}
+              className="rounded-full border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-bold text-bimbi-ink shadow-card hover:border-bimbi-pink/50 transition-colors cursor-pointer"
+            >
+              ✕ Tutup
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={toggleZoom}
+                aria-pressed={zoomed}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-card transition-colors cursor-pointer ${
+                  zoomed
+                    ? "border-bimbi-pink bg-bimbi-sun text-bimbi-pink-dark"
+                    : "border-slate-300 bg-white text-bimbi-ink hover:border-bimbi-pink/50"
+                }`}
+              >
+                {zoomed ? "Perkecil" : "Perbesar"}
+              </button>
+              <button
+                type="button"
+                onClick={() => (marking ? stopMarking() : startMarking())}
+                aria-pressed={marking}
+                data-tour="tandai"
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-card transition-colors cursor-pointer ${
+                  marking
+                    ? "border-bimbi-pink bg-bimbi-sun text-bimbi-pink-dark animate-pulse"
+                    : "border-slate-300 bg-white text-bimbi-ink hover:border-bimbi-pink/50"
+                }`}
+              >
+                {marking ? "✕ Kembali" : "▢ Mau yang mana? Tandai"}
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Ask CTA — big, floating dead-center over the photo once a mark
-            exists (hidden while fullscreen). The overlay is click-through so
-            panning/zooming the photo still works; only the buttons catch
-            presses. */}
-        {mark && !marking && (
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center">
+        {/* Ask CTA — pops in dead-center over the fullscreen (darkened) stage
+            once a mark is committed. The overlay is click-through so
+            panning/zooming the marked photo still works; only the buttons
+            catch presses. */}
+        {askMode && (
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center animate-pop-in">
             {ready ? (
               <button
                 type="button"

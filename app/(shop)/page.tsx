@@ -120,9 +120,6 @@ export default async function HomePage({
         <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent" />
         <div className="relative mx-auto max-w-7xl px-6 sm:px-6 py-10 md:py-16">
           <div className="space-y-3 max-w-lg text-left ml-2 sm:ml-6 md:ml-8 lg:ml-16">
-            <span className="text-xs font-extrabold uppercase tracking-widest text-bimbi-pink">
-              Tentang Bimbi Toys
-            </span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl text-bimbi-ink leading-tight font-extrabold">
               Teman Bermain &amp; Belajar Anak
             </h1>

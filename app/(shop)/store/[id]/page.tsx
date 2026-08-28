@@ -6,6 +6,7 @@ import { formatShelfRange } from "@/lib/shelf";
 import { normalizePhone } from "@/lib/phone";
 import { isContactReady, waLink } from "@/lib/storeContacts";
 import ShelfPhotoViewer from "@/components/shelf/ShelfPhotoViewer";
+import CoachMark from "@/components/CoachMark";
 
 async function getShelf(id: string) {
   return prisma.shelf.findUnique({
@@ -59,14 +60,25 @@ export default async function ShelfDetailPage({ params }: { params: Promise<{ id
 
         {/* Interactive shelf photo — zoom, pan, circle a product, ask the store */}
         {shelf.image && (
-          <ShelfPhotoViewer
-            shelfId={shelf.id}
-            image={shelf.image}
-            code={shelf.code}
-            name={shelf.name}
-            storeName={shelf.store.name}
-            whatsapp={whatsapp}
-          />
+          <>
+            <ShelfPhotoViewer
+              shelfId={shelf.id}
+              image={shelf.image}
+              code={shelf.code}
+              name={shelf.name}
+              storeName={shelf.store.name}
+              whatsapp={whatsapp}
+            />
+            {/* One-shot hint teaching the Tandai button (target lives inside
+                the viewer). Inside the image branch so no-photo shelves —
+                which never render the button — don't burn the flag. */}
+            <CoachMark
+              selector='[data-tour="tandai"]'
+              storageKey="bimbi-coachmark-tandai-v1"
+              title="Tandai mainan yang kamu suka"
+              text="Pencet tombol ini untuk menandai yang menarik perhatianmu"
+            />
+          </>
         )}
 
         {/* Shelf masthead */}

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
-const STORAGE_KEY = "bimbi-tour-done-v1";
+const STORAGE_KEY = "bimbi-tour-done-v2";
 
 type Step = {
   selector: string;
@@ -29,14 +29,30 @@ const STEPS: Step[] = [
     title: "3. Selesaikan belanjamu ",
     text: "Kalau semua sudah masuk keranjang, klik keranjang di sini untuk menyelesaikan pembelianmu.",
   },
+  {
+    // Targets the section element that matches the heading label
+    selector: 'section[aria-labelledby="yang-kamu-cari"]',
+    title: "4. Yang Kamu Cari ",
+    text: "Cari yang kamu mau sesuai tipe di sini.",
+  },
+  {
+    selector: 'section[aria-labelledby="buat-kamu-yang-gasempet"]',
+    title: "5. Intip Toko ",
+    text: "Penasaran sama barang di toko? Lihat di sini.",
+  },
+  {
+    selector: 'section[aria-labelledby="cari-mainanmu"]',
+    title: "6. Cari Mainanmu ",
+    text: "Atur budget dan gender anak untuk mencari mainan mu.",
+  },
+
 ];
 
-// A responsive layout keeps both variants in the DOM and hides one with CSS.
-// querySelector would happily return the hidden one, whose bounding box is all
-// zeroes — putting the spotlight in the top-left corner. Pick a rendered one.
-// Height matters as much as width now: the sticky header collapses rows with
-// grid-template-rows: 0fr, which zeroes an element's HEIGHT while leaving its
-// width intact — a width-only check would happily spotlight an invisible strip.
+// A responsive layout keeps both variants in the DOM and hides one with CSS
+// (e.g. the mobile/desktop cart shortcuts). querySelector would happily
+// return the hidden one, whose bounding box is all zeroes — putting the
+// spotlight in the top-left corner. Pick a rendered one: both dimensions
+// must be non-zero, not just width.
 function findVisible(selector: string): Element | null {
   const all = Array.from(document.querySelectorAll(selector));
   return (
@@ -87,43 +103,42 @@ export default function OnboardingTour() {
   useEffect(() => {
     if (!active) return;
 
-    const el = findVisible(STEPS[step].selector);
+    // Check if element is directly available in DOM tree
+    let el = findVisible(STEPS[step].selector);
+    
     if (!el) {
-      // A missing target is not necessarily a missing feature: the header menu
-      // unmounts its tiles while the page is scrolled, so the cart step can
-      // vanish mid-tour. Go back to the top, where it remounts, and look again
-      // before writing the step off.
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // FIX: Instead of forcing scrollTo({ top: 0 }) which breaks steps 4-6,
+      // we check if an unrendered hidden matching variant can guide our viewport.
+      const hiddenEl = document.querySelector(STEPS[step].selector);
+      if (hiddenEl) {
+        hiddenEl.scrollIntoView({ block: "center", behavior: "auto" });
+      }
+
       const t = setTimeout(() => {
-        if (findVisible(STEPS[step].selector)) {
-          setRetry((r) => r + 1); // found after the scroll — re-run this step
+        el = findVisible(STEPS[step].selector);
+        if (el) {
+          setRetry((r) => r + 1); // Found! Re-trigger positioning layout
         } else if (step < STEPS.length - 1) {
-          setStep((s) => s + 1);
+          setStep((s) => s + 1); // Not on screen (e.g. absent feature), skip safely
         } else {
           finish();
         }
-      }, 450);
+      }, 300);
       return () => clearTimeout(t);
     }
 
-    // Targets inside the sticky header must not be centred: scrolling down to
-    // "centre" them makes the header collapse and shrink the very element being
-    // pointed at. Go to the top instead, where the header is fully expanded.
-    if (el.closest("header[data-sticky-header]")) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      el.scrollIntoView({ block: "center" });
-    }
+    // Safely center viewport on our active tour layout section
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
 
     const measure = () => {
+      if (!el) return;
       const r = el.getBoundingClientRect();
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
     };
 
-    // Measure now, then re-measure on scroll/resize and via a short interval
-    // (covers smooth-scroll settling without pinning the page to a rAF loop).
+    // Keep layout measurements highly precise during transitions
     measure();
-    const interval = setInterval(measure, 200);
+    const interval = setInterval(measure, 100);
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
 
@@ -136,10 +151,6 @@ export default function OnboardingTour() {
 
   if (!mounted) return null;
 
-  // Rendered into <body> rather than in place. The homepage wraps its content
-  // in .space-bg, which sets isolation:isolate for the wallpaper layer — that
-  // creates a stacking context, so a z-100 overlay inside it still paints
-  // BELOW the sticky header (z-50) and the spotlight looks covered.
   if (!active) {
     return createPortal(
       <button
@@ -172,9 +183,9 @@ export default function OnboardingTour() {
 
   return createPortal(
     <div className="fixed inset-0 z-[100]" role="dialog" aria-label="Panduan belanja">
-      {/* spotlight: the box-shadow darkens everything around the target */}
+      {/* spotlight overlay frame */}
       <div
-        className="absolute rounded-xl"
+        className="absolute rounded-xl transition-all duration-300"
         style={{
           top: rect.top - pad,
           left: rect.left - pad,
@@ -184,9 +195,9 @@ export default function OnboardingTour() {
         }}
       />
 
-      {/* tooltip */}
+      {/* tooltip utility card */}
       <div
-        className="absolute rounded-2xl bg-white shadow-2xl p-5 animate-pop-in"
+        className="absolute rounded-2xl bg-white shadow-2xl p-5 animate-pop-in transition-all duration-300"
         style={{ top: tooltipTop, bottom: tooltipBottom, left: tooltipLeft, width: tooltipWidth }}
       >
         <p className="font-display font-bold text-bimbi-grape">{current.title}</p>
@@ -200,15 +211,24 @@ export default function OnboardingTour() {
             Lewati
           </button>
           <div className="flex items-center gap-3">
+            {step > 0 && (
+              <button
+                type="button"
+                onClick={() => setStep((s) => s - 1)}
+                className="text-xs font-semibold text-slate-500 hover:text-slate-700 cursor-pointer"
+              >
+                Kembali
+              </button>
+            )}
             <span className="text-xs text-slate-400 font-semibold">
               {step + 1}/{STEPS.length}
             </span>
             <button
               type="button"
               onClick={() => (isLast ? finish() : setStep((s) => s + 1))}
-              className="rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark text-white text-sm font-bold px-5 py-2 transition-colors cursor-pointer"
+              className="rounded-lg bg-bimbi-sky px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-800 transition-all cursor-pointer"
             >
-              {isLast ? "Selesai " : "Lanjut →"}
+              {isLast ? "Selesai" : "Lanjut"}
             </button>
           </div>
         </div>

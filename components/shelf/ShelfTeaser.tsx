@@ -72,13 +72,17 @@ export default async function ShelfTeaser() {
               </div>
             )}
 
-            {/* readability wash + store label + CTA */}
-            <div aria-hidden className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/65 to-transparent" />
+            {/* readability wash — deep at the bottom, fading through a mid
+                stop so the store name/city stay legible over bright collages */}
+            <div
+              aria-hidden
+              className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent"
+            />
             <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-4 sm:p-6 sm:flex-row sm:items-end sm:justify-between">
               {image && (
                 <div>
-                  <p className="text-base sm:text-xl font-extrabold text-white drop-shadow">{store.name}</p>
-                  <p className="text-xs sm:text-sm font-semibold text-white/80">{store.city}</p>
+                  <p className="text-base sm:text-xl font-extrabold text-white drop-shadow-md">{store.name}</p>
+                  <p className="text-xs sm:text-sm font-semibold text-white/90">{store.city}</p>
                 </div>
               )}
               <span className="self-start rounded-full bg-white px-5 py-2.5 text-xs sm:text-sm font-extrabold text-bimbi-ink shadow chip-spring transition-colors group-hover:bg-bimbi-sun sm:self-auto">
