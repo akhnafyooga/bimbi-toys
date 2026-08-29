@@ -9,4 +9,4 @@ export const CUSTOMERS_PER_PAGE = 15;
 // JPEG — accepted at the door, but normalized to canonical "image/jpeg" in
 // lib/upload.ts before anything is stored or served.
 export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+export const MAX_IMAGE_SIZE_BYTES = 15 * 1024 * 1024; // 5MB
