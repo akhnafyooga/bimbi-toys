@@ -50,116 +50,118 @@ export default async function Navbar() {
   const categoryList = categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }));
 
   return (
-    <header
-      data-sticky-header
-      className="sticky top-0 w-full z-50 flex flex-col shadow-sm"
-    >
-      {/* z-10 lifts this whole layer above the category strip inside the
-          header's stacking context, so the search suggest dropdown and the
-          menu dropdown (both trapped here by the glass bar's stacking
-          context — backdrop-filter isolates) paint over it. */}
-      <div className="glass-bar z-10 w-full text-bimbi-ink border-b border-white/60">
-        <div className="mx-auto max-w-7xl px-3 sm:px-6 py-2">
-          {/* ===== ONE slim row: logo | search | shortcuts ===== */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/" className="chip-spring flex shrink-0 items-center" title="Bimbi Toys">
-              <BrandLogo variant="mark" height={32} />
-            </Link>
-
-            <SearchSuggest categories={categoryList} />
-
-            {/* Shortcuts — cart and Menu on every screen; the rest
-                desktop-only (they stay in the dropdown on mobile). */}
-            <div className="flex shrink-0 items-center gap-1">
-              {!session?.user && (
-                <PendingLink href="/login" label="Masuk" title="Masuk" overlayLabel={null} className={COMPACT_DESKTOP}>
-                  <AppIcon name="akun" size={20} />
-                </PendingLink>
-              )}
-              <PendingLink href="/orders" label="Pesanan Saya" title="Pesanan Saya" overlayLabel={null} className={COMPACT_DESKTOP}>
-                <AppIcon name="pesanan" size={20} />
-              </PendingLink>
-              <PendingLink href="/wishlist" label="Wishlist" title="Wishlist" overlayLabel={null} className={COMPACT_DESKTOP}>
-                <span className="relative">
-                  <AppIcon name="wishlist" size={20} />
-                  <CartBadge count={wishlistCount} variant="bubble" />
-                </span>
-              </PendingLink>
-              {/* The tour's cart step targets [data-tour="cart"] — now always
-                  visible on every screen size, no scroll-fold caveats. */}
-              <PendingLink href="/cart" label="Keranjang" title="Keranjang" overlayLabel={null} className={COMPACT} id="tour-cart" dataTour="cart">
-                <span className="relative">
-                  <AppIcon name="cart" size={20} />
-                  <CartBadge count={cartCount} variant="bubble" />
-                </span>
-              </PendingLink>
-
-              {/* Menu dropdown: greeting + account tiles. Children are
-                  server-rendered (the sign-out server action rides along). */}
-              <NavPanel>
-                {session?.user && (
-                  <p className="px-1 pb-1.5 text-[11px] font-semibold text-slate-700">
-                    Hai, {session.user.name?.split(" ")[0]}!
-                  </p>
-                )}
-                <div className="grid gap-2 grid-cols-4">
-                  {!session?.user && (
-                    <PendingLink href="/login" label="Masuk" overlayLabel={null} className={TILE}>
-                      <AppIcon name="akun" size={22} />
-                      <span>Masuk</span>
-                    </PendingLink>
-                  )}
-
-                  {/* Always shown: /orders sends guests to login and back, so
-                      hiding it just made the button look like it vanished. */}
-                  <PendingLink href="/orders" label="Pesanan Saya" overlayLabel={null} className={TILE}>
-                    <AppIcon name="pesanan" size={22} />
-                    <span>Pesanan</span>
-                  </PendingLink>
-
-                  <PendingLink href="/wishlist" label="Wishlist" overlayLabel={null} className={TILE}>
-                    <span className="relative">
-                      <AppIcon name="wishlist" size={22} />
-                      <CartBadge count={wishlistCount} variant="bubble" />
-                    </span>
-                    <span>Wishlist</span>
-                  </PendingLink>
-
-                  <PendingLink href="/cart" label="Keranjang" overlayLabel={null} className={TILE}>
-                    <span className="relative">
-                      <AppIcon name="cart" size={22} />
-                      <CartBadge count={cartCount} variant="bubble" />
-                    </span>
-                    <span>{cartCount > 0 ? formatIDR(cartTotal) : "Keranjang"}</span>
-                  </PendingLink>
-
-                  {session?.user && (
-                    <form
-                      action={async () => {
-                        "use server";
-                        await signOut({ redirectTo: "/" });
-                      }}
-                    >
-                      <button type="submit" className={`${TILE} w-full cursor-pointer text-bimbi-pink`}>
-                        <AppIcon name="akun" size={22} />
-                        <span>Keluar</span>
-                      </button>
-                    </form>
-                  )}
-                </div>
-              </NavPanel>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Category strip — frosted, sliding, with arrows. The second and
-          final header row; it no longer folds away on scroll. */}
-      <div className="glass-bar w-full border-b border-white/50">
+    <>
+      {/* Category strip — frosted, sliding, with arrows. Sits at the top of the page layout (non-sticky, scrolls away) */}
+      <div className="glass-bar w-full border-b border-white/50 z-40 relative">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center w-full min-w-0">
           <CategoryNav categories={categoryList} />
         </div>
       </div>
-    </header>
+
+      {/* Main navigation header — sticky top-0 */}
+      <header
+        data-sticky-header
+        className="sticky top-0 w-full z-50 flex flex-col shadow-sm"
+      >
+        {/* z-10 lifts this whole layer above the category strip inside the
+            header's stacking context, so the search suggest dropdown and the
+            menu dropdown (both trapped here by the glass bar's stacking
+            context — backdrop-filter isolates) paint over it. */}
+        <div className="glass-bar z-10 w-full text-bimbi-ink border-b border-white/60">
+          <div className="mx-auto max-w-7xl px-3 sm:px-6 py-2">
+            {/* ===== ONE slim row: logo | search | shortcuts ===== */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link href="/" className="chip-spring flex shrink-0 items-center" title="Bimbi Toys">
+                <BrandLogo variant="mark" height={32} />
+              </Link>
+
+              <SearchSuggest categories={categoryList} />
+
+              {/* Shortcuts — cart and Menu on every screen; the rest
+                  desktop-only (they stay in the dropdown on mobile). */}
+              <div className="flex shrink-0 items-center gap-1">
+                {!session?.user && (
+                  <PendingLink href="/login" label="Masuk" title="Masuk" overlayLabel={null} className={COMPACT_DESKTOP}>
+                    <AppIcon name="akun" size={20} />
+                  </PendingLink>
+                )}
+                <PendingLink href="/orders" label="Pesanan Saya" title="Pesanan Saya" overlayLabel={null} className={COMPACT_DESKTOP}>
+                  <AppIcon name="pesanan" size={20} />
+                </PendingLink>
+                <PendingLink href="/wishlist" label="Wishlist" title="Wishlist" overlayLabel={null} className={COMPACT_DESKTOP}>
+                  <span className="relative">
+                    <AppIcon name="wishlist" size={20} />
+                    <CartBadge count={wishlistCount} variant="bubble" />
+                  </span>
+                </PendingLink>
+                {/* The tour's cart step targets [data-tour="cart"] — now always
+                    visible on every screen size, no scroll-fold caveats. */}
+                <PendingLink href="/cart" label="Keranjang" title="Keranjang" overlayLabel={null} className={COMPACT} id="tour-cart" dataTour="cart">
+                  <span className="relative">
+                    <AppIcon name="cart" size={20} />
+                    <CartBadge count={cartCount} variant="bubble" />
+                  </span>
+                </PendingLink>
+
+                {/* Menu dropdown: greeting + account tiles. Children are
+                    server-rendered (the sign-out server action rides along). */}
+                <NavPanel>
+                  {session?.user && (
+                    <p className="px-1 pb-1.5 text-[11px] font-semibold text-slate-700">
+                      Hai, {session.user.name?.split(" ")[0]}!
+                    </p>
+                  )}
+                  <div className="grid gap-2 grid-cols-4">
+                    {!session?.user && (
+                      <PendingLink href="/login" label="Masuk" overlayLabel={null} className={TILE}>
+                        <AppIcon name="akun" size={22} />
+                        <span>Masuk</span>
+                      </PendingLink>
+                    )}
+
+                    {/* Always shown: /orders sends guests to login and back, so
+                        hiding it just made the button look like it vanished. */}
+                    <PendingLink href="/orders" label="Pesanan Saya" overlayLabel={null} className={TILE}>
+                      <AppIcon name="pesanan" size={22} />
+                      <span>Pesanan</span>
+                    </PendingLink>
+
+                    <PendingLink href="/wishlist" label="Wishlist" overlayLabel={null} className={TILE}>
+                      <span className="relative">
+                        <AppIcon name="wishlist" size={22} />
+                        <CartBadge count={wishlistCount} variant="bubble" />
+                      </span>
+                      <span>Wishlist</span>
+                    </PendingLink>
+
+                    <PendingLink href="/cart" label="Keranjang" overlayLabel={null} className={TILE}>
+                      <span className="relative">
+                        <AppIcon name="cart" size={22} />
+                        <CartBadge count={cartCount} variant="bubble" />
+                      </span>
+                      <span>{cartCount > 0 ? formatIDR(cartTotal) : "Keranjang"}</span>
+                    </PendingLink>
+
+                    {session?.user && (
+                      <form
+                        action={async () => {
+                          "use server";
+                          await signOut({ redirectTo: "/" });
+                        }}
+                      >
+                        <button type="submit" className={`${TILE} w-full cursor-pointer text-bimbi-pink`}>
+                          <AppIcon name="akun" size={22} />
+                          <span>Keluar</span>
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </NavPanel>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+    </>
   );
 }

@@ -14,6 +14,7 @@ import Rail from "@/components/Rail";
 import SegmentRail from "@/components/SegmentRail";
 import ToyFinder from "@/components/ToyFinder";
 import ShelfTeaser from "@/components/shelf/ShelfTeaser";
+import HeroBanner from "@/components/HeroBanner";
 import { SEGMENTS, segmentWhere, isSegmentKey } from "@/lib/homeSegments";
 import { groupWhere } from "@/lib/adminGroups";
 import type { Prisma } from "@prisma/client";
@@ -111,33 +112,8 @@ export default async function HomePage({
   return (
     <div className="bg-white min-h-screen">
 
-      {/* 1. Hero Banner — FULL WIDTH (edge to edge). bg image: public/brand/hero.jpg */}
-      <div
-        className="relative overflow-hidden bg-bimbi-sun min-h-[240px] md:min-h-[320px] bg-cover bg-center"
-        style={{ backgroundImage: "url(/brand/hero.jpg)" }}
-      >
-        {/* readability wash so the headline stays legible over any photo */}
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent" />
-        <div className="relative mx-auto max-w-7xl px-6 sm:px-6 py-10 md:py-16">
-          <div className="space-y-3 max-w-lg text-left ml-2 sm:ml-6 md:ml-8 lg:ml-16">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl text-bimbi-ink leading-tight font-extrabold">
-              Teman Bermain &amp; Belajar Anak
-            </h1>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Ribuan mainan asli berkualitas, aman, dan edukatif untuk buah hati Anda.
-              Dapatkan penawaran harga terbaik!
-            </p>
-            <div className="pt-2">
-              <Link
-                href="#katalog"
-                className="inline-block rounded-full bg-bimbi-pink hover:bg-bimbi-pink-dark px-7 py-3 font-extrabold text-white text-sm transition-colors chip-spring"
-              >
-                Mulai Belanja
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* 1. Hero Banner — FULL WIDTH (edge to edge). Carousel Client Component */}
+      <HeroBanner />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 md:pt-10 pb-6 flex flex-col gap-10 md:gap-14">
 
