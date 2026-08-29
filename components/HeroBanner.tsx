@@ -142,7 +142,7 @@ export default function HeroBanner() {
                       }`}
                   >
                     <h1
-                      className={`leading-tight font-extrabold tracking-tight text-white ${banner.id === 1 ? "text-xl" : "text-2xl"
+                      className={`leading-tight font-extrabold tracking-tight text-white ${banner.id === 1 ? "text-2xl" : "text-2xl"
                         }`}
                     >
                       {banner.id === 1 ? (
