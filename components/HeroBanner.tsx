@@ -58,7 +58,7 @@ export default function HeroBanner() {
 
   return (
     <div
-      className="relative overflow-hidden w-full group min-h-[380px] lg:min-h-0 lg:aspect-[7780/2978]"
+      className="relative overflow-hidden w-full group aspect-video lg:aspect-[7780/2978] lg:min-h-0 lg:aspect-[7780/2978]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -145,9 +145,8 @@ export default function HeroBanner() {
           <button
             key={index}
             onClick={() => setActiveIndex(index)}
-            className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-              activeIndex === index ? "bg-white w-6" : "bg-white/50 hover:bg-white/80 w-2"
-            }`}
+            className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${activeIndex === index ? "bg-white w-6" : "bg-white/50 hover:bg-white/80 w-2"
+              }`}
             aria-label={`Ke slide ${index + 1}`}
           />
         ))}
