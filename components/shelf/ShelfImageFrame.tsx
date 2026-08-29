@@ -1,38 +1,95 @@
-import Image from "next/image";
 
-// The shelf photo is the hero of the shelf system. When a shelf has no photo
-// yet, fall back to a quiet typographic plate (the rack code) — never fake
-// shelf imagery.
+"use client";
+
+import Image from "next/image";
+import { useState } from "react";
+
+type ImageOrientation = "portrait" | "landscape" | "square";
+
 export default function ShelfImageFrame({
   src,
   code,
-  sizes = "(max-width: 768px) 80vw, 320px",
   priority = false,
 }: {
-  src?: string | null;
+  src: string | null;
   code: string;
-  sizes?: string;
   priority?: boolean;
 }) {
-  if (src) {
+  const [orientation, setOrientation] =
+    useState<ImageOrientation>("square");
+
+  if (!src) {
     return (
-      <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-        <Image
-          src={src}
-          alt={`Foto rak ${code}`}
-          fill
-          sizes={sizes}
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          priority={priority}
-        />
+      <div
+        className="
+          flex
+          h-[420px]
+          w-full
+          items-center
+          justify-center
+          bg-white/20
+        "
+      >
+        <div className="text-center">
+          <div
+            className="
+              text-4xl
+              font-black
+              tracking-tight
+              text-slate-300
+            "
+          >
+            {code}
+          </div>
+
+          <p className="mt-2 text-sm font-semibold text-slate-400">
+            Belum ada foto rak
+          </p>
+        </div>
       </div>
     );
   }
 
+  const imageWidth =
+    orientation === "landscape"
+      ? 600
+      : orientation === "portrait"
+        ? 300
+        : 400;
+
   return (
-    <div className="aspect-[4/3] bg-slate-100 flex flex-col items-center justify-center gap-1">
-      <span className="text-lg font-extrabold uppercase tracking-widest text-slate-300">{code}</span>
-      <span className="text-[11px] text-slate-400">foto rak segera hadir</span>
+    <div className="flex w-full items-center justify-center overflow-hidden bg-white/20">
+      <Image
+        src={src}
+        alt={`Foto rak ${code}`}
+        width={imageWidth}
+        height={600}
+        priority={priority}
+        sizes="(max-width: 768px) 100vw, 600px"
+        className="
+          h-auto
+          w-auto
+          max-w-full
+          object-contain
+          transition-transform
+          duration-500
+          ease-out
+          group-hover:scale-[1.015]
+        "
+        onLoad={(e) => {
+          const img = e.currentTarget;
+
+          if (img.naturalWidth > img.naturalHeight) {
+            setOrientation("landscape");
+          } else if (
+            img.naturalHeight > img.naturalWidth
+          ) {
+            setOrientation("portrait");
+          } else {
+            setOrientation("square");
+          }
+        }}
+      />
     </div>
   );
 }

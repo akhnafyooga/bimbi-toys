@@ -1,77 +1,183 @@
-
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-type Pan = { x: number; y: number };
+type Pan = {
+  x: number;
+  y: number;
+};
 
 const DRAG_THRESHOLD_PX = 5;
 const KEY_PAN_PX = 200;
 const FOCUS_MARGIN_PX = 24;
 
+/* ============================================================
+   WHEEL SENSITIVITY
+   ============================================================ */
+
+const WHEEL_PAN_SENSITIVITY = 0.15;
+const WHEEL_ZOOM_SENSITIVITY = 0.015;
+
+/* ============================================================
+   ZOOM
+   ============================================================ */
+
+const MIN_ZOOM = 0.35;
+const MAX_ZOOM = 2;
+const ZOOM_STEP = 0.1;
+const DEFAULT_ZOOM = 1;
+
+/* ============================================================
+   MINIMAP
+   ============================================================ */
+
 const MINIMAP_WIDTH = 180;
 const MINIMAP_HEIGHT = 110;
 const MINIMAP_PADDING = 6;
+
+function clampZoom(value: number): number {
+  return Math.min(
+    MAX_ZOOM,
+    Math.max(
+      MIN_ZOOM,
+      value
+    )
+  );
+}
 
 export default function ShelfCanvas({
   board,
   children,
 }: {
-  board: { width: number; height: number };
+  board: {
+    width: number;
+    height: number;
+  };
   children: React.ReactNode;
 }) {
-  const stageRef = useRef<HTMLDivElement>(null);
-  const minimapRef = useRef<HTMLDivElement>(null);
+  const stageRef =
+    useRef<HTMLDivElement>(null);
 
-  const [pan, setPan] = useState<Pan>({
-    x: 0,
-    y: 0,
-  });
+  const minimapRef =
+    useRef<HTMLDivElement>(null);
 
-  const panRef = useRef<Pan>(pan);
+  /* ==========================================================
+     PAN
+     ========================================================== */
 
-  const [dragging, setDragging] = useState(false);
+  const [pan, setPan] =
+    useState<Pan>({
+      x: 0,
+      y: 0,
+    });
 
-  const [stageSize, setStageSize] = useState({
-    width: 0,
-    height: 0,
-  });
+  const panRef =
+    useRef<Pan>(pan);
 
-  const pointers = useRef(
-    new Map<number, { x: number; y: number }>()
-  );
+  /* ==========================================================
+     ZOOM
+     ========================================================== */
 
-  const gestureStart = useRef<{
-    x: number;
-    y: number;
-    pan: Pan;
-  } | null>(null);
+  const [zoom, setZoom] =
+    useState(DEFAULT_ZOOM);
 
-  const centroid = useRef<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const zoomRef =
+    useRef(DEFAULT_ZOOM);
 
-  const moved = useRef(false);
+  const [dragging, setDragging] =
+    useState(false);
 
-  const samples = useRef<
-    { t: number; pan: Pan }[]
-  >([]);
+  /* ==========================================================
+     STAGE SIZE
+     ========================================================== */
 
-  const raf = useRef(0);
+  const [stageSize, setStageSize] =
+    useState({
+      width: 0,
+      height: 0,
+    });
 
-  // ============================================================
-  // PAN CLAMPING
-  // ============================================================
+  /* ==========================================================
+     POINTER STATE
+     ========================================================== */
 
-  const clampPan = (p: Pan): Pan => {
-    const el = stageRef.current;
+  const pointers =
+    useRef(
+      new Map<
+        number,
+        {
+          x: number;
+          y: number;
+        }
+      >()
+    );
 
-    const width = el?.clientWidth ?? 0;
-    const height = el?.clientHeight ?? 0;
+  const gestureStart =
+    useRef<{
+      x: number;
+      y: number;
+      pan: Pan;
+    } | null>(null);
 
-    const minX = Math.min(0, width - board.width);
-    const minY = Math.min(0, height - board.height);
+  const centroid =
+    useRef<{
+      x: number;
+      y: number;
+    } | null>(null);
+
+  const moved =
+    useRef(false);
+
+  const samples =
+    useRef<
+      {
+        t: number;
+        pan: Pan;
+      }[]
+    >([]);
+
+  const raf =
+    useRef(0);
+
+  /* ==========================================================
+     PAN CLAMPING
+     ========================================================== */
+
+  const clampPan = (
+    p: Pan
+  ): Pan => {
+    const el =
+      stageRef.current;
+
+    const width =
+      el?.clientWidth ?? 0;
+
+    const height =
+      el?.clientHeight ?? 0;
+
+    const scaledWidth =
+      board.width *
+      zoomRef.current;
+
+    const scaledHeight =
+      board.height *
+      zoomRef.current;
+
+    const minX = Math.min(
+      0,
+      width -
+        scaledWidth
+    );
+
+    const minY = Math.min(
+      0,
+      height -
+        scaledHeight
+    );
 
     return {
       x:
@@ -79,7 +185,10 @@ export default function ShelfCanvas({
           ? minX / 2
           : Math.min(
               0,
-              Math.max(minX, p.x)
+              Math.max(
+                minX,
+                p.x
+              )
             ),
 
       y:
@@ -87,109 +196,172 @@ export default function ShelfCanvas({
           ? minY / 2
           : Math.min(
               0,
-              Math.max(minY, p.y)
+              Math.max(
+                minY,
+                p.y
+              )
             ),
     };
   };
 
-  const clampRef = useRef(clampPan);
+  const clampRef =
+    useRef(clampPan);
 
   useEffect(() => {
-    clampRef.current = clampPan;
+    clampRef.current =
+      clampPan;
   });
 
-  const applyPan = (next: Pan) => {
-    const target = clampRef.current(next);
+  const applyPan = (
+    next: Pan
+  ) => {
+    const target =
+      clampRef.current(
+        next
+      );
 
-    panRef.current = target;
+    panRef.current =
+      target;
+
     setPan(target);
   };
 
   const stopInertia = () => {
-    cancelAnimationFrame(raf.current);
+    cancelAnimationFrame(
+      raf.current
+    );
   };
 
-  // ============================================================
-  // INERTIA
-  // ============================================================
+  /* ==========================================================
+     INERTIA
+     ========================================================== */
 
   const startInertia = () => {
-    const now = performance.now();
+    const now =
+      performance.now();
 
-    const recent = samples.current.filter(
-      (sample) => now - sample.t < 90
-    );
+    const recent =
+      samples.current.filter(
+        (sample) =>
+          now - sample.t < 90
+      );
 
-    if (recent.length < 2) return;
+    if (
+      recent.length < 2
+    ) {
+      return;
+    }
 
-    const first = recent[0];
-    const last = recent[recent.length - 1];
+    const first =
+      recent[0];
+
+    const last =
+      recent[
+        recent.length - 1
+      ];
 
     const dt = Math.max(
       1,
-      last.t - first.t
+      last.t -
+        first.t
     );
 
     let vx =
-      (last.pan.x - first.pan.x) / dt;
+      (last.pan.x -
+        first.pan.x) /
+      dt;
 
     let vy =
-      (last.pan.y - first.pan.y) / dt;
+      (last.pan.y -
+        first.pan.y) /
+      dt;
 
-    const speed = Math.hypot(vx, vy);
+    const speed =
+      Math.hypot(
+        vx,
+        vy
+      );
 
-    if (speed < 0.05) return;
+    if (
+      speed < 0.05
+    ) {
+      return;
+    }
 
     const cap = 1.8;
 
-    if (speed > cap) {
-      vx = (vx / speed) * cap;
-      vy = (vy / speed) * cap;
+    if (
+      speed > cap
+    ) {
+      vx =
+        (vx / speed) *
+        cap;
+
+      vy =
+        (vy / speed) *
+        cap;
     }
 
-    let lastTime = now;
+    let lastTime =
+      now;
 
-    const step = (time: number) => {
-      const frameMs = Math.min(
-        32,
-        time - lastTime
-      );
+    const step = (
+      time: number
+    ) => {
+      const frameMs =
+        Math.min(
+          32,
+          time -
+            lastTime
+        );
 
-      lastTime = time;
+      lastTime =
+        time;
 
       applyPan({
         x:
           panRef.current.x +
-          vx * frameMs,
+          vx *
+            frameMs,
 
         y:
           panRef.current.y +
-          vy * frameMs,
+          vy *
+            frameMs,
       });
 
-      const decay = Math.pow(
-        0.93,
-        frameMs / 16.7
-      );
+      const decay =
+        Math.pow(
+          0.93,
+          frameMs /
+            16.7
+        );
 
       vx *= decay;
       vy *= decay;
 
       if (
-        Math.hypot(vx, vy) > 0.02
+        Math.hypot(
+          vx,
+          vy
+        ) > 0.02
       ) {
         raf.current =
-          requestAnimationFrame(step);
+          requestAnimationFrame(
+            step
+          );
       }
     };
 
     raf.current =
-      requestAnimationFrame(step);
+      requestAnimationFrame(
+        step
+      );
   };
 
-  // ============================================================
-  // POINTER HELPERS
-  // ============================================================
+  /* ==========================================================
+     POINTER HELPERS
+     ========================================================== */
 
   function trackPointer(
     e: React.PointerEvent
@@ -211,23 +383,33 @@ export default function ShelfCanvas({
     return {
       x:
         points.reduce(
-          (sum, point) =>
-            sum + point.x,
+          (
+            sum,
+            point
+          ) =>
+            sum +
+            point.x,
           0
-        ) / points.length,
+        ) /
+        points.length,
 
       y:
         points.reduce(
-          (sum, point) =>
-            sum + point.y,
+          (
+            sum,
+            point
+          ) =>
+            sum +
+            point.y,
           0
-        ) / points.length,
+        ) /
+        points.length,
     };
   }
 
-  // ============================================================
-  // POINTER DOWN
-  // ============================================================
+  /* ==========================================================
+     POINTER DOWN
+     ========================================================== */
 
   function onPointerDown(
     e: React.PointerEvent
@@ -240,8 +422,12 @@ export default function ShelfCanvas({
       e.pointerId
     );
 
-    if (pointers.current.size === 1) {
-      moved.current = false;
+    if (
+      pointers.current.size ===
+      1
+    ) {
+      moved.current =
+        false;
 
       gestureStart.current = {
         x: e.clientX,
@@ -249,9 +435,12 @@ export default function ShelfCanvas({
         pan: panRef.current,
       };
 
-      centroid.current = null;
+      centroid.current =
+        null;
     } else {
-      gestureStart.current = null;
+      gestureStart.current =
+        null;
+
       centroid.current =
         currentCentroid();
     }
@@ -259,14 +448,15 @@ export default function ShelfCanvas({
     samples.current = [
       {
         t: performance.now(),
-        pan: panRef.current,
+        pan:
+          panRef.current,
       },
     ];
   }
 
-  // ============================================================
-  // POINTER MOVE
-  // ============================================================
+  /* ==========================================================
+     POINTER MOVE
+     ========================================================== */
 
   function onPointerMove(
     e: React.PointerEvent
@@ -281,9 +471,13 @@ export default function ShelfCanvas({
 
     trackPointer(e);
 
-    // Multi-touch
+    /* ========================================================
+       MULTI TOUCH PAN
+       ======================================================== */
+
     if (
-      pointers.current.size >= 2 &&
+      pointers.current.size >=
+        2 &&
       centroid.current
     ) {
       const next =
@@ -297,27 +491,41 @@ export default function ShelfCanvas({
         next.y -
         centroid.current.y;
 
-      centroid.current = next;
+      centroid.current =
+        next;
 
-      if (dx !== 0 || dy !== 0) {
-        moved.current = true;
-        setDragging(true);
+      if (
+        dx !== 0 ||
+        dy !== 0
+      ) {
+        moved.current =
+          true;
+
+        setDragging(
+          true
+        );
 
         applyPan({
           x:
-            panRef.current.x + dx,
+            panRef.current.x +
+            dx,
 
           y:
-            panRef.current.y + dy,
+            panRef.current.y +
+            dy,
         });
 
-        samples.current.push({
-          t: performance.now(),
-          pan: panRef.current,
-        });
+        samples.current.push(
+          {
+            t: performance.now(),
+            pan:
+              panRef.current,
+          }
+        );
 
         if (
-          samples.current.length > 8
+          samples.current
+            .length > 8
         ) {
           samples.current.shift();
         }
@@ -326,51 +534,74 @@ export default function ShelfCanvas({
       return;
     }
 
+    /* ========================================================
+       SINGLE POINTER PAN
+       ======================================================== */
+
     const gesture =
       gestureStart.current;
 
-    if (!gesture) return;
+    if (!gesture) {
+      return;
+    }
 
     const dx =
-      e.clientX - gesture.x;
+      e.clientX -
+      gesture.x;
 
     const dy =
-      e.clientY - gesture.y;
+      e.clientY -
+      gesture.y;
 
     if (
       !moved.current &&
-      Math.hypot(dx, dy) >
+      Math.hypot(
+        dx,
+        dy
+      ) >
         DRAG_THRESHOLD_PX
     ) {
-      moved.current = true;
-      setDragging(true);
+      moved.current =
+        true;
+
+      setDragging(
+        true
+      );
     }
 
-    if (moved.current) {
+    if (
+      moved.current
+    ) {
       applyPan({
         x:
-          gesture.pan.x + dx,
+          gesture.pan.x +
+          dx,
 
         y:
-          gesture.pan.y + dy,
+          gesture.pan.y +
+          dy,
       });
 
-      samples.current.push({
-        t: performance.now(),
-        pan: panRef.current,
-      });
+      samples.current.push(
+        {
+          t: performance.now(),
+          pan:
+            panRef.current,
+        }
+      );
 
       if (
-        samples.current.length > 8
+        samples.current
+          .length > 8
       ) {
         samples.current.shift();
       }
     }
   }
 
-  // ============================================================
-  // POINTER RELEASE
-  // ============================================================
+  /* ==========================================================
+     POINTER RELEASE
+     ========================================================== */
 
   function onPointerRelease(
     e: React.PointerEvent
@@ -388,19 +619,26 @@ export default function ShelfCanvas({
     }
 
     if (
-      pointers.current.size === 0
+      pointers.current.size ===
+      0
     ) {
-      setDragging(false);
-      centroid.current = null;
+      setDragging(
+        false
+      );
+
+      centroid.current =
+        null;
 
       if (
         moved.current &&
-        e.type === "pointerup"
+        e.type ===
+          "pointerup"
       ) {
         startInertia();
       }
     } else if (
-      pointers.current.size === 1
+      pointers.current.size ===
+      1
     ) {
       const [only] = [
         ...pointers.current.values(),
@@ -409,36 +647,41 @@ export default function ShelfCanvas({
       gestureStart.current = {
         x: only.x,
         y: only.y,
-        pan: panRef.current,
+        pan:
+          panRef.current,
       };
 
-      centroid.current = null;
+      centroid.current =
+        null;
 
       samples.current = [
         {
           t: performance.now(),
-          pan: panRef.current,
+          pan:
+            panRef.current,
         },
       ];
     }
   }
 
-  // ============================================================
-  // CLICK
-  // ============================================================
+  /* ==========================================================
+     CLICK
+     ========================================================== */
 
   function onClickCapture(
     e: React.MouseEvent
   ) {
-    if (moved.current) {
+    if (
+      moved.current
+    ) {
       e.preventDefault();
       e.stopPropagation();
     }
   }
 
-  // ============================================================
-  // KEYBOARD
-  // ============================================================
+  /* ==========================================================
+     KEYBOARD
+     ========================================================== */
 
   function onKeyDown(
     e: React.KeyboardEvent
@@ -448,48 +691,85 @@ export default function ShelfCanvas({
       Pan
     > = {
       ArrowLeft: {
-        x: KEY_PAN_PX,
+        x:
+          KEY_PAN_PX,
         y: 0,
       },
 
       ArrowRight: {
-        x: -KEY_PAN_PX,
+        x:
+          -KEY_PAN_PX,
         y: 0,
       },
 
       ArrowUp: {
         x: 0,
-        y: KEY_PAN_PX,
+        y:
+          KEY_PAN_PX,
       },
 
       ArrowDown: {
         x: 0,
-        y: -KEY_PAN_PX,
+        y:
+          -KEY_PAN_PX,
       },
     };
 
-    const delta = deltas[e.key];
+    const delta =
+      deltas[e.key];
 
-    if (!delta) return;
+    if (delta) {
+      e.preventDefault();
 
-    e.preventDefault();
+      stopInertia();
 
-    stopInertia();
+      applyPan({
+        x:
+          panRef.current.x +
+          delta.x,
 
-    applyPan({
-      x:
-        panRef.current.x +
-        delta.x,
+        y:
+          panRef.current.y +
+          delta.y,
+      });
 
-      y:
-        panRef.current.y +
-        delta.y,
-    });
+      return;
+    }
+
+    if (
+      e.key === "+" ||
+      e.key === "="
+    ) {
+      e.preventDefault();
+
+      zoomIn();
+
+      return;
+    }
+
+    if (
+      e.key === "-" ||
+      e.key === "_"
+    ) {
+      e.preventDefault();
+
+      zoomOut();
+
+      return;
+    }
+
+    if (
+      e.key === "0"
+    ) {
+      e.preventDefault();
+
+      resetView();
+    }
   }
 
-  // ============================================================
-  // FOCUS
-  // ============================================================
+  /* ==========================================================
+     FOCUS
+     ========================================================== */
 
   function onFocusCapture(
     e: React.FocusEvent
@@ -513,7 +793,10 @@ export default function ShelfCanvas({
     const stageRect =
       stage.getBoundingClientRect();
 
-    let { x, y } =
+    let {
+      x,
+      y,
+    } =
       panRef.current;
 
     if (
@@ -561,22 +844,211 @@ export default function ShelfCanvas({
     }
 
     if (
-      x !== panRef.current.x ||
-      y !== panRef.current.y
+      x !==
+        panRef.current.x ||
+      y !==
+        panRef.current.y
     ) {
-      applyPan({ x, y });
+      applyPan({
+        x,
+        y,
+      });
     }
   }
 
-  // ============================================================
-  // WHEEL
-  // ============================================================
+  /* ==========================================================
+     ZOOM AROUND POINT
+     ========================================================== */
+
+  function setZoomAroundPoint(
+    nextZoom: number,
+    centerX: number,
+    centerY: number
+  ) {
+    const stage =
+      stageRef.current;
+
+    if (!stage) {
+      return;
+    }
+
+    const oldZoom =
+      zoomRef.current;
+
+    const clampedZoom =
+      clampZoom(
+        nextZoom
+      );
+
+    if (
+      clampedZoom ===
+      oldZoom
+    ) {
+      return;
+    }
+
+    /*
+     * Convert the screen point into board coordinates.
+     */
+    const boardX =
+      (centerX -
+        panRef.current.x) /
+      oldZoom;
+
+    const boardY =
+      (centerY -
+        panRef.current.y) /
+      oldZoom;
+
+    /*
+     * Recalculate pan so that the same board point remains
+     * underneath the cursor.
+     */
+    const nextPan = {
+      x:
+        centerX -
+        boardX *
+          clampedZoom,
+
+      y:
+        centerY -
+        boardY *
+          clampedZoom,
+    };
+
+    zoomRef.current =
+      clampedZoom;
+
+    setZoom(
+      clampedZoom
+    );
+
+    panRef.current =
+      nextPan;
+
+    setPan(
+      clampRef.current(
+        nextPan
+      )
+    );
+  }
+
+  /* ==========================================================
+     ZOOM IN
+     ========================================================== */
+
+  function zoomIn() {
+    const stage =
+      stageRef.current;
+
+    if (!stage) {
+      return;
+    }
+
+    const centerX =
+      stage.clientWidth /
+      2;
+
+    const centerY =
+      stage.clientHeight /
+      2;
+
+    setZoomAroundPoint(
+      zoomRef.current +
+        ZOOM_STEP,
+      centerX,
+      centerY
+    );
+  }
+
+  /* ==========================================================
+     ZOOM OUT
+     ========================================================== */
+
+  function zoomOut() {
+    const stage =
+      stageRef.current;
+
+    if (!stage) {
+      return;
+    }
+
+    const centerX =
+      stage.clientWidth /
+      2;
+
+    const centerY =
+      stage.clientHeight /
+      2;
+
+    setZoomAroundPoint(
+      zoomRef.current -
+        ZOOM_STEP,
+      centerX,
+      centerY
+    );
+  }
+
+  /* ==========================================================
+     RESET VIEW
+     ========================================================== */
+
+  function resetView() {
+    const stage =
+      stageRef.current;
+
+    if (!stage) {
+      return;
+    }
+
+    const nextZoom =
+      DEFAULT_ZOOM;
+
+    zoomRef.current =
+      nextZoom;
+
+    setZoom(
+      nextZoom
+    );
+
+    const scaledWidth =
+      board.width *
+      nextZoom;
+
+    const scaledHeight =
+      board.height *
+      nextZoom;
+
+    const nextPan = {
+      x:
+        stage.clientWidth /
+          2 -
+        scaledWidth /
+          2,
+
+      y:
+        stage.clientHeight /
+          2 -
+        scaledHeight /
+          2,
+    };
+
+    applyPan(
+      nextPan
+    );
+  }
+
+  /* ==========================================================
+     WHEEL
+     ========================================================== */
 
   useEffect(() => {
     const stage =
       stageRef.current;
 
-    if (!stage) return;
+    if (!stage) {
+      return;
+    }
 
     const onWheel = (
       e: WheelEvent
@@ -585,27 +1057,81 @@ export default function ShelfCanvas({
 
       stopInertia();
 
-      const dx = e.shiftKey
-        ? e.deltaY
-        : e.deltaX;
+      const rect =
+        stage.getBoundingClientRect();
 
-      const dy = e.shiftKey
-        ? 0
-        : e.deltaY;
+      /* ======================================================
+         CTRL / CMD + WHEEL = ZOOM
+         ====================================================== */
+
+      if (
+        e.ctrlKey ||
+        e.metaKey
+      ) {
+        const centerX =
+          e.clientX -
+          rect.left;
+
+        const centerY =
+          e.clientY -
+          rect.top;
+
+        /*
+         * Very low sensitivity.
+         *
+         * Previously this was effectively ~0.08 per wheel
+         * event. It is now only 0.015.
+         */
+        const zoomDelta =
+          -e.deltaY *
+          WHEEL_ZOOM_SENSITIVITY;
+
+        setZoomAroundPoint(
+          zoomRef.current +
+            zoomDelta,
+          centerX,
+          centerY
+        );
+
+        return;
+      }
+
+      /* ======================================================
+         NORMAL WHEEL = PAN
+         ====================================================== */
+
+      /*
+       * Deliberately reduced to 15% of the raw wheel delta.
+       */
+      const dx =
+        (e.shiftKey
+          ? e.deltaY
+          : e.deltaX) *
+        WHEEL_PAN_SENSITIVITY;
+
+      const dy =
+        (e.shiftKey
+          ? 0
+          : e.deltaY) *
+        WHEEL_PAN_SENSITIVITY;
 
       applyPan({
         x:
-          panRef.current.x - dx,
+          panRef.current.x -
+          dx,
 
         y:
-          panRef.current.y - dy,
+          panRef.current.y -
+          dy,
       });
     };
 
     stage.addEventListener(
       "wheel",
       onWheel,
-      { passive: false }
+      {
+        passive: false,
+      }
     );
 
     return () => {
@@ -616,29 +1142,40 @@ export default function ShelfCanvas({
     };
   }, []);
 
-  // ============================================================
-  // STAGE RESIZE
-  // ============================================================
+  /* ==========================================================
+     STAGE RESIZE
+     ========================================================== */
 
   useEffect(() => {
     const stage =
       stageRef.current;
 
-    if (!stage) return;
+    if (!stage) {
+      return;
+    }
 
     const update = () => {
       setStageSize({
-        width: stage.clientWidth,
-        height: stage.clientHeight,
+        width:
+          stage.clientWidth,
+
+        height:
+          stage.clientHeight,
       });
 
-      applyPan(panRef.current);
+      applyPan(
+        panRef.current
+      );
     };
 
     const observer =
-      new ResizeObserver(update);
+      new ResizeObserver(
+        update
+      );
 
-    observer.observe(stage);
+    observer.observe(
+      stage
+    );
 
     update();
 
@@ -646,17 +1183,19 @@ export default function ShelfCanvas({
       observer.disconnect();
   }, []);
 
-  // ============================================================
-  // MINIMAP GEOMETRY
-  // ============================================================
+  /* ==========================================================
+     MINIMAP GEOMETRY
+     ========================================================== */
 
   const innerWidth =
     MINIMAP_WIDTH -
-    MINIMAP_PADDING * 2;
+    MINIMAP_PADDING *
+      2;
 
   const innerHeight =
     MINIMAP_HEIGHT -
-    MINIMAP_PADDING * 2;
+    MINIMAP_PADDING *
+      2;
 
   const boardRatio =
     board.width /
@@ -666,8 +1205,11 @@ export default function ShelfCanvas({
     innerWidth /
     innerHeight;
 
-  let mapWidth = innerWidth;
-  let mapHeight = innerHeight;
+  let mapWidth =
+    innerWidth;
+
+  let mapHeight =
+    innerHeight;
 
   if (
     boardRatio >
@@ -696,23 +1238,27 @@ export default function ShelfCanvas({
     mapWidth /
     board.width;
 
-  // ============================================================
-  // CURRENT VIEWPORT
-  // ============================================================
+  /* ==========================================================
+     CURRENT VIEWPORT
+     ========================================================== */
 
   const visibleBoardWidth =
     stageSize.width /
+    zoom /
     scale;
 
   const visibleBoardHeight =
     stageSize.height /
+    zoom /
     scale;
 
   const currentBoardX =
-    -pan.x;
+    -pan.x /
+    zoom;
 
   const currentBoardY =
-    -pan.y;
+    -pan.y /
+    zoom;
 
   const maxBoardX =
     Math.max(
@@ -750,13 +1296,15 @@ export default function ShelfCanvas({
     Math.min(
       board.width,
       visibleBoardWidth
-    ) * scale;
+    ) *
+    scale;
 
   const viewportHeight =
     Math.min(
       board.height,
       visibleBoardHeight
-    ) * scale;
+    ) *
+    scale;
 
   const viewportLeft =
     mapOffsetX +
@@ -768,9 +1316,9 @@ export default function ShelfCanvas({
     clampedBoardY *
       scale;
 
-  // ============================================================
-  // MINIMAP NAVIGATION
-  // ============================================================
+  /* ==========================================================
+     MINIMAP NAVIGATION
+     ========================================================== */
 
   function handleMinimapPointerDown(
     e: React.PointerEvent<HTMLDivElement>
@@ -781,7 +1329,9 @@ export default function ShelfCanvas({
     const minimap =
       minimapRef.current;
 
-    if (!minimap) return;
+    if (!minimap) {
+      return;
+    }
 
     const rect =
       minimap.getBoundingClientRect();
@@ -818,18 +1368,22 @@ export default function ShelfCanvas({
 
     applyPan({
       x:
-        stageSize.width / 2 -
-        targetX,
+        stageSize.width /
+          2 -
+        targetX *
+          zoom,
 
       y:
-        stageSize.height / 2 -
-        targetY,
+        stageSize.height /
+          2 -
+        targetY *
+          zoom,
     });
   }
 
-  // ============================================================
-  // RENDER
-  // ============================================================
+  /* ==========================================================
+     RENDER
+     ========================================================== */
 
   return (
     <div
@@ -837,15 +1391,31 @@ export default function ShelfCanvas({
       role="region"
       aria-label="Papan rak toko — seret ke segala arah untuk menjelajahi"
       tabIndex={0}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerRelease}
-      onPointerCancel={onPointerRelease}
-      onClickCapture={onClickCapture}
-      onKeyDown={onKeyDown}
-      onFocusCapture={onFocusCapture}
+      onPointerDown={
+        onPointerDown
+      }
+      onPointerMove={
+        onPointerMove
+      }
+      onPointerUp={
+        onPointerRelease
+      }
+      onPointerCancel={
+        onPointerRelease
+      }
+      onClickCapture={
+        onClickCapture
+      }
+      onKeyDown={
+        onKeyDown
+      }
+      onFocusCapture={
+        onFocusCapture
+      }
       className={`shelf-stage relative h-full w-full touch-none select-none overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-bimbi-sky/60 ${
-        dragging ? "is-dragging" : ""
+        dragging
+          ? "is-dragging"
+          : ""
       }`}
     >
       {/* ======================================================
@@ -855,24 +1425,127 @@ export default function ShelfCanvas({
       <div
         className="shelf-board absolute left-0 top-0"
         style={{
-          width: board.width,
-          height: board.height,
-          transform: `translate3d(${pan.x}px, ${pan.y}px, 0)`,
+          width:
+            board.width,
+
+          height:
+            board.height,
+
+          transform:
+            `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
+
+          transformOrigin:
+            "0 0",
         }}
       >
         {children}
       </div>
 
       {/* ======================================================
-          FIXED MINIMAP / OVERVIEW
-          
-          This is a sibling of shelf-board.
+          ZOOM CONTROLS
+          ====================================================== */}
 
-          shelf-board moves.
-          minimap does NOT move.
+      <div
+        className="
+          absolute
+          bottom-4
+          left-4
+          z-[100]
+          flex
+          items-center
+          overflow-hidden
+          rounded-xl
+          border
+          border-white/90
+          bg-white/85
+          shadow-[0_6px_24px_rgba(0,0,0,0.16)]
+          backdrop-blur-md
+        "
+      >
+        <button
+          type="button"
+          onClick={
+            zoomOut
+          }
+          disabled={
+            zoom <=
+            MIN_ZOOM
+          }
+          aria-label="Zoom out"
+          className="
+            flex
+            h-9
+            w-9
+            items-center
+            justify-center
+            text-lg
+            font-bold
+            text-slate-600
+            transition
+            hover:bg-slate-100
+            disabled:cursor-not-allowed
+            disabled:opacity-30
+          "
+        >
+          −
+        </button>
 
-          Therefore it behaves like a HUD attached to the
-          visible shelf panel.
+        <button
+          type="button"
+          onClick={
+            resetView
+          }
+          aria-label="Reset zoom"
+          className="
+            min-w-[58px]
+            border-x
+            border-slate-200
+            px-2
+            text-xs
+            font-extrabold
+            tabular-nums
+            text-slate-600
+            transition
+            hover:bg-slate-100
+          "
+        >
+          {Math.round(
+            zoom * 100
+          )}
+          %
+        </button>
+
+        <button
+          type="button"
+          onClick={
+            zoomIn
+          }
+          disabled={
+            zoom >=
+            MAX_ZOOM
+          }
+          aria-label="Zoom in"
+          className="
+            flex
+            h-9
+            w-9
+            items-center
+            justify-center
+            text-lg
+            font-bold
+            text-slate-600
+            transition
+            hover:bg-slate-100
+            disabled:cursor-not-allowed
+            disabled:opacity-30
+          "
+        >
+          +
+        </button>
+      </div>
+
+      {/* ======================================================
+          FIXED MINIMAP
           ====================================================== */}
 
       <div
@@ -912,8 +1585,6 @@ export default function ShelfCanvas({
       >
         {/* ==================================================
             MINIATURE BOARD
-
-            This is the actual {children}, scaled down.
             ================================================== */}
 
         <div
@@ -935,23 +1606,34 @@ export default function ShelfCanvas({
               MINIMAP_PADDING +
               mapOffsetY,
 
-            width: mapWidth,
-            height: mapHeight,
+            width:
+              mapWidth,
+
+            height:
+              mapHeight,
           }}
         >
           <div
-            className="absolute left-0 top-0 origin-top-left"
+            className="
+              absolute
+              left-0
+              top-0
+              origin-top-left
+            "
             style={{
-              width: board.width,
-              height: board.height,
+              width:
+                board.width,
 
-              transform: `scale(${scale})`,
+              height:
+                board.height,
+
+              transform:
+                `scale(${scale})`,
             }}
           >
             {children}
           </div>
 
-          {/* Slight wash so the minimap reads as an overview */}
           <div
             className="
               pointer-events-none
@@ -963,7 +1645,7 @@ export default function ShelfCanvas({
         </div>
 
         {/* ==================================================
-            CURRENT POSITION INDICATOR
+            CURRENT VIEWPORT
             ================================================== */}
 
         <div
@@ -985,15 +1667,17 @@ export default function ShelfCanvas({
               MINIMAP_PADDING +
               viewportTop,
 
-            width: Math.max(
-              5,
-              viewportWidth
-            ),
+            width:
+              Math.max(
+                5,
+                viewportWidth
+              ),
 
-            height: Math.max(
-              5,
-              viewportHeight
-            ),
+            height:
+              Math.max(
+                5,
+                viewportHeight
+              ),
           }}
         />
 
