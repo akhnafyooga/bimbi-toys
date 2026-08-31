@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { formatShelfRange } from "@/lib/shelf";
 import EmptyState from "@/components/admin/EmptyState";
 import ShelfDeleteButton from "@/components/admin/ShelfDeleteButton";
+import ShelfPhotoDrop from "@/components/admin/ShelfPhotoDrop";
 
 export default async function AdminShelvesPage({
   searchParams,
@@ -11,8 +12,9 @@ export default async function AdminShelvesPage({
 }) {
   const { toko, q } = await searchParams;
 
-  const [stores, shelves] = await Promise.all([
+  const [stores, categories, shelves] = await Promise.all([
     prisma.storeLocation.findMany({ orderBy: { name: "asc" } }),
+    prisma.shelfCategory.findMany({ orderBy: [{ position: "asc" }, { name: "asc" }] }),
     prisma.shelf.findMany({
       where: {
         ...(toko ? { storeId: toko } : {}),
@@ -54,6 +56,19 @@ export default async function AdminShelvesPage({
           </Link>
         </div>
       </div>
+
+      {/* ── Instant photo drop zone ── */}
+      {stores.length > 0 && categories.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl shadow-card p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
+            Upload Foto Rak Cepat
+          </p>
+          <ShelfPhotoDrop
+            stores={stores.map((s) => ({ id: s.id, name: s.name, city: s.city }))}
+            categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+          />
+        </div>
+      )}
 
       {/* Store filter + search, both URL-driven */}
       <form method="get" className="flex flex-wrap gap-3 items-center">
