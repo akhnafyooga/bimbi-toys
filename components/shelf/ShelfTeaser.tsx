@@ -14,9 +14,9 @@ import StoreSlider from "@/components/shelf/StoreSlider";
 // them from here.
 
 const COLLAGES = [
-  { nameIncludes: "Jatisari", image: "/brand/shelf-collage-jatisari.webp" },
-  { nameIncludes: "Ngaliyan", image: "/brand/shelf-collage-ngaliyan.jpeg" },
-  { nameIncludes: "Pamularsih", image: "/brand/shelf-collage-pamularsih.jpeg" },
+  { nameIncludes: "Jatisari", image: "/brand/shelf-college-jatisari.webp" },
+  { nameIncludes: "Ngaliyan", image: "/brand/shelf-college-ngaliyan.jpeg" },
+  { nameIncludes: "Pamularsih", image: "/brand/shelf-college-pamularsih.jpeg" },
 ];
 
 export default async function ShelfTeaser() {
