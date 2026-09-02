@@ -148,7 +148,7 @@ export default async function ShelfBrowsePage({
                   >
                     <div
                       className="shelf-pose"
-                      style={{ transform: `rotate(${s.rotate}deg) scale(${s.scale})` }}
+                        style={{ transform: `scale(${s.scale})` }}
                     >
                       <div
                         className="shelf-float"
