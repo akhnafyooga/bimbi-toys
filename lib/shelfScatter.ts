@@ -66,11 +66,12 @@ export type ShelfBoard = {
 const CARD_W = 272;
 
 /*
- * Approximate maximum visual card height.
+ * Approximate maximum visual card height, including the no-image frame and
+ * the information panel below it.
  *
  * This is used ONLY for calculating board bounds.
  */
-const EST_CARD_H = 430;
+const EST_CARD_H = 600;
 
 /*
  * Distance between shelves inside a category.
@@ -78,7 +79,7 @@ const EST_CARD_H = 430;
  * Smaller = shelves closer together.
  */
 const CELL_W = 300;
-const CELL_H = 410;
+const CELL_H = 620;
 
 /*
  * Maximum shelves in one category row.
