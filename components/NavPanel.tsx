@@ -62,7 +62,9 @@ export default function NavPanel({ children }: { children: React.ReactNode }) {
         <div
           role="menu"
           className="animate-pop-in absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-xl"
-          onClickCapture={() => setOpen(false)}
+          onClickCapture={(event) => {
+            if (!(event.target as Element | null)?.closest("form")) setOpen(false);
+          }}
         >
           {children}
         </div>
