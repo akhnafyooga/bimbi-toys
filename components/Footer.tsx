@@ -48,6 +48,7 @@ export default async function Footer() {
                 <Link
                   key={s.id}
                   href={`/store/${s.id}`}
+                  aria-label={`Lihat lokasi ${s.name}`}
                   className="group flex items-start justify-between gap-3 rounded-md py-1 hover:text-bimbi-pink transition-colors"
                 >
                   <div className="min-w-0">
@@ -61,9 +62,9 @@ export default async function Footer() {
                   </div>
                   <span
                     aria-hidden="true"
-                    className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white/70 text-lg leading-none text-bimbi-ink transition-colors group-hover:border-bimbi-pink group-hover:bg-bimbi-pink group-hover:text-white"
+                    className="pointer-events-none mt-1 flex h-9 w-9 shrink-0 select-none items-center justify-center rounded-full border border-slate-300 bg-white/70 text-lg leading-none text-bimbi-ink transition-colors group-hover:border-bimbi-pink group-hover:bg-bimbi-pink group-hover:text-white"
                   >
-                    →
+                    &gt;
                   </span>
                 </Link>
               ))}
