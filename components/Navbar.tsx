@@ -6,6 +6,7 @@ import CategoryNav from "@/components/CategoryNav";
 import CartBadge from "@/components/CartBadge";
 import BrandLogo from "@/components/BrandLogo";
 import AppIcon from "@/components/AppIcon";
+import LogoutButton from "@/components/LogoutButton";
 import NavPanel from "@/components/NavPanel";
 import PendingLink from "@/components/PendingLink";
 import SearchSuggest from "@/components/SearchSuggest";
@@ -46,17 +47,10 @@ export default async function Navbar() {
       : [],
   ]);
 
-  const cartTotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const categoryList = categories.map((c) => ({ id: c.id, slug: c.slug, name: c.name }));
-
-  return (
-    <>
-      {/* Category strip — frosted, sliding, with arrows. Sits at the top of the page layout (non-sticky, scrolls away) */}
-      <div className="glass-bar w-full border-b border-white/50 z-40 relative">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-between items-center w-full min-w-0">
-          <CategoryNav categories={categoryList} />
-        </div>
-      </div>
+                      <LogoutButton className={`${TILE} w-full cursor-pointer text-bimbi-pink`}>
+                        <AppIcon name="akun" size={22} />
+                        <span>Keluar</span>
+                      </LogoutButton>
 
       {/* Main navigation header — sticky top-0 */}
       <header
