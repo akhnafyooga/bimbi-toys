@@ -47,10 +47,13 @@ export default async function Navbar() {
       : [],
   ]);
 
-                      <LogoutButton className={`${TILE} w-full cursor-pointer text-bimbi-pink`}>
-                        <AppIcon name="akun" size={22} />
-                        <span>Keluar</span>
-                      </LogoutButton>
+  const cartTotal = cartItems.reduce(
+    (total, item) => total + item.product.price * item.quantity,
+    0,
+  );
+
+  return (
+    <>
 
       {/* Main navigation header — sticky top-0 */}
       <header
@@ -69,7 +72,7 @@ export default async function Navbar() {
                 <BrandLogo variant="mark" height={32} />
               </Link>
 
-              <SearchSuggest categories={categoryList} />
+              <SearchSuggest categories={categories} />
 
               {/* Shortcuts — cart and Menu on every screen; the rest
                   desktop-only (they stay in the dropdown on mobile). */}
