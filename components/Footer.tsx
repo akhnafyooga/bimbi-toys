@@ -48,15 +48,23 @@ export default async function Footer() {
                 <Link
                   key={s.id}
                   href={`/store/${s.id}`}
-                  className="block rounded-md hover:text-bimbi-pink transition-colors"
+                  className="group flex items-start justify-between gap-3 rounded-md py-1 hover:text-bimbi-pink transition-colors"
                 >
-                  <AppIcon name="location" size={18} />
-                  <p className="mt-0.5 font-extrabold text-xs md:text-sm">
-                    {s.name}
-                  </p>
-                  <p className="text-xs md:text-sm text-slate-600 leading-snug">
-                    {s.address}, {s.city}
-                  </p>
+                  <div className="min-w-0">
+                    <AppIcon name="location" size={18} />
+                    <p className="mt-0.5 font-extrabold text-xs md:text-sm">
+                      {s.name}
+                    </p>
+                    <p className="text-xs md:text-sm text-slate-600 leading-snug">
+                      {s.address}, {s.city}
+                    </p>
+                  </div>
+                  <span
+                    aria-hidden="true"
+                    className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white/70 text-lg leading-none text-bimbi-ink transition-colors group-hover:border-bimbi-pink group-hover:bg-bimbi-pink group-hover:text-white"
+                  >
+                    →
+                  </span>
                 </Link>
               ))}
             </div>
