@@ -3,6 +3,7 @@ import PendingLink from "@/components/PendingLink";
 import { prisma } from "@/lib/prisma";
 import BrandLogo from "@/components/BrandLogo";
 import AppIcon from "@/components/AppIcon";
+import { googleMapsUrl } from "@/lib/maps";
 import { normalizePhone } from "@/lib/phone";
 
 const PAYMENTS = ["QRIS", "GoPay", "OVO", "Dana", "ShopeePay", "m-Banking"];
@@ -16,6 +17,8 @@ export default async function Footer() {
       city: true,
       address: true,
       phone: true,
+      lat: true,
+      lng: true,
     },
   });
 
@@ -45,9 +48,11 @@ export default async function Footer() {
             {/* Store addresses */}
             <div className="space-y-3 md:space-y-5 lg:pl-2">
               {stores.map((s) => (
-                <Link
+                <a
                   key={s.id}
-                  href={`/store/${s.id}`}
+                  href={googleMapsUrl(s)}
+                  target="_blank"
+                  rel="noreferrer"
                   aria-label={`Lihat lokasi ${s.name}`}
                   className="group flex items-start justify-between gap-3 rounded-md py-1 hover:text-bimbi-pink transition-colors"
                 >
@@ -66,7 +71,7 @@ export default async function Footer() {
                   >
                     &gt;
                   </span>
-                </Link>
+                </a>
               ))}
             </div>
 
