@@ -66,7 +66,7 @@ export default function CatalogControls({
     if (minV) p.set("min", minV);
     if (maxV) p.set("max", maxV);
     const qs = p.toString();
-    router.push(qs ? `${basePath}?${qs}` : basePath, { scroll: false });
+    router.push(qs ? `${basePath}?${qs}` : basePath, { scroll: true });
     setOpen(false);
   }
 
