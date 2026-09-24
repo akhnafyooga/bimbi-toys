@@ -1,3 +1,5 @@
+import { hiddenCategoryWhere } from "@/lib/storefront";
+
 // The admin panel groups the catalog's many categories into the sections the
 // store owner actually thinks in. "Mainan & Lainnya" is one group: toys and the
 // odds-and-ends are stocked and browsed together, and splitting them left the
@@ -31,7 +33,7 @@ export function groupCategories<T extends { name: string }>(
 /** Prisma filter for one group — used by the storefront banner links. */
 export function groupWhere(group: AdminGroup) {
   const stationery = { category: { name: { contains: "Alat Tulis", mode: "insensitive" as const } } };
-  return group === "Alat Tulis" ? stationery : { NOT: stationery };
+  return group === "Alat Tulis" ? stationery : { NOT: [stationery, hiddenCategoryWhere] };
 }
 
 export function isAdminGroup(v: string | undefined): v is AdminGroup {

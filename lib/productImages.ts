@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { visibleProductWhere } from "@/lib/storefront";
+import type { Prisma } from "@prisma/client";
 import { searchProductImages } from "@/lib/serper";
 import { uploadImageBytes } from "@/lib/upload";
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/lib/constants";
@@ -70,7 +72,11 @@ export type BackfillSummary = {
 export async function backfillMissingImages(limit: number): Promise<BackfillSummary> {
   // Only products we have never searched for. Excluding imageSearchedAt is what
   // keeps a product that Serper cannot match from costing a credit on every run.
-  const pending = { images: { none: {} }, imageSearchedAt: null } as const;
+  const pending: Prisma.ProductWhereInput = {
+    images: { none: {} },
+    imageSearchedAt: null,
+    ...visibleProductWhere,
+  };
 
   const products = await prisma.product.findMany({
     where: pending,
@@ -98,7 +104,7 @@ export async function backfillMissingImages(limit: number): Promise<BackfillSumm
 
   const [remaining, remainingNoImage] = await Promise.all([
     prisma.product.count({ where: pending }),
-    prisma.product.count({ where: { images: { none: {} } } }),
+    prisma.product.count({ where: { images: { none: {} }, ...visibleProductWhere } }),
   ]);
   return { processed: products.length, filled, noResult, failed, remaining, remainingNoImage };
 }

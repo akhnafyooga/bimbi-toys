@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { visibleCategoryWhere } from "@/lib/storefront";
 import { formatIDR } from "@/lib/format";
 import CategoryNav from "@/components/CategoryNav";
 import CartBadge from "@/components/CartBadge";
@@ -38,7 +39,7 @@ export default async function Navbar() {
   const [cartCount, wishlistCount, categories, cartItems] = await Promise.all([
     userId ? prisma.cartItem.count({ where: { userId } }) : 0,
     userId ? prisma.wishlistItem.count({ where: { userId } }) : 0,
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.category.findMany({ where: visibleCategoryWhere, orderBy: { name: "asc" } }),
     userId
       ? prisma.cartItem.findMany({
         where: { userId },

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserDiscount } from "@/lib/discount";
 import ProductCard from "@/components/ProductCard";
 import { tokenize, relevance, buildVocab, suggestQuery } from "@/lib/search";
+import { visibleProductWhere, notHiddenCategorySql } from "@/lib/storefront";
 
 const INCLUDE_IMAGE = { images: { orderBy: { position: "asc" as const }, take: 1 } };
 
@@ -91,7 +92,7 @@ export default async function SearchPage({
   // Fetch bounded by MAX_MATCHES, then rank by relevance so best matches lead.
   async function fetchMatches(where: Prisma.ProductWhereInput, limit = MAX_MATCHES) {
     return prisma.product.findMany({
-      where: { AND: [categoryFilter, priceFilter, where] },
+      where: { AND: [categoryFilter, priceFilter, where, visibleProductWhere] },
       include: INCLUDE_IMAGE,
       take: limit,
       ...(priceSort ? { orderBy: { price: priceSort } } : {}),
@@ -127,7 +128,7 @@ export default async function SearchPage({
   let suggestion: string | null = null;
   let suggestedProducts: typeof products = [];
   if (query && products.length === 0 && !hasPriceFilter) {
-    const names = await prisma.product.findMany({ select: { name: true, displayName: true } });
+    const names = await prisma.product.findMany({ where: visibleProductWhere, select: { name: true, displayName: true } });
     suggestion = suggestQuery(query, buildVocab(names.map((n) => n.displayName ?? n.name)));
     if (suggestion) {
       const sTokens = tokenize(suggestion);
@@ -163,15 +164,17 @@ export default async function SearchPage({
       ? prisma.$queryRaw<{ id: string }[]>`
           SELECT id FROM "Product"
           WHERE "categoryId" IN (${Prisma.join(focusCatIds)})
+          AND ${notHiddenCategorySql}
           ORDER BY RANDOM() LIMIT 40`
       : Promise.resolve([]),
     focusCatIds.length
       ? prisma.$queryRaw<{ id: string }[]>`
           SELECT id FROM "Product"
           WHERE "categoryId" NOT IN (${Prisma.join(focusCatIds)})
+          AND ${notHiddenCategorySql}
           ORDER BY RANDOM() LIMIT 20`
       : prisma.$queryRaw<{ id: string }[]>`
-          SELECT id FROM "Product" ORDER BY RANDOM() LIMIT 20`,
+          SELECT id FROM "Product" WHERE ${notHiddenCategorySql} ORDER BY RANDOM() LIMIT 20`,
   ]);
 
   const simPicks = simRows.map((r) => r.id).filter((id) => !shownIds.has(id)).slice(0, 8);

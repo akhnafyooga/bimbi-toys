@@ -17,6 +17,7 @@ import ShelfTeaser from "@/components/shelf/ShelfTeaser";
 import HeroBanner from "@/components/HeroBanner";
 import { SEGMENTS, segmentWhere, isSegmentKey } from "@/lib/homeSegments";
 import { groupWhere } from "@/lib/adminGroups";
+import { visibleProductWhere, visibleCategoryWhere } from "@/lib/storefront";
 import type { Prisma } from "@prisma/client";
 
 const PAGE = 10; // 2 rows at the desktop 5-column grid, then "Muat lebih banyak"
@@ -55,6 +56,7 @@ export default async function HomePage({
       priceFilter,
       seg ? segmentWhere(seg) : {},
       grp ? groupWhere(grp) : {},
+      visibleProductWhere,
     ],
   };
   const orderBy: Prisma.ProductOrderByWithRelationInput =
@@ -65,7 +67,7 @@ export default async function HomePage({
         : { createdAt: "desc" };
 
   const [categories, total, products, allForPicks, discountPercent] = await Promise.all([
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.category.findMany({ where: visibleCategoryWhere, orderBy: { name: "asc" } }),
     prisma.product.count({ where }),
     prisma.product.findMany({
       where,
@@ -75,6 +77,7 @@ export default async function HomePage({
     }),
     // Pool for the "Penawaran Hits" pick — every product, one image each.
     prisma.product.findMany({
+      where: visibleProductWhere,
       include: { images: { orderBy: { position: "asc" }, take: 1 } },
     }),
     // "Harga spesial kenalan" — 0 for guests and normal customers.
@@ -86,7 +89,7 @@ export default async function HomePage({
   const railItems = await Promise.all(
     SEGMENTS.map((sgm) =>
       prisma.product.findMany({
-        where: { AND: [segmentWhere(sgm.key), { images: { some: {} } }] },
+        where: { AND: [segmentWhere(sgm.key), { images: { some: {} } }, visibleProductWhere] },
         take: 12,
         orderBy: { createdAt: "desc" },
         include: { images: { orderBy: { position: "asc" }, take: 1 } },

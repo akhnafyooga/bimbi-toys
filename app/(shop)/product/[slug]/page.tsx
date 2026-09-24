@@ -10,6 +10,7 @@ import ProductActions from "@/components/ProductActions";
 import ProductCard from "@/components/ProductCard";
 import AppIcon from "@/components/AppIcon";
 import { googleMapsUrl } from "@/lib/maps";
+import { HIDDEN_CATEGORY_SLUGS, notHiddenCategorySql } from "@/lib/storefront";
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -30,6 +31,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   ]);
 
   if (!product) notFound();
+
+  // Products retired into a hidden category (see lib/storefront.ts) stay in the
+  // database for order history, but must not be browsable or shoppable any more.
+  if (HIDDEN_CATEGORY_SLUGS.includes(product.category.slug)) notFound();
 
   // "Lihat Ada Apa di Toko": which physical shelves (across stores) hold this
   // product. Same product can sit on several shelves — that's the point of
@@ -72,11 +77,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const [similarIds, otherIds] = await Promise.all([
     prisma.$queryRaw<{ id: string }[]>`
       SELECT id FROM "Product"
-      WHERE "categoryId" = ${product.categoryId} AND id <> ${product.id}
+      WHERE "categoryId" = ${product.categoryId} AND id <> ${product.id} AND ${notHiddenCategorySql}
       ORDER BY RANDOM() LIMIT 8`,
     prisma.$queryRaw<{ id: string }[]>`
       SELECT id FROM "Product"
-      WHERE "categoryId" <> ${product.categoryId}
+      WHERE "categoryId" <> ${product.categoryId} AND ${notHiddenCategorySql}
       ORDER BY RANDOM() LIMIT 4`,
   ]);
 

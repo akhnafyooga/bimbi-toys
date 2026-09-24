@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { tokenize, relevance } from "@/lib/search";
+import { HIDDEN_CATEGORY_SLUGS, visibleProductWhere } from "@/lib/storefront";
 
 // Typeahead for the navbar search box: a few ranked products + matching
 // categories, scoped to the optional category dropdown. Public and hit on
@@ -45,6 +46,7 @@ export async function GET(req: Request) {
   const where = {
     AND: [
       categoryFilter,
+      visibleProductWhere,
       {
         OR: effective.flatMap((t) => [
           { name: { contains: t, mode: "insensitive" as const } },
@@ -69,7 +71,7 @@ export async function GET(req: Request) {
       take: 50,
     }),
     prisma.category.findMany({
-      where: { name: { contains: q, mode: "insensitive" as const } },
+      where: { name: { contains: q, mode: "insensitive" as const }, slug: { notIn: HIDDEN_CATEGORY_SLUGS } },
       select: { id: true, name: true, slug: true },
       take: 3,
     }),
