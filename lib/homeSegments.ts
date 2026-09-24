@@ -1,11 +1,24 @@
 import type { Prisma } from "@prisma/client";
 
 // Home-page merchandising groups. These are presentation-only: nothing in the
-// database knows about "laki" or "perempuan", so each group is expressed as a
-// Prisma filter over the categories and product names we already have. That
-// keeps routing, the catalog filters and the admin panel untouched.
+// database knows about "kecil" (nor about the old laki/perempuan split), so the
+// group is expressed as a Prisma filter over the categories and product names
+// we already have. That keeps routing, the catalog filters and the admin panel
+// untouched.
 
-export type SegmentKey = "laki" | "perempuan";
+export type SegmentKey = "kecil";
+
+// Slugs that used to be their own segments. They are still produced by the
+// "Cari Mainanmu?" picker and can live on in bookmarks / shared links, so each
+// one resolves to the merged segment instead of silently filtering nothing
+// (or, for "bayi", crashing on a missing SEGMENT_BY_KEY entry).
+export type LegacySegmentKey = "laki" | "perempuan" | "bayi";
+
+const LEGACY_ALIASES: Record<LegacySegmentKey, SegmentKey> = {
+  laki: "kecil",
+  perempuan: "kecil",
+  bayi: "kecil",
+};
 
 type Segment = {
   key: SegmentKey;
@@ -22,30 +35,21 @@ type Segment = {
 
 export const SEGMENTS: Segment[] = [
   {
-    key: "laki",
-    title: "Untuk Si Kecil Laki-Laki",
-    blurb: "Mobil-mobilan, senjata mainan, robot, bola & balok susun",
-    categories: ["mobil-kendaraan", "diecast-rc", "mainan-bayi"],
+    key: "kecil",
+    title: "Untuk Si Kecil",
+    blurb: "Mobil-mobilan, boneka, masak-masakan, robot, puzzle & mainan bayi",
+    // Union of the two former gender rails (mainan-bayi appears in both, once).
+    categories: ["mobil-kendaraan", "diecast-rc", "mainan-bayi", "boneka"],
     keywords: [
+      // active / building play
       "MOBIL", "TRUK", "MOTOR", "PISTOL", "PEDANG", "SENAPAN", "ROBOT", "TAMIYA", "DINO",
-      // absorbed from the former "Bayi & Balita" group — building / active play
       "BOLA", "TUMPUK", "BALOK",
-    ],
-    band: "bg-sky-100",
-    headingClass: "text-sky-900",
-  },
-  {
-    key: "perempuan",
-    title: "Untuk Si Kecil Perempuan",
-    blurb: "Boneka, mainan masak, puzzle & mainan bayi",
-    categories: ["boneka", "mainan-bayi"],
-    keywords: [
+      // soft / sensory / role play
       "BONEKA", "MASAK", "DAPUR", "SALON", "PRINCESS", "SQUISHI", "SLIME", "TAS",
-      // absorbed from the former "Bayi & Balita" group — soft / sensory play
       "PUZZLE", "GIGITAN", "KERINCING", "CICIT", "RATTLE",
     ],
-    band: "bg-pink-100",
-    headingClass: "text-pink-900",
+    band: "bg-violet-100",
+    headingClass: "text-violet-900",
   },
 ];
 
@@ -54,8 +58,11 @@ export const SEGMENT_BY_KEY = Object.fromEntries(SEGMENTS.map((s) => [s.key, s])
   Segment
 >;
 
-export function isSegmentKey(v: string | undefined): v is SegmentKey {
-  return v === "laki" || v === "perempuan" || v === "bayi";
+/** Resolve a `?segment=` value to a real segment key, or undefined if unknown. */
+export function resolveSegmentKey(v: string | undefined): SegmentKey | undefined {
+  if (!v) return undefined;
+  if (v in SEGMENT_BY_KEY) return v as SegmentKey;
+  return LEGACY_ALIASES[v as LegacySegmentKey];
 }
 
 /** Prisma `where` for one segment: its categories OR any of its keywords. */

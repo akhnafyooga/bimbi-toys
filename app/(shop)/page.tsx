@@ -15,7 +15,7 @@ import SegmentRail from "@/components/SegmentRail";
 import ToyFinder from "@/components/ToyFinder";
 import ShelfTeaser from "@/components/shelf/ShelfTeaser";
 import HeroBanner from "@/components/HeroBanner";
-import { SEGMENTS, segmentWhere, isSegmentKey } from "@/lib/homeSegments";
+import { SEGMENTS, segmentWhere, resolveSegmentKey } from "@/lib/homeSegments";
 import { groupWhere } from "@/lib/adminGroups";
 import { visibleProductWhere, visibleCategoryWhere } from "@/lib/storefront";
 import type { Prisma } from "@prisma/client";
@@ -36,7 +36,7 @@ export default async function HomePage({
   }>;
 }) {
   const { category, sort, min, max, show, segment, group } = await searchParams;
-  const seg = isSegmentKey(segment) ? segment : undefined;
+  const seg = resolveSegmentKey(segment);
   // "Mau cari apa?" doorways. Reuses the admin classifier so the storefront and
   // the admin panel always mean the same thing by these two groups.
   const grp = group === "alat-tulis" ? "Alat Tulis" : group === "mainan" ? "Mainan & Lainnya" : undefined;
@@ -164,7 +164,7 @@ export default async function HomePage({
           </Reveal>
         )}
 
-        {/* 4. Merchandising rails — who the toy is for */}
+        {/* 4. Merchandising band — "Untuk Si Kecil" */}
         {/* One stack, no gap: the bands must be adjacent siblings for the
             overlap that joins their colours. A <Reveal> wrapper around each
             would break that adjacency. */}
@@ -186,7 +186,6 @@ export default async function HomePage({
         {/* 5. Guided finder — gender + budget, lands on the catalog below */}
         <Reveal>
           <ToyFinder
-            initialSegment={seg}
             initialMax={max ? Number(max) : undefined}
           />
         </Reveal>
